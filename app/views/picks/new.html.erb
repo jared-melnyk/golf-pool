@@ -1,5 +1,15 @@
 <h1>Pick 5 golfers — <%= @tournament.name %></h1>
 
+<% if @pick.errors.any? %>
+  <div class="error-messages">
+    <ul>
+      <% @pick.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
 <%= form_with url: pool_picks_path(@pool), method: :post, local: true do |f| %>
   <%= hidden_field_tag :tournament_id, @tournament.id %>
   <% 5.times do |i| %>

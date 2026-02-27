@@ -1,6 +1,8 @@
 class PicksController < ApplicationController
   before_action :set_pool
   before_action :set_tournament, only: [ :new, :create ]
+  before_action :set_pick, only: [ :edit, :update ]
+  before_action :ensure_tournament_unlocked!, only: [ :new, :create, :edit, :update ]
 
   def index
     @standings = @pool.standings
@@ -31,13 +33,11 @@ class PicksController < ApplicationController
   end
 
   def edit
-    @pick = picks_scope.find(params[:id])
-    @tournament = @pick.tournament
+    # @pick and @tournament are set in before_actions
     @golfers = Golfer.order(:name)
   end
 
   def update
-    @pick = picks_scope.find(params[:id])
     @pick.pick_golfers.destroy_all
     slot = 1
     (params[:golfer_ids] || []).first(5).each do |golfer_id|
@@ -64,7 +64,32 @@ class PicksController < ApplicationController
     @tournament = @pool.tournaments.find(params[:tournament_id])
   end
 
+  def set_pick
+    @pick = picks_scope.find(params[:id])
+    @tournament = @pick.tournament
+  end
+
   def picks_scope
     Pick.where(user: current_user, tournament: @pool.tournaments)
+  end
+
+  def ensure_tournament_unlocked!
+    return if @tournament.blank?
+
+    refresh_tournament_from_api(@tournament)
+    @tournament.reload
+
+    if @tournament.starts_at.present? && @tournament.starts_at <= Time.current
+      redirect_to pool_picks_path(@pool), alert: "Picks are locked because #{@tournament.name} has already started."
+    end
+  end
+
+  def refresh_tournament_from_api(tournament)
+    return if tournament.external_id.blank?
+
+    season = (tournament.starts_at&.year || Date.current.year)
+    BallDontLie::SyncTournaments.new(season: season).call
+  rescue => e
+    Rails.logger.error("Failed to refresh tournaments from API: #{e.class}: #{e.message}")
   end
 end

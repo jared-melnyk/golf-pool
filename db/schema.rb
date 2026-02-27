@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_040244) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_040244) do
     t.index ["tournament_id"], name: "index_picks_on_tournament_id"
     t.index ["user_id", "tournament_id"], name: "index_picks_on_user_id_and_tournament_id", unique: true
     t.index ["user_id"], name: "index_picks_on_user_id"
+  end
+
+  create_table "pool_tournament_odds", force: :cascade do |t|
+    t.integer "american_odds", null: false
+    t.datetime "created_at", null: false
+    t.bigint "golfer_id", null: false
+    t.datetime "locked_at", null: false
+    t.bigint "pool_tournament_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "vendor"
+    t.index ["golfer_id"], name: "index_pool_tournament_odds_on_golfer_id"
+    t.index ["pool_tournament_id", "golfer_id"], name: "index_pool_tournament_odds_on_pt_and_golfer", unique: true
+    t.index ["pool_tournament_id"], name: "index_pool_tournament_odds_on_pool_tournament_id"
   end
 
   create_table "pool_tournaments", force: :cascade do |t|
@@ -103,6 +116,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_040244) do
   add_foreign_key "pick_golfers", "picks"
   add_foreign_key "picks", "tournaments"
   add_foreign_key "picks", "users"
+  add_foreign_key "pool_tournament_odds", "golfers"
+  add_foreign_key "pool_tournament_odds", "pool_tournaments"
   add_foreign_key "pool_tournaments", "pools"
   add_foreign_key "pool_tournaments", "tournaments"
   add_foreign_key "pool_users", "pools"

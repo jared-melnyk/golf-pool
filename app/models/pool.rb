@@ -6,18 +6,34 @@ class Pool < ApplicationRecord
 
   validates :name, presence: true
 
-  # Standings: total prize money per user from their picks in this pool's tournaments.
-  # Returns array of [ user, total_prize_money ] sorted by total descending.
+  # Standings: total points per user from their picks in this pool's tournaments.
+  # Points = prize money + odds-based bonus where available.
+  # Returns array of [ user, total_points ] sorted by total descending.
   def standings
     users
       .distinct
-      .map { |user| [ user, total_prize_money_for(user) ] }
+      .map { |user| [ user, total_points_for(user) ] }
       .sort_by { |_, total| -total }
   end
 
-  def total_prize_money_for(user)
-    Pick
-      .where(user: user, tournament: tournaments)
-      .sum { |pick| pick.total_prize_money.to_d }
+  def total_points_for(user)
+    pool_tournaments.includes(:tournament).sum do |pool_tournament|
+      tournament = pool_tournament.tournament
+      pick = Pick.find_by(user: user, tournament: tournament)
+      next 0.to_d unless pick
+
+      pick.golfers.sum do |golfer|
+        base = TournamentResult.where(tournament: tournament, golfer: golfer).sum(:prize_money).to_d
+        odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
+        bonus = odds_row ? odds_bonus(odds_row.american_odds) : 0.to_d
+        base + bonus
+      end
+    end
+  end
+
+  private
+
+  def odds_bonus(american_odds)
+    american_odds.to_d.abs * 1000
   end
 end

@@ -2,8 +2,12 @@ class PoolTournamentsController < ApplicationController
   def create
     @pool = current_user.pools.find(params[:pool_id])
     tournament = Tournament.find(params[:tournament_id])
-    @pool.pool_tournaments.find_or_create_by!(tournament: tournament)
-    redirect_to @pool, notice: "Tournament added."
+    pt = @pool.pool_tournaments.find_or_initialize_by(tournament: tournament)
+    if pt.save
+      redirect_to @pool, notice: "Tournament added."
+    else
+      redirect_to @pool, alert: pt.errors.full_messages.to_sentence
+    end
   end
 
   def destroy

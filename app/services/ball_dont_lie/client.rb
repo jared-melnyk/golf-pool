@@ -53,6 +53,13 @@ module BallDontLie
       end
     end
 
+    def futures(tournament_ids: nil, vendors: nil, cursor: nil, per_page: 100)
+      params = { cursor: cursor, per_page: per_page }
+      params["tournament_ids[]"] = Array(tournament_ids) if tournament_ids.present?
+      params["vendors[]"] = Array(vendors) if vendors.present?
+      get "futures", **params
+    end
+
     private
 
     MAX_429_RETRIES = 3

@@ -24,7 +24,8 @@
 <% end %>
 
 <%= form_with url: pool_pool_tournaments_path(@pool), method: :post do |f| %>
-  <%= f.select :tournament_id, options_from_collection_for_select(Tournament.order(:name) - @pool.tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id" } %>
+  <% eligible_tournaments = Tournament.where("ends_at IS NULL OR ends_at >= ?", Time.current).order(:starts_at) - @pool.tournaments %>
+  <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id" } %>
   <%= f.submit "Add tournament" %>
 <% end %>
 
