@@ -28,7 +28,7 @@ This guide walks through deploying the app to [Render](https://render.com) and p
 1. **New** → **PostgreSQL**. Name it e.g. `golf-pool-db`, choose plan (Free is fine to start). Create.
 2. **New** → **Web Service**. Connect the golf_pool repo.
 3. Configure:
-   - **Build Command:** `bundle install && bundle exec rails assets:precompile && bundle exec rails assets:clean`
+   - **Build Command:** `bundle install && bundle exec rails tailwindcss:build && bundle exec rails assets:precompile && bundle exec rails assets:clean`
    - **Start Command:** `./bin/rails db:prepare && ./bin/rails server`
    - **Health Check Path:** `/up`
 4. In **Environment**, add:
