@@ -1,14 +1,34 @@
-<h1>Add tournament</h1>
+<div class="max-w-md mx-auto border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Add tournament</h1>
 
-<%= form_with model: @tournament, local: true do |f| %>
-  <% if @tournament.errors.any? %>
-    <ul><% @tournament.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %></ul>
+  <%= form_with model: @tournament, local: true, class: "space-y-4" do |f| %>
+    <% if @tournament.errors.any? %>
+      <ul class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+        <% @tournament.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    <% end %>
+    <div>
+      <%= f.label :name, class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :name, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+    </div>
+    <div>
+      <%= f.label :starts_at, class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.datetime_local_field :starts_at, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+    </div>
+    <div>
+      <%= f.label :ends_at, class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.datetime_local_field :ends_at, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+    </div>
+    <div>
+      <%= f.label :external_id, "External ID (for API)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.text_field :external_id, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+    </div>
+    <div>
+      <%= f.submit "Add tournament", class: "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium" %>
+    </div>
   <% end %>
-  <p><%= f.label :name %> <%= f.text_field :name, required: true %></p>
-  <p><%= f.label :starts_at %> <%= f.datetime_local_field :starts_at %></p>
-  <p><%= f.label :ends_at %> <%= f.datetime_local_field :ends_at %></p>
-  <p><%= f.label :external_id, "External ID (for API)" %> <%= f.text_field :external_id %></p>
-  <p><%= f.submit "Add tournament" %></p>
-<% end %>
 
-<p><%= link_to "Back", tournaments_path %></p>
+  <p class="mt-4"><%= link_to "Back", tournaments_path, class: "text-emerald-600 hover:underline" %></p>
+</div>

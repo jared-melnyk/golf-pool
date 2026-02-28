@@ -1,28 +1,40 @@
-<h1>Sync from BALLDONTLIE API</h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-4">Sync from BALLDONTLIE API</h1>
 
-<p>Sync tournaments, golfers, and tournament results from the BALLDONTLIE PGA API. Set <code>BALLDONTLIE_API_KEY</code> in your <code>.env</code> file.</p>
+<p class="text-gray-600 mb-6">Sync tournaments, golfers, and tournament results from the BALLDONTLIE PGA API. Set <code class="px-1 py-0.5 bg-gray-200 rounded text-sm">BALLDONTLIE_API_KEY</code> in your <code class="px-1 py-0.5 bg-gray-200 rounded text-sm">.env</code> file.</p>
 
-<%= form_with url: sync_tournaments_path, method: :post do |f| %>
-  <p>
-    <label>Season (year)</label>
-    <%= number_field_tag :season, Date.current.year, min: 2020, max: 2030 %>
-  </p>
-  <p><%= f.submit "Sync tournaments" %></p>
-<% end %>
-
-<h2>Sync tournament field (golfers)</h2>
-<p>Select a tournament synced from the API, then sync its field to add those players so you can make picks. Your golfer list grows one tournament at a time.</p>
-<% if @tournaments_with_api_id.any? %>
-  <%= form_with url: sync_field_path, method: :post do |f| %>
-    <p>
-      <label>Tournament</label>
-      <%= select_tag :tournament_id, options_from_collection_for_select(@tournaments_with_api_id, :id, :name), include_blank: "Select tournament…" %>
-    </p>
-    <p><%= f.submit "Sync field" %></p>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <%= form_with url: sync_tournaments_path, method: :post, class: "space-y-4" do |f| %>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Season (year)</label>
+      <%= number_field_tag :season, Date.current.year, min: 2020, max: 2030, class: "rounded border border-gray-300 px-3 py-2 w-24" %>
+    </div>
+    <div>
+      <%= f.submit "Sync tournaments", class: "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium" %>
+    </div>
   <% end %>
-  <p><small>Tournament field requires BALLDONTLIE GOAT tier. If you see 401, use “Sync results” on a completed tournament instead—that adds golfers from the leaderboard (ALL-STAR tier).</small></p>
-<% else %>
-  <p>No tournaments with API id yet. Sync tournaments above first.</p>
-<% end %>
+</section>
 
-<p><%= link_to "Tournaments", tournaments_path %> · <%= link_to "Golfers", golfers_path %> · <%= link_to "Pools", pools_path %></p>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Sync tournament field (golfers)</h2>
+  <p class="text-gray-600 mb-4">Select a tournament synced from the API, then sync its field to add those players so you can make picks. Your golfer list grows one tournament at a time.</p>
+  <% if @tournaments_with_api_id.any? %>
+    <%= form_with url: sync_field_path, method: :post, class: "space-y-4" do |f| %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Tournament</label>
+        <%= select_tag :tournament_id, options_from_collection_for_select(@tournaments_with_api_id, :id, :name), include_blank: "Select tournament…", class: "rounded border border-gray-300 px-3 py-2 w-full max-w-md" %>
+      </div>
+      <div>
+        <%= f.submit "Sync field", class: "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium" %>
+      </div>
+    <% end %>
+    <p class="mt-4 text-sm text-gray-600">Tournament field requires BALLDONTLIE GOAT tier. If you see 401, use "Sync results" on a completed tournament instead—that adds golfers from the leaderboard (ALL-STAR tier).</p>
+  <% else %>
+    <p class="text-gray-600">No tournaments with API id yet. Sync tournaments above first.</p>
+  <% end %>
+</section>
+
+<p class="flex gap-4 text-gray-600">
+  <%= link_to "Tournaments", tournaments_path, class: "hover:text-gray-900" %>
+  <%= link_to "Golfers", golfers_path, class: "hover:text-gray-900" %>
+  <%= link_to "Pools", pools_path, class: "hover:text-gray-900" %>
+</p>

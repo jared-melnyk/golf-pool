@@ -1,14 +1,19 @@
-<h1>Tournaments</h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-4">Tournaments</h1>
 
-<p><%= link_to "Add tournament", new_tournament_path %></p>
+<p class="mb-6">
+  <%= link_to "Add tournament", new_tournament_path, class: "inline-block bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium no-underline" %>
+</p>
 
-<ul>
+<ul class="list-disc list-inside space-y-2 mb-6">
   <% @tournaments.each do |t| %>
-    <li><%= link_to t.name, tournament_path(t) %> — <%= t.starts_at&.strftime("%b %d") %> to <%= t.ends_at&.strftime("%b %d") %></li>
+    <li><%= link_to t.name, tournament_path(t), class: "text-emerald-600 hover:underline" %> — <%= t.starts_at&.strftime("%b %d") %> to <%= t.ends_at&.strftime("%b %d") %></li>
   <% end %>
 </ul>
 <% if @tournaments.empty? %>
-  <p>No tournaments yet. Add one to get started.</p>
+  <p class="text-gray-600 mb-6">No tournaments yet. Add one to get started.</p>
 <% end %>
 
-<p><%= link_to "Sync from API", sync_index_path %> · <%= link_to "Back", pools_path %></p>
+<p class="flex gap-4 text-gray-600">
+  <%= link_to "Sync from API", sync_index_path, class: "hover:text-gray-900" %>
+  <%= link_to "Back", pools_path, class: "hover:text-gray-900" %>
+</p>

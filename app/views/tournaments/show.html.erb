@@ -1,29 +1,48 @@
-<h1><%= @tournament.name %></h1>
-<p><%= @tournament.starts_at&.strftime("%b %d, %Y") %> – <%= @tournament.ends_at&.strftime("%b %d, %Y") %></p>
+<h1 class="text-2xl font-bold text-gray-900 mb-2"><%= @tournament.name %></h1>
+<p class="text-gray-600 mb-6"><%= @tournament.starts_at&.strftime("%b %d, %Y") %> – <%= @tournament.ends_at&.strftime("%b %d, %Y") %></p>
+
 <% if @tournament.external_id.present? %>
-  <p>
-    <%= button_to "Sync field", sync_field_path, method: :post, params: { tournament_id: @tournament.id } %>
-    <%= button_to "Sync results from API", sync_tournament_results_path(@tournament), method: :post %>
+  <p class="flex gap-2 flex-wrap mb-6">
+    <%= button_to "Sync field", sync_field_path, method: :post, params: { tournament_id: @tournament.id }, form: { class: "inline-block" }, class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+    <%= button_to "Sync results from API", sync_tournament_results_path(@tournament), method: :post, form: { class: "inline-block" }, class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
   </p>
 <% end %>
 
-<h2>Results</h2>
-<ul>
-  <% @tournament.tournament_results.includes(:golfer).order(position: :asc).each do |r| %>
-    <li><%= r.position %>. <%= r.golfer.name %> — $<%= number_with_delimiter(r.prize_money&.to_i) %>
-      <%= button_to "Remove", tournament_result_path(@tournament, r), method: :delete %>
-    </li>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Results</h2>
+  <ul class="space-y-2">
+    <% @tournament.tournament_results.includes(:golfer).order(position: :asc).each do |r| %>
+      <li class="flex items-center gap-2 flex-wrap">
+        <%= r.position %>. <%= r.golfer.name %> — $<%= number_with_delimiter(r.prize_money&.to_i) %>
+        <%= button_to "Remove", tournament_result_path(@tournament, r), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300" %>
+      </li>
+    <% end %>
+  </ul>
+  <% if @tournament.tournament_results.empty? %>
+    <p class="text-gray-600">No results yet. Add below (e.g. from API or manual entry).</p>
   <% end %>
-</ul>
-<% if @tournament.tournament_results.empty? %>
-  <p>No results yet. Add below (e.g. from API or manual entry).</p>
-<% end %>
+</section>
 
-<%= form_with model: [ @tournament, TournamentResult.new ], url: tournament_results_path(@tournament), local: true do |f| %>
-  <p><%= f.label :golfer_id, "Golfer" %> <%= f.collection_select :golfer_id, Golfer.order(:name), :id, :name, { include_blank: "Select…" } %></p>
-  <p><%= f.label :position %> <%= f.number_field :position, min: 1 %></p>
-  <p><%= f.label :prize_money %> <%= f.number_field :prize_money, min: 0, step: 0.01 %></p>
-  <p><%= f.submit "Add result" %></p>
-<% end %>
+<div class="border border-gray-200 rounded-lg p-4 bg-white mb-6">
+  <%= form_with model: [ @tournament, TournamentResult.new ], url: tournament_results_path(@tournament), local: true, class: "space-y-4" do |f| %>
+    <div class="flex flex-wrap gap-4 items-end">
+      <div>
+        <%= f.label :golfer_id, "Golfer", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.collection_select :golfer_id, Golfer.order(:name), :id, :name, { include_blank: "Select…" }, class: "rounded border border-gray-300 px-2 py-1" %>
+      </div>
+      <div>
+        <%= f.label :position, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.number_field :position, min: 1, class: "rounded border border-gray-300 px-2 py-1 w-20" %>
+      </div>
+      <div>
+        <%= f.label :prize_money, class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.number_field :prize_money, min: 0, step: 0.01, class: "rounded border border-gray-300 px-2 py-1" %>
+      </div>
+      <div>
+        <%= f.submit "Add result", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+      </div>
+    </div>
+  <% end %>
+</div>
 
-<p><%= link_to "Back to tournaments", tournaments_path %></p>
+<p><%= link_to "Back to tournaments", tournaments_path, class: "text-emerald-600 hover:underline" %></p>
