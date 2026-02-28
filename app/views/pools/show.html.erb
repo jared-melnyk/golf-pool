@@ -1,47 +1,58 @@
-<h1><%= @pool.name %></h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-4"><%= @pool.name %></h1>
 
-<h2>Standings</h2>
-<ol>
-  <% @pool.standings.each_with_index do |(user, total), idx| %>
-    <li><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></li>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Standings</h2>
+  <ol class="list-decimal list-inside space-y-2">
+    <% @pool.standings.each_with_index do |(user, total), idx| %>
+      <li><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></li>
+    <% end %>
+  </ol>
+  <% if @pool.standings.empty? %>
+    <p class="text-gray-600">No picks or results yet.</p>
   <% end %>
-</ol>
-<% if @pool.standings.empty? %>
-  <p>No picks or results yet.</p>
-<% end %>
+</section>
 
-<h2>Tournaments in this pool</h2>
-<ul>
-  <% @pool.tournaments.order(:starts_at).each do |t| %>
-    <li>
-      <%= t.name %> (<%= t.starts_at&.strftime("%b %d") %>)
-      <%= button_to "Remove", pool_pool_tournament_path(@pool, @pool.pool_tournaments.find_by(tournament: t)), method: :delete if @pool.pool_tournaments.exists?(tournament: t) %>
-    </li>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Tournaments in this pool</h2>
+  <ul class="space-y-2">
+    <% @pool.tournaments.order(:starts_at).each do |t| %>
+      <li class="flex items-center gap-2 flex-wrap">
+        <%= t.name %> (<%= t.starts_at&.strftime("%b %d") %>)
+        <% if @pool.pool_tournaments.exists?(tournament: t) %>
+          <%= button_to "Remove", pool_pool_tournament_path(@pool, @pool.pool_tournaments.find_by(tournament: t)), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <% if @pool.tournaments.empty? %>
+    <p class="text-gray-600">No tournaments added. Add one below.</p>
   <% end %>
-</ul>
-<% if @pool.tournaments.empty? %>
-  <p>No tournaments added. Add one below.</p>
-<% end %>
-
-<%= form_with url: pool_pool_tournaments_path(@pool), method: :post do |f| %>
-  <%# Addable = not completed. Started-but-not-finished tournaments are allowed. %>
-  <% eligible_tournaments = Tournament.addable_to_pool.order(:starts_at) - @pool.tournaments %>
-  <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id" } %>
-  <%= f.submit "Add tournament" %>
-<% end %>
-
-<h2>Members</h2>
-<ul>
-  <% @pool.users.each do |u| %>
-    <li><%= u.name %> (<%= u.email %>) <%= button_to "Remove", pool_pool_user_path(@pool, @pool.pool_users.find_by(user: u)), method: :delete if @pool.pool_users.exists?(user: u) %></li>
+  <%= form_with url: pool_pool_tournaments_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
+    <% eligible_tournaments = Tournament.addable_to_pool.order(:starts_at) - @pool.tournaments %>
+    <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id", class: "rounded border border-gray-300 px-2 py-1" } %>
+    <%= f.submit "Add tournament", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
   <% end %>
-</ul>
-<%= form_with url: pool_pool_users_path(@pool), method: :post do |f| %>
-  <%= f.select :user_id, options_from_collection_for_select(User.order(:name) - @pool.users, :id, :name), { include_blank: "Select user…" }, { name: "user_id" } %>
-  <%= f.submit "Add member" %>
-<% end %>
+</section>
 
-<p>
-  <%= link_to "My picks", pool_picks_path(@pool) %>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Members</h2>
+  <ul class="space-y-2">
+    <% @pool.users.each do |u| %>
+      <li class="flex items-center gap-2 flex-wrap">
+        <%= u.name %> (<%= u.email %>)
+        <% if @pool.pool_users.exists?(user: u) %>
+          <%= button_to "Remove", pool_pool_user_path(@pool, @pool.pool_users.find_by(user: u)), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <%= form_with url: pool_pool_users_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
+    <%= f.select :user_id, options_from_collection_for_select(User.order(:name) - @pool.users, :id, :name), { include_blank: "Select user…" }, { name: "user_id", class: "rounded border border-gray-300 px-2 py-1" } %>
+    <%= f.submit "Add member", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+  <% end %>
+</section>
+
+<p class="mb-2">
+  <%= link_to "My picks", pool_picks_path(@pool), class: "text-emerald-600 hover:underline" %>
 </p>
-<p><%= link_to "Back to pools", pools_path %></p>
+<p><%= link_to "Back to pools", pools_path, class: "text-gray-600 hover:text-gray-900" %></p>
