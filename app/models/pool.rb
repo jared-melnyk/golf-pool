@@ -34,6 +34,6 @@ class Pool < ApplicationRecord
   private
 
   def odds_bonus(american_odds)
-    american_odds.to_d.abs * 1000
+    american_odds.to_d.abs * 15
   end
 end
