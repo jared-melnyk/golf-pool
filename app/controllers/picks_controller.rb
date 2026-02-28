@@ -77,6 +77,7 @@ class PicksController < ApplicationController
     return if @tournament.blank?
 
     refresh_tournament_from_api(@tournament)
+    sync_tournament_field(@tournament)
     @tournament.reload
 
     if @tournament.starts_at.present? && @tournament.starts_at <= Time.current
@@ -91,5 +92,13 @@ class PicksController < ApplicationController
     BallDontLie::SyncTournaments.new(season: season).call
   rescue => e
     Rails.logger.error("Failed to refresh tournaments from API: #{e.class}: #{e.message}")
+  end
+
+  def sync_tournament_field(tournament)
+    return if tournament.external_id.blank?
+
+    BallDontLie::SyncTournamentField.new(tournament: tournament).call
+  rescue => e
+    Rails.logger.error("Failed to sync tournament field from API: #{e.class}: #{e.message}")
   end
 end
