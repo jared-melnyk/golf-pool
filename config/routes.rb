@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
-  root "pools#index"
+  root "landing#index"
 
   get "signup", to: "users#new", as: :signup
   post "signup", to: "users#create"

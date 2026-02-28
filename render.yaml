@@ -1,16 +1,16 @@
-# Render Blueprint: golf_pool
+# Render Blueprint: long_shot
 # Deploy from GitHub: connect repo in Render dashboard, then use this file for one-click setup.
 # See docs/deploy-render.md for custom domain (Green Geeks) and env var steps.
 
 databases:
-  - name: golf-pool-db
+  - name: long-shot-db
     databaseName: golf_pool
     plan: free
     # region: oregon  # optional; defaults to your region
 
 services:
   - type: web
-    name: golf-pool-web
+    name: long-shot-web
     runtime: ruby
     plan: free
 
@@ -30,7 +30,8 @@ services:
         value: "true"
       - key: DATABASE_URL
         fromDatabase:
-          name: golf-pool-db
+          name: long-shot-db
           property: connectionString
       # Add BALLDONTLIE_API_KEY in Render dashboard (Environment) for PGA API
       # For custom domain (e.g. Green Geeks): add APP_HOST=yourdomain.com in Environment
+      # For subpath at jaredmelnyk.com/longshot add RAILS_RELATIVE_URL_ROOT=/longshot in Environment

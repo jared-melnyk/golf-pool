@@ -87,4 +87,9 @@ Rails.application.configure do
     config.hosts << /.*\.#{Regexp.escape(ENV["APP_HOST"])}/
   end
   config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Serve app under subpath e.g. jaredmelnyk.com/longshot. Set RAILS_RELATIVE_URL_ROOT in Render (e.g. /longshot).
+  if ENV["RAILS_RELATIVE_URL_ROOT"].present?
+    config.action_controller.relative_url_root = ENV["RAILS_RELATIVE_URL_ROOT"]
+  end
 end
