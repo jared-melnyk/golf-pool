@@ -1,24 +1,26 @@
-<h1>Pick 5 golfers — <%= @tournament.name %></h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Pick 5 golfers — <%= @tournament.name %></h1>
 
 <% if @pick.errors.any? %>
-  <div class="error-messages">
-    <ul>
-      <% @pick.errors.full_messages.each do |msg| %>
-        <li><%= msg %></li>
-      <% end %>
-    </ul>
-  </div>
+  <ul class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+    <% @pick.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  </ul>
 <% end %>
 
-<%= form_with url: pool_picks_path(@pool), method: :post, local: true do |f| %>
-  <%= hidden_field_tag :tournament_id, @tournament.id %>
-  <% 5.times do |i| %>
-    <p>
-      <label>Slot <%= i + 1 %></label>
-      <%= select_tag "golfer_ids[]", options_from_collection_for_select(@golfers, :id, :name, @pick.pick_golfers.find { |pg| pg.slot == i + 1 }&.golfer_id), include_blank: "Select golfer…" %>
-    </p>
+<div class="max-w-md border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+  <%= form_with url: pool_picks_path(@pool), method: :post, local: true, class: "space-y-4" do |f| %>
+    <%= hidden_field_tag :tournament_id, @tournament.id %>
+    <% 5.times do |i| %>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Slot <%= i + 1 %></label>
+        <%= select_tag "golfer_ids[]", options_from_collection_for_select(@golfers, :id, :name, @pick.pick_golfers.find { |pg| pg.slot == i + 1 }&.golfer_id), include_blank: "Select golfer…", class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+    <% end %>
+    <div>
+      <%= submit_tag "Save picks", class: "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium" %>
+    </div>
   <% end %>
-  <p><%= submit_tag "Save picks" %></p>
-<% end %>
+</div>
 
-<p><%= link_to "Back to picks", pool_picks_path(@pool) %></p>
+<p class="mt-4"><%= link_to "Back to picks", pool_picks_path(@pool), class: "text-emerald-600 hover:underline" %></p>

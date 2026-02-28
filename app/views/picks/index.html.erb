@@ -1,29 +1,33 @@
-<h1>My picks — <%= @pool.name %></h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-4">My picks — <%= @pool.name %></h1>
 
-<h2>Standings</h2>
-<ol>
-  <% @standings.each_with_index do |(user, total), idx| %>
-    <li><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></li>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Standings</h2>
+  <ol class="list-decimal list-inside space-y-2">
+    <% @standings.each_with_index do |(user, total), idx| %>
+      <li><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></li>
+    <% end %>
+  </ol>
+</section>
+
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">Tournaments</h2>
+  <ul class="space-y-2">
+    <% @tournaments.each do |tournament| %>
+      <li>
+        <%= tournament.name %>
+        <% pick = Pick.find_by(user: current_user, tournament: tournament) %>
+        <% if pick&.pick_golfers&.any? %>
+          (<%= pick.golfers.map(&:name).join(", ") %>)
+          <%= link_to "Edit", edit_pool_pick_path(@pool, pick), class: "text-emerald-600 hover:underline ml-1" %>
+        <% else %>
+          <%= link_to "Make picks", new_pool_pick_path(@pool, tournament_id: tournament.id), class: "text-emerald-600 hover:underline ml-1" %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+  <% if @tournaments.empty? %>
+    <p class="text-gray-600">No tournaments in this pool yet. Add them from the pool page.</p>
   <% end %>
-</ol>
+</section>
 
-<h2>Tournaments</h2>
-<ul>
-  <% @tournaments.each do |tournament| %>
-    <li>
-      <%= tournament.name %>
-      <% pick = Pick.find_by(user: current_user, tournament: tournament) %>
-      <% if pick&.pick_golfers&.any? %>
-        (<%= pick.golfers.map(&:name).join(", ") %>)
-        <%= link_to "Edit", edit_pool_pick_path(@pool, pick) %>
-      <% else %>
-        <%= link_to "Make picks", new_pool_pick_path(@pool, tournament_id: tournament.id) %>
-      <% end %>
-    </li>
-  <% end %>
-</ul>
-<% if @tournaments.empty? %>
-  <p>No tournaments in this pool yet. Add them from the pool page.</p>
-<% end %>
-
-<p><%= link_to "Back to #{@pool.name}", pool_path(@pool) %></p>
+<p><%= link_to "Back to #{@pool.name}", pool_path(@pool), class: "text-emerald-600 hover:underline" %></p>
