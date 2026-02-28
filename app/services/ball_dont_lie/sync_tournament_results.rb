@@ -31,6 +31,7 @@ module BallDontLie
           updated += 1
         end
       end
+      @tournament.update_column(:results_synced_at, Time.current)
       { created: created, updated: updated, total: api_results.size }
     end
   end

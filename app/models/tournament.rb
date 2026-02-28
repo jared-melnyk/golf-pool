@@ -11,4 +11,16 @@ class Tournament < ApplicationRecord
   # Tournaments that can be added to a pool: not yet completed. Started-but-not-finished is OK.
   # Completed = ends_at is at least 1 day ago so the final day of play still counts as addable.
   scope :addable_to_pool, -> { where("ends_at IS NULL OR ends_at >= ?", 1.day.ago) }
+
+  def completed?
+    ends_at.present? && ends_at < Time.current
+  end
+
+  # True if we have already synced results after the tournament ended (no need to sync again).
+  def results_synced_since_completion?
+    return false unless completed?
+    return false if results_synced_at.blank?
+
+    results_synced_at >= ends_at
+  end
 end
