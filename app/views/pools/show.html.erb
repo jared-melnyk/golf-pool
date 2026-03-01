@@ -33,8 +33,9 @@
         <div class="flex-1 min-w-0">
           <%= render "picks/tournament_with_picks", tournament: t, pool: @pool, pick: @my_picks_by_tournament&.[](t.id) %>
         </div>
-        <% if @pool.pool_tournaments.exists?(tournament: t) %>
-          <%= button_to "Remove", pool_pool_tournament_path(@pool, @pool.pool_tournaments.find_by(tournament: t)), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+        <% pt = @pool.pool_tournaments.find_by(tournament: t) %>
+        <% if pt && @pool.creator?(current_user) && !t.started? %>
+          <%= button_to "Remove", pool_pool_tournament_path(@pool, pt), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
         <% end %>
       </li>
     <% end %>
@@ -42,10 +43,12 @@
   <% if @pool.tournaments.empty? %>
     <p class="text-gray-600">No tournaments added. Add one below.</p>
   <% end %>
-  <%= form_with url: pool_pool_tournaments_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
-    <% eligible_tournaments = Tournament.addable_to_pool.order(:starts_at) - @pool.tournaments %>
-    <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id", class: "rounded border border-gray-300 px-2 py-1" } %>
-    <%= f.submit "Add tournament", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+  <% if @pool.creator?(current_user) %>
+    <%= form_with url: pool_pool_tournaments_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
+      <% eligible_tournaments = Tournament.addable_to_pool.order(:starts_at) - @pool.tournaments %>
+      <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id", class: "rounded border border-gray-300 px-2 py-1" } %>
+      <%= f.submit "Add tournament", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+    <% end %>
   <% end %>
 </section>
 
@@ -53,16 +56,23 @@
   <h2 class="text-lg font-semibold text-gray-900 mb-2">Members</h2>
   <ul class="space-y-2">
     <% @pool.users.each do |u| %>
+      <% pu = @pool.pool_users.find_by(user: u) %>
       <li class="flex items-center gap-2 flex-wrap">
         <%= u.name %> (<%= u.email %>)
-        <% if @pool.pool_users.exists?(user: u) %>
-          <%= button_to "Remove", pool_pool_user_path(@pool, @pool.pool_users.find_by(user: u)), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+        <% if pu %>
+          <% if u == current_user %>
+            <%= button_to "Leave pool", pool_pool_user_path(@pool, pu), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% elsif @pool.creator?(current_user) %>
+            <%= button_to "Remove", pool_pool_user_path(@pool, pu), method: :delete, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% end %>
         <% end %>
       </li>
     <% end %>
   </ul>
-  <%= form_with url: pool_pool_users_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
-    <%= f.select :user_id, options_from_collection_for_select(User.order(:name) - @pool.users, :id, :name), { include_blank: "Select user…" }, { name: "user_id", class: "rounded border border-gray-300 px-2 py-1" } %>
-    <%= f.submit "Add member", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+  <% if @pool.creator?(current_user) %>
+    <%= form_with url: pool_pool_users_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
+      <%= f.select :user_id, options_from_collection_for_select(User.order(:name) - @pool.users, :id, :name), { include_blank: "Select user…" }, { name: "user_id", class: "rounded border border-gray-300 px-2 py-1" } %>
+      <%= f.submit "Add member", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+    <% end %>
   <% end %>
 </section>

@@ -12,6 +12,10 @@ class Tournament < ApplicationRecord
   # Completed = ends_at is at least 1 day ago so the final day of play still counts as addable.
   scope :addable_to_pool, -> { where("ends_at IS NULL OR ends_at >= ?", 1.day.ago) }
 
+  def started?
+    starts_at.present? && starts_at <= Time.current
+  end
+
   def completed?
     ends_at.present? && ends_at < Time.current
   end

@@ -15,6 +15,10 @@ class Pool < ApplicationRecord
     token
   end
 
+  def creator?(user)
+    user.present? && creator_id == user.id
+  end
+
   # Start date of the pool = start date of the first tournament (by starts_at).
   def start_date
     tournaments.order(:starts_at).limit(1).pick(:starts_at)
