@@ -4,7 +4,14 @@ class Pool < ApplicationRecord
   has_many :pool_users, dependent: :destroy
   has_many :users, through: :pool_users
 
+  before_validation :generate_token, on: :create
+
   validates :name, presence: true
+  validates :token, presence: true, uniqueness: true
+
+  def to_param
+    token
+  end
 
   # Start date of the pool = start date of the first tournament (by starts_at).
   def start_date
@@ -37,6 +44,10 @@ class Pool < ApplicationRecord
   end
 
   private
+
+  def generate_token
+    self.token ||= SecureRandom.urlsafe_base64(16)
+  end
 
   def odds_bonus(american_odds)
     american_odds.to_d.abs * 15

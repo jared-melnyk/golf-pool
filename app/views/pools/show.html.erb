@@ -3,10 +3,8 @@
   <p class="text-gray-600 mb-4">Starts <%= @pool.start_date.strftime("%B %d, %Y") %></p>
 <% end %>
 <% if current_user && @pool.users.include?(current_user) %>
-  <p class="mb-4">
+  <p class="mb-4" data-controller="clipboard" data-invite-url="<%= pool_url(@pool) %>">
     <button type="button"
-            data-invite-url="<%= pool_url(@pool) %>"
-            data-controller="clipboard"
             data-action="click->clipboard#copy"
             class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
       Invite to pool

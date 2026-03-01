@@ -5,26 +5,11 @@
 </p>
 
 <% if @pools.any? %>
-  <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-2">My pools</h2>
   <ul class="list-disc list-inside space-y-2">
     <% @pools.each do |pool| %>
       <li><%= link_to pool.name, pool_path(pool), class: "text-emerald-600 hover:underline" %></li>
     <% end %>
   </ul>
-<% end %>
-
-<% if @other_pools.any? %>
-  <h2 class="text-lg font-semibold text-gray-900 mt-6 mb-2">Other pools</h2>
-  <ul class="space-y-2">
-    <% @other_pools.each do |pool| %>
-      <li class="flex items-center gap-2 flex-wrap">
-        <%= link_to pool.name, pool_path(pool), class: "text-emerald-600 hover:underline" %>
-        <%= button_to "Join", join_pool_path(pool), method: :post, form: { class: "inline-block" }, class: "rounded px-2 py-1 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
-      </li>
-    <% end %>
-  </ul>
-<% end %>
-
-<% if @pools.empty? && @other_pools.empty? %>
-  <p class="text-gray-600">No pools yet. Create one to get started.</p>
+<% else %>
+  <p class="text-gray-600">No pools yet. Create one or use an invite link to join a pool.</p>
 <% end %>
