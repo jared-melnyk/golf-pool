@@ -34,5 +34,4 @@ RSpec.describe "Tournaments", type: :request do
       expect(response.body).to include("1 —")
     end
   end
-
 end
