@@ -9,7 +9,7 @@ class UsersController < ApplicationController
     @user = User.new(user_params)
     if @user.save
       session[:user_id] = @user.id
-      redirect_to root_path, notice: "Account created."
+      redirect_to session.delete(:return_to).presence || root_path, notice: "Account created."
     else
       render :new, status: :unprocessable_entity
     end

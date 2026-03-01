@@ -17,6 +17,7 @@ class ApplicationController < ActionController::Base
 
   def require_login
     return if current_user
+    session[:return_to] = request.original_url
     redirect_to login_path, alert: "Please sign in."
   end
 end
