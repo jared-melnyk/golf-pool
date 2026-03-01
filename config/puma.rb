@@ -37,6 +37,9 @@ plugin :tmp_restart
 # Run the Solid Queue supervisor inside of Puma for single-server deployments.
 plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 
+# Single worker is intentional on 512MB (WEB_CONCURRENCY=1); avoid warning.
+silence_single_worker_warning if ENV["WEB_CONCURRENCY"].to_s == "1"
+
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]

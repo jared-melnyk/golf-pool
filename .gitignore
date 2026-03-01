@@ -39,3 +39,6 @@
 
 # RSpec example status (--only-failures, --next-failure)
 /spec/examples.txt
+
+# Git worktrees
+.worktrees/

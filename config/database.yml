@@ -17,7 +17,7 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 
 
 development:
@@ -103,6 +103,8 @@ production:
     database: golf_pool_production_queue
     migrations_paths: db/queue_migrate
     url: <%= ENV["DATABASE_URL"] %>
+    # Solid Queue uses multiple threads (dispatcher + worker + scheduler); pool must be >= 5.
+    pool: 5
   cable:
     <<: *primary_production
     database: golf_pool_production_cable
