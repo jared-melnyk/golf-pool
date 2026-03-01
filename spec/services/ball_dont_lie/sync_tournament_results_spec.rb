@@ -37,7 +37,7 @@ RSpec.describe BallDontLie::SyncTournamentResults do
       end
 
       it "creates golfers and tournament results" do
-        expect(client).to receive(:fetch_all_tournament_results).with(tournament_ids: [20]).and_return(api_results)
+        expect(client).to receive(:fetch_all_tournament_results).with(tournament_ids: [ 20 ]).and_return(api_results)
 
         result = described_class.new(tournament: tournament, client: client).call
 

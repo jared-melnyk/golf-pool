@@ -40,8 +40,8 @@ RSpec.describe Pool, type: :model do
       TournamentResult.create!(tournament: tournament, golfer: golfer2, position: 2, prize_money: 600_000)
 
       standings = pool.standings
-      expect(standings.map { |u, _| u }).to eq([user2, user])
-      expect(standings.map { |_, total| total }).to eq([600_000, 300_000])
+      expect(standings.map { |u, _| u }).to eq([ user2, user ])
+      expect(standings.map { |_, total| total }).to eq([ 600_000, 300_000 ])
     end
 
     it "includes an odds-based bonus on top of prize money when PoolTournamentOdds exist" do
