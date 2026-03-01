@@ -1,6 +1,6 @@
 class PoolTournamentsController < ApplicationController
   def create
-    @pool = current_user.pools.find(params[:pool_id])
+    @pool = current_user.pools.find_by!(token: params[:pool_id])
     tournament = Tournament.find(params[:tournament_id])
     pt = @pool.pool_tournaments.find_or_initialize_by(tournament: tournament)
     if pt.save

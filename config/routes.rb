@@ -20,7 +20,7 @@ Rails.application.routes.draw do
   post "sync/tournament_results/:tournament_id", to: "sync#tournament_results", as: :sync_tournament_results
   post "sync/field", to: "sync#field", as: :sync_field
 
-  resources :pools do
+  resources :pools, param: :token do
     post "join", on: :member
     resources :pool_tournaments, only: [ :create, :destroy ]
     resources :pool_users, only: [ :create, :destroy ], path: "members"

@@ -1,11 +1,10 @@
 class PoolsController < ApplicationController
   def index
     @pools = current_user.pools
-    @other_pools = Pool.where.not(id: @pools.pluck(:id))
   end
 
   def show
-    @pool = Pool.find(params[:id])
+    @pool = Pool.find_by!(token: params[:token])
     if @pool.users.include?(current_user)
       @my_picks_by_tournament = Pick.where(user: current_user, tournament: @pool.tournaments).includes(pick_golfers: :golfer).index_by(&:tournament_id)
     else
@@ -28,7 +27,7 @@ class PoolsController < ApplicationController
   end
 
   def join
-    @pool = Pool.find(params[:id])
+    @pool = Pool.find_by!(token: params[:token])
     if @pool.pool_users.exists?(user_id: current_user.id)
       redirect_to @pool, notice: "You're already in this pool."
     else
