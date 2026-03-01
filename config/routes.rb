@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   resources :tournaments, only: [ :index, :new, :create, :show ] do
     resources :tournament_results, only: [ :create, :destroy ], path: "results"
   end
-  resources :golfers, only: [ :index, :new, :create ]
+  resources :golfers, only: [ :index ]
 
   get "sync", to: "sync#index", as: :sync_index
   post "sync/tournaments", to: "sync#tournaments"
