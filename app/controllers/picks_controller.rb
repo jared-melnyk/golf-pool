@@ -12,7 +12,7 @@ class PicksController < ApplicationController
 
   def new
     @pick = Pick.find_or_initialize_by(user: current_user, tournament: @tournament)
-    5.times { |i| @pick.pick_golfers.build(slot: i + 1) if @pick.pick_golfers.none? { |pg| pg.slot == i + 1 } }
+    4.times { |i| @pick.pick_golfers.build(slot: i + 1) if @pick.pick_golfers.none? { |pg| pg.slot == i + 1 } }
     @golfers = @tournament.field_golfers.order(:name)
   end
 
@@ -20,7 +20,7 @@ class PicksController < ApplicationController
     @pick = Pick.find_or_initialize_by(user: current_user, tournament: @tournament)
     @pick.pick_golfers.destroy_all if @pick.persisted?
     slot = 1
-    (params[:golfer_ids] || []).first(5).each do |golfer_id|
+    (params[:golfer_ids] || []).first(4).each do |golfer_id|
       next if golfer_id.blank?
       @pick.pick_golfers.build(golfer_id: golfer_id, slot: slot)
       slot += 1
@@ -43,7 +43,7 @@ class PicksController < ApplicationController
   def update
     @pick.pick_golfers.destroy_all
     slot = 1
-    (params[:golfer_ids] || []).first(5).each do |golfer_id|
+    (params[:golfer_ids] || []).first(4).each do |golfer_id|
       next if golfer_id.blank?
       @pick.pick_golfers.build(golfer_id: golfer_id, slot: slot)
       slot += 1

@@ -1,4 +1,4 @@
-<h1 class="text-2xl font-bold text-gray-900 mb-6">Pick 5 golfers — <%= @tournament.name %></h1>
+<h1 class="text-2xl font-bold text-gray-900 mb-6">Pick 4 golfers — <%= @tournament.name %></h1>
 
 <% if @pick.errors.any? %>
   <ul class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
@@ -11,7 +11,7 @@
 <div class="max-w-md border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
   <%= form_with url: pool_picks_path(@pool), method: :post, local: true, class: "space-y-4" do |f| %>
     <%= hidden_field_tag :tournament_id, @tournament.id %>
-    <% 5.times do |i| %>
+    <% 4.times do |i| %>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Slot <%= i + 1 %></label>
         <%= select_tag "golfer_ids[]", options_from_collection_for_select(@golfers, :id, :name, @pick.pick_golfers.find { |pg| pg.slot == i + 1 }&.golfer_id), include_blank: "Select golfer…", class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>

@@ -97,7 +97,7 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(750_000)
     end
 
-    it "adds odds bonus when PoolTournamentOdds exist for the golfer" do
+    it "adds odds bonus when PoolTournamentOdds exist and golfer makes the cut" do
       pick = Pick.create!(user: user, tournament: tournament)
       PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 100_000)
@@ -108,8 +108,22 @@ RSpec.describe Pool, type: :model do
         vendor: "fanduel",
         locked_at: Time.current
       )
-      # bonus = 500 * 15 = 7500
-      expect(pool.total_points_for(user)).to eq(100_000 + 7500)
+      # bonus = 500 * 20 = 10_000 (only when made cut)
+      expect(pool.total_points_for(user)).to eq(100_000 + 10_000)
+    end
+
+    it "gives no odds bonus when golfer misses the cut" do
+      pick = Pick.create!(user: user, tournament: tournament)
+      PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position: 80, prize_money: 0)
+      PoolTournamentOdds.create!(
+        pool_tournament: PoolTournament.find_by(pool: pool, tournament: tournament),
+        golfer: golfer,
+        american_odds: 500,
+        vendor: "fanduel",
+        locked_at: Time.current
+      )
+      expect(pool.total_points_for(user)).to eq(0)
     end
   end
 end
