@@ -56,4 +56,3 @@
      add_index :picks, [ :user_id, :tournament_id ], unique: true
    end
  end
-
