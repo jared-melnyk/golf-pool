@@ -1,6 +1,6 @@
 class PoolTournamentsController < ApplicationController
   def create
-    @pool = current_user.pools.find_by!(token: params[:pool_id])
+    @pool = current_user.pools.find_by!(token: params[:pool_token])
     unless @pool.creator?(current_user)
       redirect_to @pool, alert: "Only the pool creator can add or remove tournaments."
       return

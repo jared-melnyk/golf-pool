@@ -25,48 +25,58 @@
   </head>
 
   <body class="bg-gray-50 font-sans">
-    <header class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-white">
-      <%= link_to "LongShot", root_path, class: "text-xl font-semibold text-gray-900 no-underline hover:text-gray-900" %>
-      <nav class="flex items-center gap-4">
-        <% if current_user %>
-          <span class="text-gray-700"><%= current_user.name %></span>
-          <%= button_to "Sign out", logout_path, method: :delete, form: { class: "inline-block" }, class: "rounded px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300" %>
-        <% else %>
-          <%= link_to "Sign in", login_path, class: "text-emerald-600 hover:underline font-medium" %>
-          <%= link_to "Sign up", signup_path, class: "rounded px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700" %>
-        <% end %>
-      </nav>
-    </header>
-    <div class="flex min-h-screen">
-      <% if current_user %>
-        <aside class="w-48 flex-shrink-0 border-r border-gray-200 bg-white p-4">
-          <nav class="space-y-1">
-            <%= link_to "Pools", pools_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline" %>
-            <%= link_to "Tournaments", tournaments_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline" %>
-            <%= link_to "Golfers", golfers_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline" %>
-            <%= link_to "Sync", sync_index_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline" %>
-            <% if @pool && @pool.users.include?(current_user) %>
-              <div class="pt-2 mt-2 border-t border-gray-200">
-                <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This pool</div>
-                <%= link_to @pool.name, pool_path(@pool), class: "block rounded px-3 py-2 text-sm text-emerald-600 hover:bg-gray-100 no-underline" %>
-                <%= link_to "My picks", pool_picks_path(@pool), class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline" %>
-              </div>
-            <% end %>
-          </nav>
-        </aside>
-      <% end %>
-      <div class="flex-1 min-w-0">
-        <div class="max-w-4xl mx-auto px-4 mt-2">
-          <% if flash[:notice] %>
-            <p class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg" role="alert"><%= flash[:notice] %></p>
+    <div data-controller="sidebar">
+      <header class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-white">
+        <div class="flex items-center gap-2">
+          <% if current_user %>
+            <button type="button" class="md:hidden p-2 -ml-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Open menu" aria-expanded="false" data-sidebar-target="toggle" data-action="click->sidebar#toggle">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
           <% end %>
-          <% if flash[:alert] %>
-            <p class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg" role="alert"><%= flash[:alert] %></p>
-          <% end %>
+          <%= link_to "LongShot", root_path, class: "text-xl font-semibold text-gray-900 no-underline hover:text-gray-900" %>
         </div>
-        <main class="max-w-4xl mx-auto px-4 py-6">
-          <%= yield %>
-        </main>
+        <nav class="flex items-center gap-4">
+          <% if current_user %>
+            <span class="text-gray-700"><%= current_user.name %></span>
+            <%= button_to "Sign out", logout_path, method: :delete, form: { class: "inline-block" }, class: "rounded px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300" %>
+          <% else %>
+            <%= link_to "Sign in", login_path, class: "text-emerald-600 hover:underline font-medium" %>
+            <%= link_to "Sign up", signup_path, class: "rounded px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700" %>
+          <% end %>
+        </nav>
+      </header>
+      <div class="flex min-h-screen">
+        <% if current_user %>
+          <div data-sidebar-target="backdrop" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden" data-action="click->sidebar#close" aria-hidden="true"></div>
+          <aside data-sidebar-target="panel" class="fixed left-0 top-0 z-50 h-full w-48 -translate-x-full transition-transform duration-200 ease-out bg-white border-r border-gray-200 p-4 pt-20 md:relative md:translate-x-0 md:h-full md:min-h-screen md:w-48 md:pt-4 md:flex-shrink-0">
+            <nav class="space-y-1">
+              <%= link_to "Pools", pools_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+              <%= link_to "Tournaments", tournaments_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+              <%= link_to "Golfers", golfers_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+              <%= link_to "Sync", sync_index_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+              <% if @pool && @pool.users.include?(current_user) %>
+                <div class="pt-2 mt-2 border-t border-gray-200">
+                  <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This pool</div>
+                  <%= link_to @pool.name, pool_path(@pool), class: "block rounded px-3 py-2 text-sm text-emerald-600 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+                  <%= link_to "My picks", pool_picks_path(@pool), class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+                </div>
+              <% end %>
+            </nav>
+          </aside>
+        <% end %>
+        <div class="flex-1 min-w-0">
+          <div class="max-w-4xl mx-auto px-4 mt-2">
+            <% if flash[:notice] %>
+              <p class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg" role="alert"><%= flash[:notice] %></p>
+            <% end %>
+            <% if flash[:alert] %>
+              <p class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg" role="alert"><%= flash[:alert] %></p>
+            <% end %>
+          </div>
+          <main class="max-w-4xl mx-auto px-4 py-6">
+            <%= yield %>
+          </main>
+        </div>
       </div>
     </div>
   </body>

@@ -62,7 +62,7 @@ class PicksController < ApplicationController
   private
 
   def set_pool
-    @pool = current_user.pools.find_by!(token: params[:pool_id])
+    @pool = current_user.pools.find_by!(token: params[:pool_token])
   end
 
   def set_tournament
