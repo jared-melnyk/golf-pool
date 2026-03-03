@@ -86,13 +86,31 @@ class PicksController < ApplicationController
   def ensure_tournament_unlocked!
     return if @tournament.blank?
 
-    refresh_tournament_from_api(@tournament)
-    sync_tournament_field(@tournament)
-    @tournament.reload
+    # Avoid expensive sync work on every request. Only refresh basic data
+    # when we don't yet know the start time, and only sync the field
+    # when no golfers have been loaded or the last sync is older than 4 hours.
+    refresh_tournament_from_api(@tournament) if @tournament.starts_at.blank?
+
+    if should_sync_tournament_field?(@tournament)
+      sync_tournament_field(@tournament)
+      @tournament.reload
+      Rails.cache.write(tournament_field_sync_cache_key(@tournament), Time.current, expires_in: 4.hours)
+    end
 
     if @tournament.starts_at.present? && @tournament.starts_at <= Time.current
       redirect_to pool_picks_path(@pool), alert: "Picks are locked because #{@tournament.name} has already started."
     end
+  end
+
+  def should_sync_tournament_field?(tournament)
+    return true if tournament.field_golfers.none?
+
+    last_synced_at = Rails.cache.read(tournament_field_sync_cache_key(tournament))
+    last_synced_at.blank? || last_synced_at < 4.hours.ago
+  end
+
+  def tournament_field_sync_cache_key(tournament)
+    "tournament:#{tournament.id}:field_synced_at"
   end
 
   def refresh_tournament_from_api(tournament)
