@@ -126,5 +126,39 @@ RSpec.describe Pool, type: :model do
       )
       expect(pool.total_points_for(user)).to eq(0)
     end
+
+    it "caps longshot bonus at 10% of tournament prize pool when raw bonus would exceed cap" do
+      capped_tournament = Tournament.create!(name: "Capped", starts_at: 1.day.from_now, ends_at: 4.days.from_now, total_prize_pool: 1_000_000)
+      capped_pt = PoolTournament.create!(pool: pool, tournament: capped_tournament)
+      pick = Pick.create!(user: user, pool_tournament: capped_pt)
+      PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
+      TournamentResult.create!(tournament: capped_tournament, golfer: golfer, position: 1, prize_money: 50_000)
+      PoolTournamentOdds.create!(
+        pool_tournament: capped_pt,
+        golfer: golfer,
+        american_odds: 10_000,
+        vendor: "fanduel",
+        locked_at: Time.current
+      )
+      # Raw bonus would be 10_000 * 20 = 200_000; cap is 100_000 (10% of 1M)
+      expect(pool.total_points_for(user)).to eq(50_000 + 100_000)
+    end
+
+    it "uses full odds bonus when raw bonus is below cap" do
+      capped_tournament = Tournament.create!(name: "Capped", starts_at: 1.day.from_now, ends_at: 4.days.from_now, total_prize_pool: 1_000_000)
+      capped_pt = PoolTournament.create!(pool: pool, tournament: capped_tournament)
+      pick = Pick.create!(user: user, pool_tournament: capped_pt)
+      PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
+      TournamentResult.create!(tournament: capped_tournament, golfer: golfer, position: 1, prize_money: 50_000)
+      PoolTournamentOdds.create!(
+        pool_tournament: capped_pt,
+        golfer: golfer,
+        american_odds: 500,
+        vendor: "fanduel",
+        locked_at: Time.current
+      )
+      # Raw bonus 500 * 20 = 10_000, below 100_000 cap
+      expect(pool.total_points_for(user)).to eq(50_000 + 10_000)
+    end
   end
 end
