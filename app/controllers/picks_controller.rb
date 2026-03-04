@@ -7,6 +7,7 @@ class PicksController < ApplicationController
   def index
     @standings = @pool.standings
     @tournaments = @pool.tournaments.order(:starts_at)
+    @pool_tournaments_by_tournament = @pool.pool_tournaments.includes(:pool_tournament_odds).index_by(&:tournament_id)
     @picks_by_tournament = Pick
       .joins(:pool_tournament)
       .where(user: current_user, pool_tournaments: { pool_id: @pool.id, tournament_id: @tournaments.ids })
@@ -18,6 +19,7 @@ class PicksController < ApplicationController
     @pick = Pick.find_or_initialize_by(user: current_user, pool_tournament: @pool_tournament)
     4.times { |i| @pick.pick_golfers.build(slot: i + 1) if @pick.pick_golfers.none? { |pg| pg.slot == i + 1 } }
     @golfers = @tournament.field_golfers.order(:name)
+    @golfer_odds = current_odds_for_pick_form
   end
 
   def create
@@ -33,6 +35,7 @@ class PicksController < ApplicationController
       redirect_to pool_picks_path(@pool), notice: "Picks saved."
     else
       @golfers = @tournament.field_golfers.order(:name)
+      @golfer_odds = current_odds_for_pick_form
       render :new, status: :unprocessable_entity
     end
   end
@@ -42,6 +45,7 @@ class PicksController < ApplicationController
     field = @tournament.field_golfers
     picked = @pick.golfers.to_a
     @golfers = (field + picked).uniq.sort_by(&:name)
+    @golfer_odds = current_odds_for_pick_form
   end
 
   def update
@@ -59,6 +63,7 @@ class PicksController < ApplicationController
       field = @tournament.field_golfers.to_a
       picked = @pick.golfers.to_a
       @golfers = (field + picked).uniq.sort_by(&:name)
+      @golfer_odds = current_odds_for_pick_form
       render :edit, status: :unprocessable_entity
     end
   end
@@ -146,5 +151,25 @@ class PicksController < ApplicationController
     end
     msg += " You can try again later or use the Sync field button on the tournament page."
     msg
+  end
+
+  # Returns Hash[golfer_id => american_odds] for the current tournament, from the futures API.
+  # Used to show odds in the pick form dropdown. Returns {} if API is unavailable.
+  def current_odds_for_pick_form
+    return {} if @tournament.blank? || @tournament.external_id.blank?
+
+    client = BallDontLie::Client.new
+    response = client.futures(tournament_ids: [ @tournament.external_id.to_i ], per_page: 200)
+    data = response["data"] || []
+    data.each_with_object({}) do |future, hash|
+      player = future["player"]
+      next if player.blank?
+
+      golfer = Golfer.find_by(external_id: player["id"].to_s)
+      hash[golfer.id] = future["american_odds"] if golfer
+    end
+  rescue => e
+    Rails.logger.error("Failed to fetch futures for pick form: #{e.class}: #{e.message}")
+    {}
   end
 end
