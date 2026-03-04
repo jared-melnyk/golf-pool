@@ -17,7 +17,7 @@
   <ul class="space-y-4">
     <% @tournaments.each do |tournament| %>
       <li class="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-        <%= render "picks/tournament_with_picks", tournament: tournament, pool: @pool, pick: @picks_by_tournament[tournament.id] %>
+        <%= render "picks/tournament_with_picks", tournament: tournament, pool: @pool, pick: @picks_by_tournament[tournament.id], pool_tournament: @pool_tournaments_by_tournament[tournament.id] %>
       </li>
     <% end %>
   </ul>

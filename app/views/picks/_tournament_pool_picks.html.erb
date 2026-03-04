@@ -36,8 +36,9 @@
                 <% if pool_tournament.can_view_all_picks?(current_user) || pool_tournament.can_view_member_picks?(current_user, member) %>
                   <ul class="list-disc list-inside space-y-0.5 text-gray-800">
                     <% pick.pick_golfers.order(:slot).each do |pg| %>
+                      <% odds = pool_tournament.pool_tournament_odds.find { |o| o.golfer_id == pg.golfer_id }&.american_odds %>
                       <li>
-                        <span><%= pg.golfer&.name %></span>
+                        <span><%= golfer_name_with_odds(pg.golfer&.name, odds) %></span>
                       </li>
                     <% end %>
                   </ul>

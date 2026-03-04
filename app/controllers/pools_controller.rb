@@ -6,6 +6,8 @@ class PoolsController < ApplicationController
   def show
     @pool = Pool.find_by!(token: params[:token])
     if @pool.users.include?(current_user)
+      @pool_tournaments = @pool.pool_tournaments.includes(:pool_tournament_odds)
+
       @my_picks_by_tournament = Pick
         .joins(:pool_tournament)
         .where(user: current_user, pool_tournaments: { pool_id: @pool.id, tournament_id: @pool.tournaments.ids })

@@ -1,6 +1,7 @@
 class PoolTournament < ApplicationRecord
   belongs_to :pool
   belongs_to :tournament
+  has_many :pool_tournament_odds, class_name: "PoolTournamentOdds", dependent: :destroy
 
   validate :tournament_not_completed
 
