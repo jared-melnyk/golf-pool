@@ -18,8 +18,9 @@ class PicksController < ApplicationController
   def new
     @pick = Pick.find_or_initialize_by(user: current_user, pool_tournament: @pool_tournament)
     4.times { |i| @pick.pick_golfers.build(slot: i + 1) if @pick.pick_golfers.none? { |pg| pg.slot == i + 1 } }
-    @golfers = @tournament.field_golfers.order(:name)
+    @golfers = @tournament.field_golfers.to_a
     @golfer_odds = current_odds_for_pick_form
+    @golfers = @golfers.sort_by { |g| [ @golfer_odds[g.id].nil? ? 1 : 0, @golfer_odds[g.id] || Float::INFINITY, g.name.to_s ] }
   end
 
   def create
@@ -34,18 +35,20 @@ class PicksController < ApplicationController
     if @pick.save
       redirect_to pool_picks_path(@pool), notice: "Picks saved."
     else
-      @golfers = @tournament.field_golfers.order(:name)
+      @golfers = @tournament.field_golfers.to_a
       @golfer_odds = current_odds_for_pick_form
+      @golfers = @golfers.sort_by { |g| [ @golfer_odds[g.id].nil? ? 1 : 0, @golfer_odds[g.id] || Float::INFINITY, g.name.to_s ] }
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
     # @pick and @tournament are set in before_actions. Include field + already-picked so existing picks stay visible.
-    field = @tournament.field_golfers
+    field = @tournament.field_golfers.to_a
     picked = @pick.golfers.to_a
-    @golfers = (field + picked).uniq.sort_by(&:name)
+    @golfers = (field + picked).uniq
     @golfer_odds = current_odds_for_pick_form
+    @golfers = @golfers.sort_by { |g| [ @golfer_odds[g.id].nil? ? 1 : 0, @golfer_odds[g.id] || Float::INFINITY, g.name.to_s ] }
   end
 
   def update
@@ -62,8 +65,9 @@ class PicksController < ApplicationController
       @tournament = @pick.tournament
       field = @tournament.field_golfers.to_a
       picked = @pick.golfers.to_a
-      @golfers = (field + picked).uniq.sort_by(&:name)
+      @golfers = (field + picked).uniq
       @golfer_odds = current_odds_for_pick_form
+      @golfers = @golfers.sort_by { |g| [ @golfer_odds[g.id].nil? ? 1 : 0, @golfer_odds[g.id] || Float::INFINITY, g.name.to_s ] }
       render :edit, status: :unprocessable_entity
     end
   end

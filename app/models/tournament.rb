@@ -36,6 +36,12 @@ class Tournament < ApplicationRecord
     started?
   end
 
+  # Maximum longshot bonus per pick: 10% of tournament total prize pool (advertised purse).
+  # Prize pool is expected to be set from API or manually and is static; when nil, max bonus is 0.
+  def max_longshot_bonus
+    (total_prize_pool.to_d || 0) * 0.10
+  end
+
   # True if we have already synced results after the tournament ended (no need to sync again).
   def results_synced_since_completion?
     return false unless completed?

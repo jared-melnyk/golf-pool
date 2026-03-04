@@ -44,7 +44,7 @@ class Pool < ApplicationRecord
         result = TournamentResult.find_by(tournament: tournament, golfer: golfer)
         base = result ? (result.prize_money.to_d || 0) : 0.to_d
         odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
-        bonus = (odds_row && result&.made_cut?) ? odds_bonus(odds_row.american_odds) : 0.to_d
+        bonus = (odds_row && result&.made_cut?) ? capped_odds_bonus(tournament, odds_row.american_odds) : 0.to_d
         base + bonus
       end
     end
@@ -58,5 +58,12 @@ class Pool < ApplicationRecord
 
   def odds_bonus(american_odds)
     american_odds.to_d.abs * 20
+  end
+
+  def capped_odds_bonus(tournament, american_odds)
+    return 0.to_d if american_odds.nil?
+    raw = odds_bonus(american_odds)
+    max_bonus = tournament.max_longshot_bonus
+    max_bonus.positive? ? [ raw, max_bonus ].min : raw
   end
 end

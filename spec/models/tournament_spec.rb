@@ -112,6 +112,18 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#max_longshot_bonus" do
+    it "returns 10% of total_prize_pool when set" do
+      tournament = Tournament.create!(name: "Rich", total_prize_pool: 10_000_000)
+      expect(tournament.max_longshot_bonus).to eq(1_000_000)
+    end
+
+    it "returns 0 when total_prize_pool is nil" do
+      tournament = Tournament.create!(name: "No purse", total_prize_pool: nil)
+      expect(tournament.max_longshot_bonus).to eq(0)
+    end
+  end
+
   describe "#picks_locked?" do
     it "is false before tournament starts" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")
