@@ -13,13 +13,16 @@
   </p>
 <% end %>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
-  <h2 class="text-lg font-semibold text-gray-900 mb-2">Standings</h2>
-  <ol class="list-decimal list-inside space-y-2">
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-900 mb-3">Standings</h2>
+  <ol class="list-decimal list-inside space-y-3">
     <% @pool.standings.each_with_index do |(user, total), idx| %>
       <% pu = @pool.pool_users.find_by(user: user) %>
       <li class="flex items-center justify-between gap-2 flex-wrap">
-        <span><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></span>
+        <span class="flex items-center gap-2">
+          <% if idx == 0 %><span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5">1st</span><% end %>
+          <%= user.name %> — $<%= number_with_delimiter(total.to_i) %>
+        </span>
         <span class="flex items-center gap-2">
           <% if pu && user == current_user %>
             <%= button_to "Leave pool", pool_pool_user_path(@pool, pu), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Removal cannot be undone. Are you sure?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
@@ -35,8 +38,8 @@
   <% end %>
 </section>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
-  <h2 class="text-lg font-semibold text-gray-900 mb-2">Tournaments in this pool</h2>
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-900 mb-3">Tournaments in this pool</h2>
   <ul class="space-y-4">
     <% @pool.tournaments.order(:starts_at).each do |t| %>
       <li class="space-y-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
@@ -67,8 +70,8 @@
   <% if @pool.creator?(current_user) %>
     <%= form_with url: pool_pool_tournaments_path(@pool), method: :post, class: "flex gap-2 items-center mt-3 flex-wrap" do |f| %>
       <% eligible_tournaments = Tournament.addable_to_pool.order(:starts_at) - @pool.tournaments %>
-      <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id", class: "rounded border border-gray-300 px-2 py-1" } %>
-      <%= f.submit "Add tournament", class: "rounded px-3 py-1.5 text-sm bg-emerald-600 text-white hover:bg-emerald-700" %>
+      <%= f.select :tournament_id, options_from_collection_for_select(eligible_tournaments, :id, :name), { include_blank: "Select tournament…" }, { name: "tournament_id", class: "rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" } %>
+      <%= f.submit "Add tournament", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
     <% end %>
   <% end %>
 </section>

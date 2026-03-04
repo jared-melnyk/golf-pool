@@ -8,7 +8,7 @@
   </p>
 <% end %>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
   <h2 class="text-lg font-semibold text-gray-900 mb-2">Results</h2>
   <ul class="space-y-2">
     <% results_list = @results || @tournament.tournament_results.includes(:golfer).order(position: :asc) %>

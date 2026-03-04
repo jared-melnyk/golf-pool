@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * UI design tokens (Notion/Headspace-style)
+ * — Page title: text-2xl or text-3xl font-bold
+ * — Section title: text-lg or text-xl font-semibold
+ * — Body: default; muted: text-gray-500 or text-gray-600
+ * — Cards: rounded-lg border border-gray-200 shadow-sm bg-white
+ * — Primary button: bg-emerald-600 hover:bg-emerald-700
+ * — Secondary: outline or gray; danger: red (e.g. text-red-600 border-red-300)
+ */
+
 /* Scan views and helpers so Tailwind includes used utilities */
 @source "../../views/**/*.erb";
 @source "../../views/**/*.html";

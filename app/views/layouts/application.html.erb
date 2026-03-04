@@ -26,7 +26,7 @@
 
   <body class="bg-gray-50 font-sans">
     <div data-controller="sidebar">
-      <header class="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-white">
+      <header class="flex justify-between items-center px-4 py-4 border-b border-gray-200 bg-white">
         <div class="flex items-center gap-2">
           <% if current_user %>
             <button type="button" class="md:hidden p-2 -ml-2 rounded-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500" aria-label="Open menu" aria-expanded="false" data-sidebar-target="toggle" data-action="click->sidebar#toggle">
@@ -42,7 +42,7 @@
             <%= button_to "Sign out", logout_path, method: :delete, form: { class: "inline-block" }, class: "rounded px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300" %>
           <% else %>
             <%= link_to "Sign in", login_path, class: "text-emerald-600 hover:underline font-medium" %>
-            <%= link_to "Sign up", signup_path, class: "rounded px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700" %>
+            <%= link_to "Sign up", signup_path, class: "rounded px-3 py-1.5 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 no-underline" %>
           <% end %>
         </nav>
       </header>
@@ -51,14 +51,14 @@
           <div data-sidebar-target="backdrop" class="hidden fixed inset-0 bg-black/50 z-40 md:hidden" data-action="click->sidebar#close" aria-hidden="true"></div>
           <aside data-sidebar-target="panel" class="fixed left-0 top-0 z-50 h-full w-48 -translate-x-full transition-transform duration-200 ease-out bg-white border-r border-gray-200 p-4 pt-20 md:relative md:translate-x-0 md:h-full md:min-h-screen md:w-48 md:pt-4 md:flex-shrink-0">
             <nav class="space-y-1">
-              <%= link_to "Rules", rules_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
-              <%= link_to "My Pools", pools_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
-              <%= link_to "Tournaments", tournaments_path, class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+              <%= link_to "Rules", rules_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(rules_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+              <%= link_to "My Pools", pools_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pools_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Tournaments", tournaments_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(tournaments_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
               <% if @pool && @pool.users.include?(current_user) %>
                 <div class="pt-2 mt-2 border-t border-gray-200">
                   <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This pool</div>
-                  <%= link_to @pool.name, pool_path(@pool), class: "block rounded px-3 py-2 text-sm text-emerald-600 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
-                  <%= link_to "My picks", pool_picks_path(@pool), class: "block rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 no-underline", data: { action: "click->sidebar#close" } %>
+                  <%= link_to @pool.name, pool_path(@pool), class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pool_path(@pool)) ? "bg-gray-100 font-medium text-gray-900" : "text-emerald-600 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+                  <%= link_to "My picks", pool_picks_path(@pool), class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pool_picks_path(@pool)) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
                 </div>
               <% end %>
             </nav>

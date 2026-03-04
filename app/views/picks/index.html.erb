@@ -1,15 +1,18 @@
 <h1 class="text-2xl font-bold text-gray-900 mb-4">My picks — <%= @pool.name %></h1>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
   <h2 class="text-lg font-semibold text-gray-900 mb-2">Standings</h2>
   <ol class="list-decimal list-inside space-y-2">
     <% @standings.each_with_index do |(user, total), idx| %>
-      <li><%= user.name %> — $<%= number_with_delimiter(total.to_i) %></li>
+      <li class="flex items-center gap-2">
+        <% if idx == 0 %><span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5">1st</span><% end %>
+        <%= user.name %> — $<%= number_with_delimiter(total.to_i) %>
+      </li>
     <% end %>
   </ol>
 </section>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white">
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
   <h2 class="text-lg font-semibold text-gray-900 mb-2">Tournaments</h2>
   <ul class="space-y-4">
     <% @tournaments.each do |tournament| %>
