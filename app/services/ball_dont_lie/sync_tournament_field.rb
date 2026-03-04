@@ -30,10 +30,13 @@ module BallDontLie
         end
         field_golfer_ids << golfer.id
       end
-      # Replace tournament field so the picks dropdown only shows these golfers
-      @tournament.tournament_fields.destroy_all
-      field_golfer_ids.uniq.each do |golfer_id|
-        @tournament.tournament_fields.create!(golfer_id: golfer_id)
+      # Replace tournament field atomically so no request can see a partial list
+      # (e.g. after destroy_all but only 6–7 create!s committed).
+      Tournament.transaction do
+        @tournament.tournament_fields.destroy_all
+        field_golfer_ids.uniq.each do |golfer_id|
+          @tournament.tournament_fields.create!(golfer_id: golfer_id)
+        end
       end
       { created: created, updated: updated, total: api_entries.size }
     end
