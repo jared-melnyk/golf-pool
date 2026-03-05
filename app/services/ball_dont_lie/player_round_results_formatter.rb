@@ -20,8 +20,8 @@ module BallDontLie
       scorecard_rows.each do |row|
         player = row["player"]
         next if player.blank?
-        player_id = player["id"]
-        next if player_id.blank?
+        player_id = player["id"].to_i
+        next if player_id.zero?
         round_number = (row["round_number"] || row["round"]).to_i
         next if round_number <= 0
         score = row["score"].to_i
@@ -50,8 +50,8 @@ module BallDontLie
         player = entry["player"]
         next if player.blank?
 
-        player_id = player["id"]
-        next if player_id.blank?
+        player_id = player["id"].to_i
+        next if player_id.zero?
 
         round_number = entry["round_number"] || entry["round"]
         round_number = round_number.to_i if round_number.respond_to?(:to_i)
