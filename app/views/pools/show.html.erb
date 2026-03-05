@@ -54,13 +54,13 @@
             <% end %>
             <% if pt && t.started? %>
               <% if t.results_synced_at.present? %>
-                <%= link_to "Results",
+                <%= link_to "View results",
                             pool_pool_tournament_path(@pool, pt),
-                            class: "inline-flex items-center rounded px-3 py-1 text-xs font-medium bg-gray-50 text-gray-700 hover:bg-gray-100" %>
+                            class: "inline-flex items-center rounded-md px-4 py-2.5 text-sm font-semibold bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600" %>
               <% else %>
                 <%= link_to "Live scores",
                             pool_pool_tournament_path(@pool, pt),
-                            class: "inline-flex items-center rounded px-3 py-1 text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100" %>
+                            class: "inline-flex items-center rounded-md px-4 py-2.5 text-sm font-semibold bg-blue-600 text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" %>
               <% end %>
             <% end %>
           </div>
