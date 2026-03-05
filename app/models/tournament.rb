@@ -1,4 +1,6 @@
 class Tournament < ApplicationRecord
+  belongs_to :champion_golfer, class_name: "Golfer", optional: true
+
   has_many :pool_tournaments, dependent: :destroy
   has_many :pools, through: :pool_tournaments
   has_many :picks, dependent: :destroy
@@ -12,9 +14,9 @@ class Tournament < ApplicationRecord
   # instead of the API start time so we don't have to guess if the API time is accurate.
   CENTRAL = "Central Time (US & Canada)"
 
-  # Tournaments that can be added to a pool: we have not yet synced results (tournament still "open").
-  # We do not use ends_at; API end_date is unreliable (e.g. sometimes equals start_date).
-  scope :addable_to_pool, -> { where(results_synced_at: nil) }
+  # Tournaments that can be added to a pool: no champion yet (tournament not completed).
+  # Completion is driven by champion_golfer_id (set when we sync results and get a winner).
+  scope :addable_to_pool, -> { where(champion_golfer_id: nil) }
 
   # Time we use for "tournament started" and locking picks: midnight Central on the start date.
   def picks_lock_at
@@ -28,9 +30,9 @@ class Tournament < ApplicationRecord
     picks_lock_at.present? && picks_lock_at <= Time.current
   end
 
-  # Tournament is considered completed once we have synced results. We do not use ends_at (API is unreliable).
+  # Tournament is completed when we have a champion (winner from synced results, position 1).
   def completed?
-    results_synced_at.present?
+    champion_golfer_id.present?
   end
 
   def picks_open_at

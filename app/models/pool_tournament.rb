@@ -24,10 +24,10 @@ class PoolTournament < ApplicationRecord
 
   private
 
-  # Block adding a tournament once results have been synced. We do not use ends_at (API is unreliable).
+  # Block adding a tournament that has a champion (already completed).
   def tournament_not_completed
     return if tournament.blank?
-    return if tournament.results_synced_at.blank?
+    return if tournament.champion_golfer_id.blank?
 
     errors.add(:tournament, "has already completed")
   end
