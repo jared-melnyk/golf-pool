@@ -29,6 +29,13 @@ module BallDontLie
       get "tournament_results", **params
     end
 
+    def player_round_results(tournament_ids: nil, player_ids: nil, cursor: nil, per_page: 100)
+      params = { cursor: cursor, per_page: per_page }
+      params["tournament_ids[]"] = Array(tournament_ids) if tournament_ids.present?
+      params["player_ids[]"] = Array(player_ids) if player_ids.present?
+      get "player_round_results", **params
+    end
+
     def tournament_field(tournament_id:, cursor: nil, per_page: 100)
       get "tournament_field", tournament_id: tournament_id, cursor: cursor, per_page: per_page
     end
@@ -50,6 +57,12 @@ module BallDontLie
     def fetch_all_tournament_results(tournament_ids:)
       fetch_all("tournament_results", tournament_ids: tournament_ids) do |c|
         tournament_results(tournament_ids: tournament_ids, cursor: c, per_page: 100)
+      end
+    end
+
+    def fetch_all_player_round_results(tournament_ids:, player_ids:)
+      fetch_all("player_round_results", tournament_ids: tournament_ids, player_ids: player_ids) do |c|
+        player_round_results(tournament_ids: tournament_ids, player_ids: player_ids, cursor: c, per_page: 100)
       end
     end
 

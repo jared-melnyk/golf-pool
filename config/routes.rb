@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
   resources :pools, param: :token do
     post "join", on: :member
-    resources :pool_tournaments, only: [ :create, :destroy ]
+    resources :pool_tournaments, only: [ :create, :destroy, :show ]
     resources :pool_users, only: [ :create, :destroy ], path: "members"
     resources :picks, only: [ :index, :new, :create, :edit, :update ]
   end

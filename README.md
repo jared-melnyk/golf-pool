@@ -17,6 +17,14 @@ On the pool page you get your own picks plus a table of every member: full lineu
 - **Standings** show every member and their total—that’s the leaderboard you’re trying to top.
 - From Standings: leave the pool yourself, or (if you’re the creator) remove someone. Keep it competitive, keep it fair.
 
+### Live scores
+
+- LongShot can show **per-golfer, per-round live scores** for each pool tournament using the `balldontlie` PGA API.
+- Configure your API key in `BALLDONTLIE_API_KEY` (GOAT tier recommended for full access and fewer 401/429s).
+- On a pool page, once a tournament has **started**, you’ll see a **“Live scores”** button next to that event; once it’s **completed**, the button reads **“Results”**.
+- Clicking the button opens a dedicated scores view for that pool + tournament: each member’s golfers, round-by-round scores to par, and a simple tournament total/position label.
+- **Standings do not use live scores**—they’re still based only on completed-tournament results and odds, so the main leaderboard remains stable until events finish.
+
 ### Development
 
 - **Ruby / Rails**: see `Gemfile` for the exact Rails and Ruby versions.

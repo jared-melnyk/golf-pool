@@ -1,0 +1,89 @@
+<h1 class="text-2xl font-bold text-gray-900 mb-2"><%= @tournament.name %> — <%= @pool.name %></h1>
+<p class="text-gray-600 mb-4">
+  <%= @tournament.starts_at&.strftime("%B %d") %> – <%= @tournament.ends_at&.strftime("%B %d, %Y") %>
+  <% if @tournament.completed? %>
+    · <span class="font-medium text-emerald-700">Completed</span>
+  <% elsif @tournament.started? %>
+    · <span class="font-medium text-blue-700">In progress</span>
+  <% else %>
+    · <span class="font-medium text-gray-700">Not started</span>
+  <% end %>
+</p>
+
+<%= link_to "Back to pool", @pool, class: "text-sm text-emerald-700 hover:text-emerald-800 underline mb-6 inline-block" %>
+
+<% if @round_results.blank? && @tournament.started? %>
+  <p class="mb-4 text-sm text-yellow-800 bg-yellow-50 border border-yellow-200 rounded px-3 py-2">
+    Live scores are temporarily unavailable. Try refreshing in a moment.
+  </p>
+<% end %>
+
+<% rounds = (1..4).to_a %>
+
+<div class="mt-4 space-y-6">
+  <% @picks_by_user.each do |user, picks| %>
+    <% pick = picks.first %>
+    <div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+      <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-gray-900"><%= user.name %></h2>
+      </div>
+      <div class="p-4 overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600">Golfer</th>
+              <% rounds.each do |r| %>
+                <% is_live = (@current_round == r) %>
+                <th class="px-3 py-2 text-center text-xs font-semibold <%= is_live ? "text-blue-900" : "text-gray-600" %>">
+                  R<%= r %><%= is_live ? " (Live)" : "" %>
+                </th>
+              <% end %>
+              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Total</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% pick.golfers.each do |golfer| %>
+              <% player_result = @round_results[golfer.external_id&.to_i] || {} %>
+              <% rounds_hash = player_result[:rounds] || {} %>
+              <% total_to_par = player_result[:total_to_par] %>
+              <tr>
+                <td class="px-3 py-3 align-top">
+                  <div class="flex flex-col gap-1">
+                    <span class="font-medium text-gray-900"><%= golfer.name %></span>
+                    <span class="text-xs text-gray-500">
+                      (<%= PoolTournamentOdds.find_by(pool_tournament: @pool_tournament, golfer: golfer)&.american_odds || "—" %>)
+                    </span>
+                  </div>
+                </td>
+                <% rounds.each do |r| %>
+                  <% round_data = rounds_hash[r] %>
+                  <% is_live = (@current_round == r) %>
+                  <td class="px-3 py-3 text-center align-middle <%= is_live ? "bg-blue-50 text-blue-900 font-semibold" : "text-gray-700" %>">
+                    <%= round_data ? round_data[:par_relative] : "—" %>
+                  </td>
+                <% end %>
+                <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
+                  <% label =
+                    if total_to_par.nil?
+                      "—"
+                    elsif total_to_par.to_i.zero?
+                      "E"
+                    elsif total_to_par.to_i.positive?
+                      "+#{total_to_par.to_i}"
+                    else
+                      total_to_par.to_i.to_s
+                    end %>
+                  <span class="font-semibold text-gray-900"><%= label %></span>
+                  <% if player_result[:position].present? %>
+                    <span class="ml-1 text-xs text-gray-500">(<%= player_result[:position] %>)</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</div>
+

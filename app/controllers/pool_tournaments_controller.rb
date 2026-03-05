@@ -1,4 +1,6 @@
 class PoolTournamentsController < ApplicationController
+  before_action :require_login
+
   def create
     @pool = current_user.pools.find_by!(token: params[:pool_token])
     unless @pool.creator?(current_user)
@@ -27,5 +29,35 @@ class PoolTournamentsController < ApplicationController
     end
     pt.destroy!
     redirect_to @pool, notice: "Tournament removed from pool."
+  end
+
+  def show
+    @pool_tournament = PoolTournament.find(params[:id])
+    @pool = @pool_tournament.pool
+    @tournament = @pool_tournament.tournament
+
+    unless @pool.users.include?(current_user)
+      redirect_to @pool, alert: "You must be a member of this pool to view scores."
+      return
+    end
+
+    @picks_by_user = Pick
+      .includes(:golfers)
+      .where(pool_tournament: @pool_tournament)
+      .group_by(&:user)
+
+    pga_tournament_id = @tournament.external_id&.to_i
+    player_ids = @picks_by_user.values.flatten.flat_map { |pick| pick.golfers.map { |g| g.external_id&.to_i } }.compact.uniq
+
+    @round_results = {}
+    @current_round = nil
+
+    if pga_tournament_id.present? && player_ids.any?
+      client = BallDontLie::Client.new
+      raw_data = client.fetch_all_player_round_results(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
+      formatter = BallDontLie::PlayerRoundResultsFormatter.new(raw_data)
+      @round_results = formatter.by_player_id
+      @current_round = formatter.current_round_number
+    end
   end
 end
