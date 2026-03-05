@@ -32,6 +32,13 @@ module BallDontLie
         end
       end
       @tournament.update_column(:results_synced_at, Time.current)
+
+      # Set champion from winner (position 1); completion is driven by champion, not results_synced_at.
+      winner_result = @tournament.tournament_results.find_by(position: 1)
+      if winner_result
+        @tournament.update_column(:champion_golfer_id, winner_result.golfer_id)
+      end
+
       { created: created, updated: updated, total: api_results.size }
     end
   end

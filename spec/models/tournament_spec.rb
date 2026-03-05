@@ -6,13 +6,14 @@ RSpec.describe Tournament, type: :model do
   include ActiveSupport::Testing::TimeHelpers
 
   describe "#completed?" do
-    it "returns true when results_synced_at is set" do
-      tournament = Tournament.create!(name: "Done", starts_at: 5.days.ago, results_synced_at: 1.day.ago)
+    it "returns true when champion_golfer_id is set" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Done", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
       expect(tournament.completed?).to be true
     end
 
-    it "returns false when results_synced_at is nil" do
-      tournament = Tournament.create!(name: "Open", starts_at: 1.day.from_now, results_synced_at: nil)
+    it "returns false when champion_golfer_id is nil" do
+      tournament = Tournament.create!(name: "Open", starts_at: 1.day.from_now, champion_golfer_id: nil)
       expect(tournament.completed?).to be false
     end
   end
@@ -30,13 +31,14 @@ RSpec.describe Tournament, type: :model do
   end
 
   describe ".addable_to_pool" do
-    it "includes tournaments with no results synced yet" do
-      t = Tournament.create!(name: "Open", starts_at: 1.day.from_now, results_synced_at: nil)
+    it "includes tournaments with no champion yet" do
+      t = Tournament.create!(name: "Open", starts_at: 1.day.from_now, champion_golfer_id: nil)
       expect(described_class.addable_to_pool).to include(t)
     end
 
-    it "excludes tournaments that have had results synced" do
-      t = Tournament.create!(name: "Closed", starts_at: 5.days.ago, results_synced_at: 1.day.ago)
+    it "excludes tournaments that have a champion" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      t = Tournament.create!(name: "Closed", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
       expect(described_class.addable_to_pool).not_to include(t)
     end
   end

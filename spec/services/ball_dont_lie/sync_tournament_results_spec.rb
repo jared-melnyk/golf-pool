@@ -57,6 +57,13 @@ RSpec.describe BallDontLie::SyncTournamentResults do
         described_class.new(tournament: tournament, client: client).call
         expect(tournament.reload.results_synced_at).to be_within(5.seconds).of(Time.current)
       end
+
+      it "sets champion_golfer_id to the winner (position 1)" do
+        described_class.new(tournament: tournament, client: client).call
+        scottie = Golfer.find_by(external_id: "185")
+        expect(tournament.reload.champion_golfer_id).to eq(scottie.id)
+        expect(tournament.champion_golfer).to eq(scottie)
+      end
     end
 
     context "when result already exists (update)" do

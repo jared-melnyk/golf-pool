@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_04_205453) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_05_204350) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -251,6 +251,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_205453) do
   end
 
   create_table "tournaments", force: :cascade do |t|
+    t.bigint "champion_golfer_id"
     t.datetime "created_at", null: false
     t.datetime "ends_at"
     t.string "external_id"
@@ -259,6 +260,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_205453) do
     t.datetime "starts_at"
     t.decimal "total_prize_pool", precision: 12, scale: 2
     t.datetime "updated_at", null: false
+    t.index ["champion_golfer_id"], name: "index_tournaments_on_champion_golfer_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -266,6 +268,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_205453) do
     t.string "email"
     t.string "name"
     t.string "password_digest"
+    t.datetime "password_reset_sent_at"
+    t.string "password_reset_token_digest"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
@@ -291,4 +295,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_04_205453) do
   add_foreign_key "tournament_fields", "tournaments"
   add_foreign_key "tournament_results", "golfers"
   add_foreign_key "tournament_results", "tournaments"
+  add_foreign_key "tournaments", "golfers", column: "champion_golfer_id"
 end
