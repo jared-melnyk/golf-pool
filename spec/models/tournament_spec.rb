@@ -125,22 +125,45 @@ RSpec.describe Tournament, type: :model do
   end
 
   describe "#picks_locked?" do
-    it "is false before tournament starts" do
+    it "is false before midnight Central on the start date" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")
       tournament = Tournament.create!(name: "Event", starts_at: starts_at)
+      # Lock is midnight Central on March 10; in March 2026 Central is CDT = 05:00 UTC
+      before_lock = Time.utc(2026, 3, 10, 4, 59, 0)
 
-      travel_to(starts_at - 1.hour) do
+      travel_to(before_lock) do
         expect(tournament.picks_locked?).to be false
       end
     end
 
-    it "is true once tournament has started" do
+    it "is true once midnight Central on the start date has passed" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")
       tournament = Tournament.create!(name: "Event", starts_at: starts_at)
+      after_lock = Time.utc(2026, 3, 10, 5, 1, 0)
 
-      travel_to(starts_at + 1.minute) do
+      travel_to(after_lock) do
         expect(tournament.picks_locked?).to be true
       end
+    end
+  end
+
+  describe "#picks_lock_at" do
+    it "returns midnight Central on the start date (we always use this, not the API time)" do
+      starts_at = Time.utc(2026, 3, 5, 0, 0, 0)
+      tournament = Tournament.create!(name: "Event", starts_at: starts_at)
+
+      lock_at = tournament.picks_lock_at
+      central = lock_at.in_time_zone("Central Time (US & Canada)")
+      expect(central.strftime("%Y-%m-%d %H:%M")).to eq("2026-03-05 00:00")
+    end
+
+    it "uses the date of starts_at only (e.g. 14:30 UTC still locks at midnight Central that day)" do
+      starts_at = Time.utc(2026, 3, 10, 14, 30, 0)
+      tournament = Tournament.create!(name: "Event", starts_at: starts_at)
+
+      lock_at = tournament.picks_lock_at
+      central = lock_at.in_time_zone("Central Time (US & Canada)")
+      expect(central.strftime("%Y-%m-%d %H:%M")).to eq("2026-03-10 00:00")
     end
   end
 end

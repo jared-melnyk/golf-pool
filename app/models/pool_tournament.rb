@@ -38,9 +38,10 @@ class PoolTournament < ApplicationRecord
   end
 
   def schedule_lock_odds
-    return if tournament.starts_at.blank?
+    lock_at_time = tournament.picks_lock_at
+    return if lock_at_time.blank?
 
-    lock_at = tournament.starts_at - 15.minutes
+    lock_at = lock_at_time - 15.minutes
     return if lock_at <= Time.current
 
     LockOddsJob.set(wait_until: lock_at).perform_later(id)

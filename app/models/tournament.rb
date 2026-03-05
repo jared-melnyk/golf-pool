@@ -8,12 +8,24 @@ class Tournament < ApplicationRecord
 
   validates :name, presence: true
 
+  # Picks lock at midnight Central (CST/CDT) on the tournament start date. We always use this
+  # instead of the API start time so we don't have to guess if the API time is accurate.
+  CENTRAL = "Central Time (US & Canada)"
+
   # Tournaments that can be added to a pool: not yet completed. Started-but-not-finished is OK.
   # Completed = ends_at is at least 1 day ago so the final day of play still counts as addable.
   scope :addable_to_pool, -> { where("ends_at IS NULL OR ends_at >= ?", 1.day.ago) }
 
+  # Time we use for "tournament started" and locking picks: midnight Central on the start date.
+  def picks_lock_at
+    return nil if starts_at.blank?
+
+    date_str = starts_at.utc.strftime("%Y-%m-%d")
+    Time.find_zone(CENTRAL).parse("#{date_str} 00:00:00")
+  end
+
   def started?
-    starts_at.present? && starts_at <= Time.current
+    picks_lock_at.present? && picks_lock_at <= Time.current
   end
 
   def completed?

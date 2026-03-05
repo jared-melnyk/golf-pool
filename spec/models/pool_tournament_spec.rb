@@ -48,21 +48,21 @@ RSpec.describe PoolTournament, type: :model do
           expect(pool_tournament.picks_open_for_submission?).to be true
         end
 
-        travel_to(starts_at + 1.hour) do
+        travel_to(Time.utc(2026, 3, 10, 5, 1, 0)) do
           expect(pool_tournament.picks_open_for_submission?).to be false
         end
       end
     end
 
     describe "#can_view_all_picks?" do
-      it "is false before tournament starts" do
-        travel_to(starts_at - 1.hour) do
+      it "is false before midnight Central on the start date" do
+        travel_to(Time.utc(2026, 3, 10, 4, 59, 0)) do
           expect(pool_tournament.can_view_all_picks?(viewer)).to be false
         end
       end
 
-      it "is true once tournament has started" do
-        travel_to(starts_at + 1.minute) do
+      it "is true once midnight Central on the start date has passed" do
+        travel_to(Time.utc(2026, 3, 10, 5, 1, 0)) do
           expect(pool_tournament.can_view_all_picks?(viewer)).to be true
         end
       end
@@ -76,13 +76,13 @@ RSpec.describe PoolTournament, type: :model do
       end
 
       it "denies viewing other members' picks before picks are locked" do
-        travel_to(starts_at - 1.hour) do
+        travel_to(Time.utc(2026, 3, 10, 4, 59, 0)) do
           expect(pool_tournament.can_view_member_picks?(viewer, member)).to be false
         end
       end
 
       it "allows viewing other members' picks once picks are locked" do
-        travel_to(starts_at + 1.minute) do
+        travel_to(Time.utc(2026, 3, 10, 5, 1, 0)) do
           expect(pool_tournament.can_view_member_picks?(viewer, member)).to be true
         end
       end
