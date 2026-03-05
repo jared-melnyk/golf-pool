@@ -40,6 +40,8 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
     expect(scottie[:rounds].keys).to contain_exactly(1, 2)
     expect(scottie[:rounds][1][:par_relative]).to eq("-3")
     expect(scottie[:rounds][2][:par_relative]).to eq("E")
+    expect(scottie[:rounds][1][:last_hole_completed]).to eq(18)
+    expect(scottie[:rounds][2][:last_hole_completed]).to eq(18)
     expect(scottie[:total_to_par]).to eq(-3)
     expect(scottie[:position]).to eq("T2")
 
@@ -85,6 +87,26 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
       ]
       formatter.merge_scorecard_live!(scorecards)
       expect(formatter.by_player_id[185][:rounds][1][:par_relative]).to eq("-3")
+    end
+
+    it "sets last_hole_completed from max hole_number in scorecard rows (F when 18)" do
+      formatter = described_class.new([])
+      scorecards = [
+        { "player" => { "id" => 100 }, "round_number" => 1, "hole_number" => 1, "score" => 4, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "hole_number" => 2, "score" => 3, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "hole_number" => 8, "score" => 4, "par" => 4 }
+      ]
+      formatter.merge_scorecard_live!(scorecards)
+      expect(formatter.by_player_id[100][:rounds][1][:last_hole_completed]).to eq(8)
+    end
+
+    it "sets last_hole_completed to 18 when all 18 holes present (finished round)" do
+      formatter = described_class.new([])
+      scorecards = (1..18).map do |h|
+        { "player" => { "id" => 100 }, "round_number" => 1, "hole_number" => h, "score" => 4, "par" => 4 }
+      end
+      formatter.merge_scorecard_live!(scorecards)
+      expect(formatter.by_player_id[100][:rounds][1][:last_hole_completed]).to eq(18)
     end
   end
 end

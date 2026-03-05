@@ -59,7 +59,11 @@
                   <% round_data = rounds_hash[r] %>
                   <% is_live = (@current_round == r) %>
                   <td class="px-3 py-3 text-center align-middle <%= is_live ? "bg-blue-50 text-blue-900 font-semibold" : "text-gray-700" %>">
-                    <%= round_data ? round_data[:par_relative] : "—" %>
+                    <% if round_data %>
+                      <%= round_data[:par_relative] %><% if round_data[:last_hole_completed].present? %><span class="text-gray-500 font-normal"> (<%= round_data[:last_hole_completed] == 18 ? "F" : round_data[:last_hole_completed] %>)</span><% end %>
+                    <% else %>
+                      —
+                    <% end %>
                   </td>
                 <% end %>
                 <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
