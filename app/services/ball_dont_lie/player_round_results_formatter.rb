@@ -25,7 +25,7 @@ module BallDontLie
         next if player_id.zero?
         round_number = (row["round_number"] || row["round"]).to_i
         next if round_number <= 0
-        score = row["score"].to_i
+        score = (row["score"] || row["strokes"]).to_i
         par = row["par"].to_i
         key = [ player_id, round_number ]
         by_player_round[key] ||= 0

@@ -59,10 +59,14 @@ class PoolTournamentsController < ApplicationController
 
       # When the tournament has started but results haven't been synced yet,
       # fetch hole-by-hole scorecards (all rounds) to show intra-round (live) scores.
-      # Requesting without round_number returns all hole data including in-progress rounds.
       if @tournament.started? && @tournament.results_synced_at.blank?
         cards = client.fetch_all_player_scorecards(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
-        formatter.merge_scorecard_live!(cards) if cards.present?
+        if cards.present?
+          formatter.merge_scorecard_live!(cards)
+          Rails.logger.info "[Live scores] Merged #{cards.size} scorecard rows for tournament #{pga_tournament_id}"
+        else
+          Rails.logger.warn "[Live scores] Scorecards API returned 0 rows for tournament_id=#{pga_tournament_id} player_ids=#{player_ids.take(5)}#{player_ids.size > 5 ? '...' : ''}. Mid-round scores will not show."
+        end
       end
 
       @round_results = formatter.by_player_id
