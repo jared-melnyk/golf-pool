@@ -18,11 +18,11 @@ class PasswordResetsController < ApplicationController
   end
 
   def edit
-    return redirect_to login_path, alert: "That link is invalid or has expired." if @user.blank?
+    redirect_to login_path, alert: "That link is invalid or has expired." and return if @user.blank?
   end
 
   def update
-    return redirect_to login_path, alert: "That link is invalid or has expired." if @user.blank?
+    redirect_to login_path, alert: "That link is invalid or has expired." and return if @user.blank?
     if @user.update(update_params)
       @user.clear_password_reset!
       redirect_to login_path, notice: "Password updated. Sign in with your new password."
