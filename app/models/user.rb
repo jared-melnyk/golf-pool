@@ -7,4 +7,27 @@ class User < ApplicationRecord
 
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
+
+  def generate_password_reset_token
+    raw_token = SecureRandom.urlsafe_base64(32)
+    self.password_reset_token_digest = Digest::SHA256.hexdigest(raw_token)
+    self.password_reset_sent_at = Time.current
+    save!
+    raw_token
+  end
+
+  def password_reset_token_valid?(raw_token)
+    return false if password_reset_sent_at.blank?
+    return false if password_reset_sent_at < 1.hour.ago
+    return false if password_reset_token_digest.blank?
+
+    digest = Digest::SHA256.hexdigest(raw_token.to_s)
+    ActiveSupport::SecurityUtils.secure_compare(digest, password_reset_token_digest)
+  end
+
+  def clear_password_reset!
+    self.password_reset_token_digest = nil
+    self.password_reset_sent_at = nil
+    update_columns(password_reset_token_digest: nil, password_reset_sent_at: nil)
+  end
 end
