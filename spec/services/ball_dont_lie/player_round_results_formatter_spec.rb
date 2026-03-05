@@ -67,6 +67,17 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
       expect(formatter.by_player_id[100][:rounds][1][:par_relative]).to eq("-2")
     end
 
+    it "sets total_to_par from sum of rounds when only scorecard data exists (no API total)" do
+      formatter = described_class.new([])
+      scorecards = [
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 3, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 3, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 4, "par" => 4 }
+      ]
+      formatter.merge_scorecard_live!(scorecards)
+      expect(formatter.by_player_id[100][:total_to_par]).to eq(-2)
+    end
+
     it "does not overwrite completed round data from player_round_results" do
       formatter = described_class.new(raw_results)
       scorecards = [

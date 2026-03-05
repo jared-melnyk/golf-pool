@@ -4,6 +4,7 @@ module BallDontLie
 
     def initialize(raw_results)
       @by_player_id = build_index(Array(raw_results))
+      compute_totals!
     end
 
     def current_round_number
@@ -36,9 +37,11 @@ module BallDontLie
         next if player_hash[:rounds][round_number].present? # keep completed round from API
         player_hash[:rounds][round_number] = {
           score: nil,
-          par_relative: format_par_relative(to_par)
+          par_relative: format_par_relative(to_par),
+          score_to_par: to_par
         }
       end
+      compute_totals!
     end
 
     private
@@ -64,9 +67,11 @@ module BallDontLie
 
         player_hash = (index[player_id] ||= { rounds: {}, total_to_par: nil, position: nil })
 
+        numeric = score_to_par.to_i
         player_hash[:rounds][round_number] = {
           score: entry["score"],
-          par_relative: format_par_relative(score_to_par)
+          par_relative: format_par_relative(score_to_par),
+          score_to_par: numeric
         }
 
         player_hash[:total_to_par] = total_to_par unless total_to_par.nil?
@@ -74,6 +79,15 @@ module BallDontLie
       end
 
       index
+    end
+
+    # Set total_to_par from sum of round score_to_par when API did not provide it.
+    def compute_totals!
+      @by_player_id.each do |_player_id, player_hash|
+        next if player_hash[:total_to_par].present?
+        sum = player_hash[:rounds].values.sum { |r| (r[:score_to_par] || 0).to_i }
+        player_hash[:total_to_par] = sum if player_hash[:rounds].any?
+      end
     end
 
     def format_par_relative(value)

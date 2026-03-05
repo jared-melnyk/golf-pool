@@ -58,12 +58,11 @@ class PoolTournamentsController < ApplicationController
       formatter = BallDontLie::PlayerRoundResultsFormatter.new(raw_data)
 
       # When the tournament has started but results haven't been synced yet,
-      # fetch hole-by-hole scorecards to show intra-round (live) scores.
+      # fetch hole-by-hole scorecards (all rounds) to show intra-round (live) scores.
+      # Requesting without round_number returns all hole data including in-progress rounds.
       if @tournament.started? && @tournament.results_synced_at.blank?
-        [ 1, 2, 3, 4 ].each do |round_num|
-          cards = client.fetch_all_player_scorecards(tournament_ids: [ pga_tournament_id ], player_ids: player_ids, round_number: round_num)
-          formatter.merge_scorecard_live!(cards) if cards.present?
-        end
+        cards = client.fetch_all_player_scorecards(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
+        formatter.merge_scorecard_live!(cards) if cards.present?
       end
 
       @round_results = formatter.by_player_id

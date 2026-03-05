@@ -74,7 +74,8 @@ module BallDontLie
       get "player_scorecards", **params
     end
 
-    def fetch_all_player_scorecards(tournament_ids:, player_ids:, round_number:)
+    # When round_number is omitted, returns all scorecard rows (all rounds), including in-progress round data.
+    def fetch_all_player_scorecards(tournament_ids:, player_ids:, round_number: nil)
       fetch_all("player_scorecards", tournament_ids: tournament_ids, player_ids: player_ids, round_number: round_number) do |c|
         player_scorecards(tournament_ids: tournament_ids, player_ids: player_ids, round_number: round_number, cursor: c, per_page: 100)
       end
