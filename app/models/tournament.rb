@@ -12,9 +12,9 @@ class Tournament < ApplicationRecord
   # instead of the API start time so we don't have to guess if the API time is accurate.
   CENTRAL = "Central Time (US & Canada)"
 
-  # Tournaments that can be added to a pool: not yet completed. Started-but-not-finished is OK.
-  # Completed = ends_at is at least 1 day ago so the final day of play still counts as addable.
-  scope :addable_to_pool, -> { where("ends_at IS NULL OR ends_at >= ?", 1.day.ago) }
+  # Tournaments that can be added to a pool: we have not yet synced results (tournament still "open").
+  # We do not use ends_at; API end_date is unreliable (e.g. sometimes equals start_date).
+  scope :addable_to_pool, -> { where(results_synced_at: nil) }
 
   # Time we use for "tournament started" and locking picks: midnight Central on the start date.
   def picks_lock_at
@@ -28,8 +28,9 @@ class Tournament < ApplicationRecord
     picks_lock_at.present? && picks_lock_at <= Time.current
   end
 
+  # Tournament is considered completed once we have synced results. We do not use ends_at (API is unreliable).
   def completed?
-    ends_at.present? && ends_at < Time.current
+    results_synced_at.present?
   end
 
   def picks_open_at
@@ -54,11 +55,8 @@ class Tournament < ApplicationRecord
     (total_prize_pool.to_d || 0) * 0.10
   end
 
-  # True if we have already synced results after the tournament ended (no need to sync again).
+  # True if we have already synced results (no need to sync again). We do not use ends_at.
   def results_synced_since_completion?
-    return false unless completed?
-    return false if results_synced_at.blank?
-
-    results_synced_at >= ends_at
+    results_synced_at.present?
   end
 end

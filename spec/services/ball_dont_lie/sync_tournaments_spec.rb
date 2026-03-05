@@ -33,5 +33,26 @@ RSpec.describe BallDontLie::SyncTournaments do
         expect(tournament.total_prize_pool).to eq(BigDecimal("8400000"))
       end
     end
+
+    context "when API returns end_date that parses to same as or before start_date" do
+      let(:api_tournaments) do
+        [
+          {
+            "id" => 99,
+            "name" => "Bad End Date",
+            "start_date" => "2025-04-10T12:00:00.000Z",
+            "end_date" => "2025-04-10",
+            "purse" => nil
+          }
+        ]
+      end
+
+      it "does not persist ends_at (we do not rely on unreliable API end_date)" do
+        described_class.new(season: 2025, client: client).call
+        tournament = Tournament.find_by(external_id: "99")
+        expect(tournament).to be_present
+        expect(tournament.ends_at).to be_nil
+      end
+    end
   end
 end

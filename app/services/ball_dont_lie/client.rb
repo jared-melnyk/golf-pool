@@ -66,6 +66,20 @@ module BallDontLie
       end
     end
 
+    def player_scorecards(tournament_ids: nil, player_ids: nil, round_number: nil, cursor: nil, per_page: 100)
+      params = { cursor: cursor, per_page: per_page }
+      params["tournament_ids[]"] = Array(tournament_ids) if tournament_ids.present?
+      params["player_ids[]"] = Array(player_ids) if player_ids.present?
+      params[:round_number] = round_number if round_number.present?
+      get "player_scorecards", **params
+    end
+
+    def fetch_all_player_scorecards(tournament_ids:, player_ids:, round_number:)
+      fetch_all("player_scorecards", tournament_ids: tournament_ids, player_ids: player_ids, round_number: round_number) do |c|
+        player_scorecards(tournament_ids: tournament_ids, player_ids: player_ids, round_number: round_number, cursor: c, per_page: 100)
+      end
+    end
+
     def futures(tournament_ids: nil, vendors: nil, cursor: nil, per_page: 100)
       params = { cursor: cursor, per_page: per_page }
       params["tournament_ids[]"] = Array(tournament_ids) if tournament_ids.present?

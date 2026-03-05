@@ -24,11 +24,10 @@ class PoolTournament < ApplicationRecord
 
   private
 
-  # Only block when tournament is completed. Started-but-not-finished is allowed.
-  # Treat completed as ends_at at least 1 day ago so the final day of play is still addable.
+  # Block adding a tournament once results have been synced. We do not use ends_at (API is unreliable).
   def tournament_not_completed
     return if tournament.blank?
-    return if tournament.ends_at.blank? || tournament.ends_at >= 1.day.ago
+    return if tournament.results_synced_at.blank?
 
     errors.add(:tournament, "has already completed")
   end

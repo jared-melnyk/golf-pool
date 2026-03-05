@@ -56,6 +56,16 @@ class PoolTournamentsController < ApplicationController
       client = BallDontLie::Client.new
       raw_data = client.fetch_all_player_round_results(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
       formatter = BallDontLie::PlayerRoundResultsFormatter.new(raw_data)
+
+      # When the tournament has started but results haven't been synced yet,
+      # fetch hole-by-hole scorecards to show intra-round (live) scores.
+      if @tournament.started? && @tournament.results_synced_at.blank?
+        [ 1, 2, 3, 4 ].each do |round_num|
+          cards = client.fetch_all_player_scorecards(tournament_ids: [ pga_tournament_id ], player_ids: player_ids, round_number: round_num)
+          formatter.merge_scorecard_live!(cards) if cards.present?
+        end
+      end
+
       @round_results = formatter.by_player_id
       @current_round = formatter.current_round_number
     end

@@ -11,6 +11,36 @@ module BallDontLie
       rounds.compact.max
     end
 
+    # Merge intra-round (live) scores from player_scorecards API into by_player_id.
+    # Scorecard rows are hole-by-hole; we sum (score - par) per player per round.
+    def merge_scorecard_live!(scorecard_rows)
+      return if scorecard_rows.blank?
+
+      by_player_round = {}
+      scorecard_rows.each do |row|
+        player = row["player"]
+        next if player.blank?
+        player_id = player["id"]
+        next if player_id.blank?
+        round_number = (row["round_number"] || row["round"]).to_i
+        next if round_number <= 0
+        score = row["score"].to_i
+        par = row["par"].to_i
+        key = [ player_id, round_number ]
+        by_player_round[key] ||= 0
+        by_player_round[key] += (score - par)
+      end
+
+      by_player_round.each do |(player_id, round_number), to_par|
+        player_hash = (@by_player_id[player_id] ||= { rounds: {}, total_to_par: nil, position: nil })
+        next if player_hash[:rounds][round_number].present? # keep completed round from API
+        player_hash[:rounds][round_number] = {
+          score: nil,
+          par_relative: format_par_relative(to_par)
+        }
+      end
+    end
+
     private
 
     def build_index(raw_results)
@@ -27,14 +57,15 @@ module BallDontLie
         round_number = round_number.to_i if round_number.respond_to?(:to_i)
         next if round_number.to_i <= 0
 
-        score_to_par = entry["score_to_par"] || entry["to_par"]
+        # API returns par_relative_score and score per round (see balldontlie PGA docs)
+        score_to_par = entry["par_relative_score"] || entry["score_to_par"] || entry["to_par"]
         total_to_par = entry["total_to_par"]
         position = entry["position"] || entry["position_display"] || entry["position_numeric"]
 
         player_hash = (index[player_id] ||= { rounds: {}, total_to_par: nil, position: nil })
 
         player_hash[:rounds][round_number] = {
-          score: score_to_par,
+          score: entry["score"],
           par_relative: format_par_relative(score_to_par)
         }
 

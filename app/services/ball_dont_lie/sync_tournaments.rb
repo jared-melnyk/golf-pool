@@ -14,7 +14,7 @@ module BallDontLie
         rec = Tournament.find_or_initialize_by(external_id: t["id"].to_s)
         rec.name = t["name"]
         rec.starts_at = parse_date(t["start_date"])
-        rec.ends_at = parse_end_date(t["end_date"], rec.starts_at)
+        rec.ends_at = parse_end_date(t["end_date"], rec.starts_at) # may be set to nil if API data is invalid
         rec.total_prize_pool = parse_purse(t["purse"])
         if rec.new_record?
           rec.save!
@@ -35,9 +35,12 @@ module BallDontLie
     end
 
     def parse_end_date(str, start_date)
-      return start_date&.+ 4.days if str.blank?
-      # API returns "Jan 2 - 5" style; use start_date + 3 days as fallback
-      Time.zone.parse(str.to_s) rescue (start_date&.+ 4.days)
+      return nil if str.blank?
+      parsed = Time.zone.parse(str.to_s) rescue nil
+      return nil if parsed.blank? || start_date.blank?
+      # API sometimes returns same as start_date or before; do not persist invalid end date
+      return nil if parsed <= start_date
+      parsed
     end
 
     def parse_purse(purse_str)

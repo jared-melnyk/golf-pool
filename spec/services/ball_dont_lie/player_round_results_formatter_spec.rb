@@ -6,21 +6,24 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
       {
         "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
         "round_number" => 1,
-        "score_to_par" => -3,
+        "score" => 68,
+        "par_relative_score" => -3,
         "total_to_par" => -3,
         "position" => "1"
       },
       {
         "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
         "round_number" => 2,
-        "score_to_par" => 0,
+        "score" => 71,
+        "par_relative_score" => 0,
         "total_to_par" => -3,
         "position" => "T2"
       },
       {
         "player" => { "id" => 282, "display_name" => "Rory McIlroy" },
         "round_number" => 1,
-        "score_to_par" => 1,
+        "score" => 72,
+        "par_relative_score" => 1,
         "total_to_par" => 1,
         "position" => "T10"
       }
@@ -50,5 +53,27 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
   it "returns the highest round number as current_round_number" do
     formatter = described_class.new(raw_results)
     expect(formatter.current_round_number).to eq(2)
+  end
+
+  describe "#merge_scorecard_live!" do
+    it "fills round cells from hole-by-hole scorecard when no completed round result exists" do
+      formatter = described_class.new([])
+      scorecards = [
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 3, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 3, "par" => 4 },
+        { "player" => { "id" => 100 }, "round_number" => 1, "score" => 4, "par" => 4 }
+      ]
+      formatter.merge_scorecard_live!(scorecards)
+      expect(formatter.by_player_id[100][:rounds][1][:par_relative]).to eq("-2")
+    end
+
+    it "does not overwrite completed round data from player_round_results" do
+      formatter = described_class.new(raw_results)
+      scorecards = [
+        { "player" => { "id" => 185 }, "round_number" => 1, "score" => 4, "par" => 4 }
+      ]
+      formatter.merge_scorecard_live!(scorecards)
+      expect(formatter.by_player_id[185][:rounds][1][:par_relative]).to eq("-3")
+    end
   end
 end
