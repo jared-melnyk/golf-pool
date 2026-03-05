@@ -10,6 +10,11 @@ Rails.application.routes.draw do
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
+  get "forgot_password", to: "password_resets#new", as: :forgot_password
+  post "forgot_password", to: "password_resets#create"
+  get "password_reset/:token", to: "password_resets#edit", as: :edit_password_reset
+  patch "password_reset/:token", to: "password_resets#update", as: :password_reset
+
   resources :tournaments, only: [ :index, :show ]
 
   post "sync/tournament_results/:tournament_id", to: "sync#tournament_results", as: :sync_tournament_results
