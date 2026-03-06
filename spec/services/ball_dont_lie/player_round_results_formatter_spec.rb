@@ -108,5 +108,31 @@ RSpec.describe BallDontLie::PlayerRoundResultsFormatter do
       formatter.merge_scorecard_live!(scorecards)
       expect(formatter.by_player_id[100][:rounds][1][:last_hole_completed]).to eq(18)
     end
+
+    it "recomputes total_to_par from sum of all rounds after merging live round (not just round 1)" do
+      # API gave round 1 only; total_to_par from API is round-1-only (-3)
+      round1_only = [
+        {
+          "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
+          "round_number" => 1,
+          "par_relative_score" => -3,
+          "total_to_par" => -3
+        }
+      ]
+      formatter = described_class.new(round1_only)
+      expect(formatter.by_player_id[185][:total_to_par]).to eq(-3)
+
+      # Merge live round 2: player is +2 through 9 holes
+      scorecards_r2 = (1..9).map do |h|
+        { "player" => { "id" => 185 }, "round_number" => 2, "hole_number" => h, "score" => 4, "par" => 4 }
+      end
+      scorecards_r2.concat((10..18).map { |h| { "player" => { "id" => 185 }, "round_number" => 2, "hole_number" => h, "score" => 5, "par" => 4 } })
+      formatter.merge_scorecard_live!(scorecards_r2)
+
+      # Total must be sum of rounds: -3 (R1) + 9 (R2: 9 pars + 9 bogeys = +9) = +6
+      expect(formatter.by_player_id[185][:rounds][1][:score_to_par]).to eq(-3)
+      expect(formatter.by_player_id[185][:rounds][2][:score_to_par]).to eq(9)
+      expect(formatter.by_player_id[185][:total_to_par]).to eq(6)
+    end
   end
 end

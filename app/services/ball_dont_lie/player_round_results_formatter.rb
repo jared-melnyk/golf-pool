@@ -88,12 +88,14 @@ module BallDontLie
       index
     end
 
-    # Set total_to_par from sum of round score_to_par when API did not provide it.
+    # Total score-to-par is always the sum of round score_to_par when we have round data,
+    # so the Total column stays in sync with R1–R4 (including live mid-round scores).
+    # API total_to_par is only used when we have no round data.
     def compute_totals!
       @by_player_id.each do |_player_id, player_hash|
-        next if player_hash[:total_to_par].present?
+        next unless player_hash[:rounds].any?
         sum = player_hash[:rounds].values.sum { |r| (r[:score_to_par] || 0).to_i }
-        player_hash[:total_to_par] = sum if player_hash[:rounds].any?
+        player_hash[:total_to_par] = sum
       end
     end
 
