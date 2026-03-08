@@ -39,6 +39,7 @@
                 </th>
               <% end %>
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Total</th>
+              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Bonus</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -51,7 +52,7 @@
                   <div class="flex flex-col gap-1">
                     <span class="font-medium text-gray-900"><%= golfer.name %></span>
                     <span class="text-xs text-gray-500">
-                      (<%= PoolTournamentOdds.find_by(pool_tournament: @pool_tournament, golfer: golfer)&.american_odds || "—" %>)
+                      <%= format_american_odds(PoolTournamentOdds.find_by(pool_tournament: @pool_tournament, golfer: golfer)&.american_odds).presence || "—" %>
                     </span>
                   </div>
                 </td>
@@ -80,6 +81,16 @@
                   <span class="font-semibold text-gray-900"><%= label %></span>
                   <% if player_result[:position].present? %>
                     <span class="ml-1 text-xs text-gray-500">(<%= player_result[:position] %>)</span>
+                  <% end %>
+                </td>
+                <td class="px-3 py-3 text-right align-middle whitespace-nowrap text-gray-700">
+                  <% bonus_val = @golfer_bonus_display[golfer.id] %>
+                  <% if bonus_val == :mc %>
+                    MC
+                  <% elsif bonus_val.is_a?(Numeric) && bonus_val.positive? %>
+                    $<%= number_with_delimiter(bonus_val.to_i) %>
+                  <% else %>
+                    —
                   <% end %>
                 </td>
               </tr>

@@ -99,6 +99,24 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#capped_longshot_bonus" do
+    it "returns 20 × |american_odds| when below max" do
+      tournament = Tournament.create!(name: "Rich", total_prize_pool: 10_000_000)
+      expect(tournament.capped_longshot_bonus(500)).to eq(10_000)
+      expect(tournament.capped_longshot_bonus(-200)).to eq(4_000)
+    end
+
+    it "caps at max_longshot_bonus when raw bonus would exceed" do
+      tournament = Tournament.create!(name: "Rich", total_prize_pool: 1_000_000)
+      expect(tournament.capped_longshot_bonus(10_000)).to eq(100_000)
+    end
+
+    it "returns 0 when american_odds is nil" do
+      tournament = Tournament.create!(name: "Rich", total_prize_pool: 10_000_000)
+      expect(tournament.capped_longshot_bonus(nil)).to eq(0)
+    end
+  end
+
   describe "#picks_locked?" do
     it "is false before midnight Central on the start date" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")

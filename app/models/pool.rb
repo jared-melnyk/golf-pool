@@ -25,7 +25,7 @@ class Pool < ApplicationRecord
   end
 
   # Standings: total points per user from their picks in this pool's tournaments.
-  # Points = prize money + (20 × American odds) only when the golfer makes the cut; otherwise 0 for that pick.
+  # Points = prize money + LongShot bonus (20 × American odds) only when the golfer makes the cut; otherwise 0 for that pick.
   # Returns array of [ user, total_points ] sorted by total descending.
   def standings
     users
@@ -44,7 +44,7 @@ class Pool < ApplicationRecord
         result = TournamentResult.find_by(tournament: tournament, golfer: golfer)
         base = result ? (result.prize_money.to_d || 0) : 0.to_d
         odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
-        bonus = (odds_row && result&.made_cut?) ? capped_odds_bonus(tournament, odds_row.american_odds) : 0.to_d
+        bonus = (odds_row && result&.made_cut?) ? tournament.capped_longshot_bonus(odds_row.american_odds) : 0.to_d
         base + bonus
       end
     end
@@ -56,14 +56,13 @@ class Pool < ApplicationRecord
     self.token ||= SecureRandom.urlsafe_base64(16)
   end
 
+  # LongShot bonus (uncapped): 20 × |american_odds|. Used when applying cap via tournament.
   def odds_bonus(american_odds)
     american_odds.to_d.abs * 20
   end
 
+  # LongShot bonus capped at tournament's max_longshot_bonus (10% of prize pool).
   def capped_odds_bonus(tournament, american_odds)
-    return 0.to_d if american_odds.nil?
-    raw = odds_bonus(american_odds)
-    max_bonus = tournament.max_longshot_bonus
-    max_bonus.positive? ? [ raw, max_bonus ].min : raw
+    tournament.capped_longshot_bonus(american_odds)
   end
 end

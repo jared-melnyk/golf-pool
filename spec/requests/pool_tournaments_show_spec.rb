@@ -36,5 +36,61 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Live scores are temporarily unavailable").or include(pool.name)
     end
+
+    it "shows Bonus column with — when no tournament results" do
+      golfer = Golfer.create!(name: "Scottie", external_id: "185")
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
+      end
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 500, vendor: "dk", locked_at: Time.current)
+
+      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Bonus")
+      expect(response.body).to include("Scottie")
+      # No TournamentResult => bonus cell shows "—"
+      expect(response.body).to match(/Total.*Bonus/m)
+      expect(response.body).to include("—")
+    end
+
+    it "shows LongShot bonus amount when golfer made cut and has odds" do
+      tournament.update!(total_prize_pool: 10_000_000)
+      golfer = Golfer.create!(name: "Scottie", external_id: "185")
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
+      end
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 500, vendor: "dk", locked_at: Time.current)
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 100_000)
+
+      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      # 500 * 20 = 10,000 bonus
+      expect(response.body).to include("10,000").or include("$10,000")
+    end
+
+    it "shows MC in Bonus column when golfer missed the cut" do
+      golfer = Golfer.create!(name: "Rory", external_id: "282")
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
+      end
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 400, vendor: "dk", locked_at: Time.current)
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position: 80, prize_money: 0)
+
+      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("MC")
+    end
   end
 end

@@ -32,7 +32,7 @@ class PoolTournamentsController < ApplicationController
   end
 
   def show
-    @pool_tournament = PoolTournament.find(params[:id])
+    @pool_tournament = PoolTournament.includes(:pool_tournament_odds).find(params[:id])
     @pool = @pool_tournament.pool
     @tournament = @pool_tournament.tournament
 
@@ -45,6 +45,25 @@ class PoolTournamentsController < ApplicationController
       .includes(:golfers)
       .where(pool_tournament: @pool_tournament)
       .group_by(&:user)
+
+    golfer_ids = @picks_by_user.values.flatten.flat_map { |pick| pick.golfers.map(&:id) }.uniq
+    results_by_golfer = TournamentResult.where(tournament: @tournament, golfer_id: golfer_ids).index_by(&:golfer_id)
+    odds_by_golfer = @pool_tournament.pool_tournament_odds.index_by(&:golfer_id)
+
+    @golfer_bonus_display = {}
+    golfer_ids.each do |gid|
+      result = results_by_golfer[gid]
+      odds_row = odds_by_golfer[gid]
+      if result
+        if result.made_cut? && odds_row
+          @golfer_bonus_display[gid] = @tournament.capped_longshot_bonus(odds_row.american_odds)
+        else
+          @golfer_bonus_display[gid] = :mc
+        end
+      else
+        @golfer_bonus_display[gid] = nil
+      end
+    end
 
     pga_tournament_id = @tournament.external_id&.to_i
     player_ids = @picks_by_user.values.flatten.flat_map { |pick| pick.golfers.map { |g| g.external_id&.to_i } }.compact.uniq

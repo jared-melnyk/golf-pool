@@ -57,6 +57,14 @@ class Tournament < ApplicationRecord
     (total_prize_pool.to_d || 0) * 0.10
   end
 
+  # LongShot bonus (20 × |american_odds|) capped at max_longshot_bonus. Used for display and by Pool scoring.
+  def capped_longshot_bonus(american_odds)
+    return 0.to_d if american_odds.nil?
+    raw = american_odds.to_d.abs * 20
+    max_bonus = max_longshot_bonus
+    max_bonus.positive? ? [ raw, max_bonus ].min : raw
+  end
+
   # True if we have already synced results (no need to sync again). We do not use ends_at.
   def results_synced_since_completion?
     results_synced_at.present?

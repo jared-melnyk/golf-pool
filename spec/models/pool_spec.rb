@@ -45,7 +45,7 @@ RSpec.describe Pool, type: :model do
       expect(standings.map { |_, total| total }).to eq([ 600_000, 300_000 ])
     end
 
-    it "includes an odds-based bonus on top of prize money when PoolTournamentOdds exist" do
+    it "includes LongShot bonus on top of prize money when PoolTournamentOdds exist" do
       pick = Pick.create!(user: user, pool_tournament: pool_tournament)
       PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 1_000_000)
@@ -98,7 +98,7 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(750_000)
     end
 
-    it "adds odds bonus when PoolTournamentOdds exist and golfer makes the cut" do
+    it "adds LongShot bonus when PoolTournamentOdds exist and golfer makes the cut" do
       pick = Pick.create!(user: user, pool_tournament: pool_tournament)
       PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 100_000)
@@ -113,7 +113,7 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(100_000 + 10_000)
     end
 
-    it "gives no odds bonus when golfer misses the cut" do
+    it "gives no LongShot bonus when golfer misses the cut" do
       pick = Pick.create!(user: user, pool_tournament: pool_tournament)
       PickGolfer.create!(pick: pick, golfer: golfer, slot: 1)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 80, prize_money: 0)
@@ -144,7 +144,7 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(50_000 + 100_000)
     end
 
-    it "uses full odds bonus when raw bonus is below cap" do
+    it "uses full LongShot bonus when raw bonus is below cap" do
       capped_tournament = Tournament.create!(name: "Capped", starts_at: 1.day.from_now, ends_at: 4.days.from_now, total_prize_pool: 1_000_000)
       capped_pt = PoolTournament.create!(pool: pool, tournament: capped_tournament)
       pick = Pick.create!(user: user, pool_tournament: capped_pt)
