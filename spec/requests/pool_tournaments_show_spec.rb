@@ -28,7 +28,11 @@ RSpec.describe "PoolTournament scores", type: :request do
     end
 
     it "renders successfully for a pool member" do
-      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [])
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_tournament_results: []
+      )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
       get pool_pool_tournament_path(pool, pool_tournament)
@@ -44,7 +48,12 @@ RSpec.describe "PoolTournament scores", type: :request do
       end
       PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 500, vendor: "dk", locked_at: Time.current)
 
-      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
       get pool_pool_tournament_path(pool, pool_tournament)
@@ -66,7 +75,12 @@ RSpec.describe "PoolTournament scores", type: :request do
       PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 500, vendor: "dk", locked_at: Time.current)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 100_000)
 
-      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
       get pool_pool_tournament_path(pool, pool_tournament)
@@ -84,7 +98,12 @@ RSpec.describe "PoolTournament scores", type: :request do
       PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: golfer, american_odds: 400, vendor: "dk", locked_at: Time.current)
       TournamentResult.create!(tournament: tournament, golfer: golfer, position: 80, prize_money: 0)
 
-      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: [], fetch_all_player_scorecards: [])
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
       get pool_pool_tournament_path(pool, pool_tournament)
@@ -106,7 +125,12 @@ RSpec.describe "PoolTournament scores", type: :request do
       raw_round_results = [
         { "player" => { "id" => 185 }, "round_number" => 3, "par_relative_score" => -1 }
       ]
-      client = instance_double(BallDontLie::Client, fetch_all_player_round_results: raw_round_results, fetch_all_player_scorecards: [])
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: raw_round_results,
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
       get pool_pool_tournament_path(pool, pool_tournament)

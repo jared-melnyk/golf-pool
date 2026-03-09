@@ -36,6 +36,21 @@ class PoolTournamentsController < ApplicationController
     @pool = @pool_tournament.pool
     @tournament = @pool_tournament.tournament
 
+    # If the tournament has an external_id and we haven't synced results yet (no winner /
+    # prize money populated), try to sync them so completion, prize money, and points are
+    # up to date when viewing scores from the pool context. We intentionally do NOT rely
+    # on ends_at from the API, since it can be unreliable.
+    if @tournament.external_id.present? &&
+        @tournament.tournament_results.empty? &&
+        !@tournament.results_synced_since_completion?
+      begin
+        BallDontLie::SyncTournamentResults.new(tournament: @tournament).call
+        @tournament.reload
+      rescue => e
+        Rails.logger.error("[PoolTournament scores] Failed to auto-sync results for tournament #{@tournament.id}: #{e.class}: #{e.message}")
+      end
+    end
+
     unless @pool.users.include?(current_user)
       redirect_to @pool, alert: "You must be a member of this pool to view scores."
       return
