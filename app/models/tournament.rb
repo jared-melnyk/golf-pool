@@ -67,6 +67,6 @@ class Tournament < ApplicationRecord
 
   # True if we have already synced results (no need to sync again). We do not use ends_at.
   def results_synced_since_completion?
-    results_synced_at.present?
+    results_synced_at.present? && champion_golfer_id.present?
   end
 end

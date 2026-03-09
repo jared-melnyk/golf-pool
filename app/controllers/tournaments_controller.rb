@@ -18,8 +18,10 @@ class TournamentsController < ApplicationController
       @tournament.reload
     end
 
-    # Sync results when not yet loaded, unless tournament is completed and we already synced after completion
-    if @tournament.tournament_results.empty? && !@tournament.results_synced_since_completion?
+    # Sync results when tournament is not yet completed or has no results, unless we have
+    # already synced after completion. We intentionally avoid using ends_at here and rely
+    # on whether a champion / results exist.
+    if !@tournament.completed? && !@tournament.results_synced_since_completion?
       sync_results
       @tournament.reload
     end

@@ -19,13 +19,19 @@ RSpec.describe Tournament, type: :model do
   end
 
   describe "#results_synced_since_completion?" do
-    it "returns true when results_synced_at is set" do
-      tournament = Tournament.create!(name: "Synced", starts_at: 5.days.ago, results_synced_at: 1.day.ago)
+    it "returns true when results_synced_at and champion_golfer_id are set" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Synced", starts_at: 5.days.ago, results_synced_at: 1.day.ago, champion_golfer_id: golfer.id)
       expect(tournament.results_synced_since_completion?).to be true
     end
 
     it "returns false when results_synced_at is blank" do
       tournament = Tournament.create!(name: "Not synced", starts_at: 5.days.ago, results_synced_at: nil)
+      expect(tournament.results_synced_since_completion?).to be false
+    end
+
+    it "returns false when champion_golfer_id is nil" do
+      tournament = Tournament.create!(name: "No champion yet", starts_at: 5.days.ago, results_synced_at: 1.day.ago, champion_golfer_id: nil)
       expect(tournament.results_synced_since_completion?).to be false
     end
   end
