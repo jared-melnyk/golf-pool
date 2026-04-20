@@ -13,7 +13,11 @@ services:
     plan: starter
 
     buildCommand: bundle install && bundle exec rails tailwindcss:build && bundle exec rails assets:precompile && bundle exec rails assets:clean
-    startCommand: ./bin/rails db:prepare && ./bin/rails server
+    # Run migrations once per deploy, before the new instance goes live.
+    # Failures here surface clearly in the deploy log instead of manifesting as an empty-logs 502.
+    preDeployCommand: ./bin/rails db:prepare
+    # Bind explicitly to 0.0.0.0 on Render's injected PORT (belt-and-suspenders with config/puma.rb).
+    startCommand: ./bin/rails server -b 0.0.0.0 -p $PORT
 
     healthCheckPath: /up
 
