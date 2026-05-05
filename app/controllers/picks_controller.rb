@@ -163,8 +163,10 @@ class PicksController < ApplicationController
     return {} if @tournament.blank? || @tournament.external_id.blank?
 
     client = BallDontLie::Client.new
-    response = client.futures(tournament_ids: [ @tournament.external_id.to_i ], vendors: [ "draftkings" ], per_page: 100)
-    data = response["data"] || []
+    data = client.fetch_all_futures(
+      tournament_ids: [ @tournament.external_id.to_i ],
+      vendors: [ "draftkings" ]
+    )
     data.each_with_object({}) do |future, hash|
       next unless future["market_type"] == "tournament_winner"
 

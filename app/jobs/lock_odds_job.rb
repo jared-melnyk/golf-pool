@@ -9,8 +9,7 @@ class LockOddsJob < ApplicationJob
     return if tournament.external_id.blank?
 
     client = BallDontLie::Client.new
-    response = client.futures(tournament_ids: [ tournament.external_id.to_i ], vendors: [ "draftkings" ])
-    data = response["data"] || []
+    data = client.fetch_all_futures(tournament_ids: [ tournament.external_id.to_i ], vendors: [ "draftkings" ])
 
     data.each do |future|
       next unless future["market_type"] == "tournament_winner"

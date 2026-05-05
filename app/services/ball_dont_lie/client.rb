@@ -88,6 +88,12 @@ module BallDontLie
       get "futures", **params
     end
 
+    def fetch_all_futures(tournament_ids:, vendors:)
+      fetch_all("futures", tournament_ids: tournament_ids, vendors: vendors) do |c|
+        futures(tournament_ids: tournament_ids, vendors: vendors, cursor: c, per_page: 100)
+      end
+    end
+
     private
 
     MAX_429_RETRIES = 3
