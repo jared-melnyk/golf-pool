@@ -1,5 +1,5 @@
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit picks — <%= @tournament.name %></h1>
-<p class="text-gray-600 text-sm mb-4">Odds are shown when available from sportsbooks; some players (often long shots) may not have listed odds.</p>
+<p class="text-gray-600 text-sm mb-4">Bonus values are shown when available from sportsbooks; some players (often long shots) may not have listed odds.</p>
 <p class="text-sm text-gray-500 mb-4">Max LongShot bonus: <%= @tournament.max_longshot_bonus.positive? ? "$#{number_with_delimiter(@tournament.max_longshot_bonus.to_i)}" : "TBD" %></p>
 
 <% if @pick.errors.any? %>
@@ -15,7 +15,7 @@
     <% 4.times do |i| %>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Slot <%= i + 1 %></label>
-        <%= select_tag "golfer_ids[]", options_for_select(@golfers.map { |g| [golfer_name_with_odds(g.name, @golfer_odds[g.id], max_bonus: @tournament.max_longshot_bonus), g.id] }, @pick.pick_golfers.find { |pg| pg.slot == i + 1 }&.golfer_id), { include_blank: "Select golfer…", class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" } %>
+        <%= select_tag "golfer_ids[]", options_for_select(@golfers.map { |g| [golfer_name_with_bonus(g.name, @golfer_odds[g.id], tournament: @tournament), g.id] }, @pick.pick_golfers.find { |pg| pg.slot == i + 1 }&.golfer_id), { include_blank: "Select golfer…", class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" } %>
       </div>
     <% end %>
     <div>

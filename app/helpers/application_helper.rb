@@ -25,4 +25,15 @@ module ApplicationHelper
     at_cap = at_max_longshot_bonus?(american_odds, max_bonus)
     at_cap ? "#{base}*" : base
   end
+
+  # Returns "Name (Cut Made Bonus: $10,000)" (and "*" when capped). If odds are missing, returns name.
+  def golfer_name_with_bonus(name, american_odds, tournament:)
+    return name.to_s if name.blank?
+    return name.to_s if american_odds.nil?
+
+    bonus = tournament.capped_longshot_bonus(american_odds).to_i
+    base = "#{name} (Cut Made Bonus: $#{number_with_delimiter(bonus)})"
+    at_cap = at_max_longshot_bonus?(american_odds, tournament.max_longshot_bonus)
+    at_cap ? "#{base}*" : base
+  end
 end
