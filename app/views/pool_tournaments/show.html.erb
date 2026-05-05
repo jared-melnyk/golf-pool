@@ -27,6 +27,16 @@
 <div class="mt-4 space-y-6">
   <% @picks_by_user.each do |user, picks| %>
     <% pick = picks.first %>
+    <%
+      golfer_totals = pick.golfers.map do |g|
+        prize_val = @golfer_prize_money[g.id]
+        bonus_val = @golfer_bonus_display[g.id]
+        bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0.to_d
+        total_val = prize_val.to_d + bonus_num
+        [ g.id, total_val ]
+      end
+      counted_golfer_ids = golfer_totals.sort_by { |(_, total)| -total }.first(3).map(&:first)
+    %>
     <div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
       <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <h2 class="text-base font-semibold text-gray-900"><%= user.name %></h2>
@@ -64,6 +74,15 @@
                     <span class="text-xs text-gray-500">
                       <%= format_american_odds(PoolTournamentOdds.find_by(pool_tournament: @pool_tournament, golfer: golfer)&.american_odds).presence || "—" %>
                     </span>
+                    <% if counted_golfer_ids.include?(golfer.id) %>
+                      <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 w-fit">
+                        Counted
+                      </span>
+                    <% else %>
+                      <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 w-fit">
+                        Dropped
+                      </span>
+                    <% end %>
                   </div>
                 </td>
                 <% rounds.each do |r| %>
@@ -123,7 +142,14 @@
               total_to_par_sum = pick.golfers.sum { |g| ((@round_results[g.external_id&.to_i] || {})[:total_to_par].to_i) }
               prize_sum = pick.golfers.sum { |g| @golfer_prize_money[g.id].to_d }
               bonus_sum = pick.golfers.sum { |g| b = @golfer_bonus_display[g.id]; b.is_a?(Numeric) ? b.to_d : 0 }
-              total_earnings_sum = prize_sum + bonus_sum
+              total_earnings_sum = pick.golfers
+                .select { |g| counted_golfer_ids.include?(g.id) }
+                .sum do |g|
+                  prize_val = @golfer_prize_money[g.id]
+                  bonus_val = @golfer_bonus_display[g.id]
+                  bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0.to_d
+                  prize_val.to_d + bonus_num
+                end
               any_round_data = round_totals.any?(&:nonzero?) || total_to_par_sum.nonzero?
               any_money_data = prize_sum.nonzero? || bonus_sum.nonzero? || @tournament.completed? || pick.golfers.any? { |g| @golfer_bonus_display[g.id].is_a?(Numeric) }
               format_score = ->(v) { v.zero? ? "E" : (v.positive? ? "+#{v}" : v.to_s) }
