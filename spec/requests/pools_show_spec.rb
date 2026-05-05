@@ -37,4 +37,34 @@ RSpec.describe "Pools show", type: :request do
     expect(tournament_hash[creator.id]).to eq(creator_pick)
     expect(tournament_hash[member.id]).to eq(member_pick)
   end
+
+  it "shows commissioner remove button for completed tournaments with warning copy" do
+    winner = Golfer.create!(name: "Winner", external_id: "991")
+    tournament.update!(starts_at: 3.days.ago, ends_at: 1.day.ago, champion_golfer: winner)
+    Pick.create!(user: creator, pool_tournament: pool_tournament)
+
+    get pool_path(pool)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Remove")
+    expect(response.body).to include("tournament results and picks history will be removed")
+  end
+
+  it "does not show remove button to non-commissioners for completed tournaments" do
+    winner = Golfer.create!(name: "Winner 2", external_id: "992")
+    tournament.update!(starts_at: 3.days.ago, ends_at: 1.day.ago, champion_golfer: winner)
+    allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(member)
+
+    get pool_path(pool)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).not_to include("tournament results and picks history will be removed")
+  end
+
+  it "shows no picks submitted badge when tournament has no pool picks" do
+    get pool_path(pool)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("No picks submitted")
+  end
 end

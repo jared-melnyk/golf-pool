@@ -41,6 +41,21 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("Live scores are temporarily unavailable").or include(pool.name)
     end
 
+    it "shows a no-picks message instead of API-unavailable warning when nobody picked" do
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_tournament_results: []
+      )
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("No picks were submitted for this tournament in this pool")
+      expect(response.body).not_to include("Live scores are temporarily unavailable")
+    end
+
     it "shows Bonus column with — when no tournament results" do
       golfer = Golfer.create!(name: "Scottie", external_id: "185")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|

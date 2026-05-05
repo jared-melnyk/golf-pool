@@ -15,7 +15,7 @@
 <% else %>
   <p class="text-gray-500 text-sm mt-1">Picks TBD</p>
   <% if tournament.picks_open? %>
-    <%= link_to "Make picks", new_pool_pick_path(pool, tournament_id: tournament.id), class: "text-emerald-600 hover:underline text-sm mt-1 inline-block" %>
+    <%= link_to "Make picks", new_pool_pick_path(pool, tournament_id: tournament.id), class: "inline-flex items-center rounded-md px-3 py-2 text-sm font-semibold bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 mt-2" %>
   <% else %>
     <span class="text-gray-500 text-sm mt-1 inline-block">
       Picks open on <%= l(tournament.picks_open_at.to_date, format: :long) %>

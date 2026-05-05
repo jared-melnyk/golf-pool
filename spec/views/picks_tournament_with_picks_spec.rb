@@ -15,11 +15,12 @@ RSpec.describe "picks/_tournament_with_picks", type: :view do
     end
   end
 
-  it "shows Make picks link when picks are open" do
+  it "shows Make picks as a prominent button when picks are open" do
     travel_to(tournament.picks_open_at + 1.hour) do
       render partial: "picks/tournament_with_picks", locals: { tournament: tournament, pool: pool, pick: nil }
 
       expect(rendered).to include("Make picks")
+      expect(rendered).to include("bg-emerald-600")
     end
   end
 
