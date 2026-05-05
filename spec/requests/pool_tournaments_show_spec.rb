@@ -153,5 +153,42 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("10,000").or include("$10,000")
     end
+
+    it "marks top 3 golfer scores as counted and one as dropped" do
+      pool_tournament
+      winner = Golfer.create!(name: "Winner", external_id: "9991")
+      tournament.update!(champion_golfer: winner)
+      g1 = Golfer.create!(name: "G1", external_id: "301")
+      g2 = Golfer.create!(name: "G2", external_id: "302")
+      g3 = Golfer.create!(name: "G3", external_id: "303")
+      g4 = Golfer.create!(name: "G4", external_id: "304")
+
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: g1, slot: 1)
+        PickGolfer.create!(pick: p, golfer: g2, slot: 2)
+        PickGolfer.create!(pick: p, golfer: g3, slot: 3)
+        PickGolfer.create!(pick: p, golfer: g4, slot: 4)
+      end
+
+      TournamentResult.create!(tournament: tournament, golfer: g1, position: 1, prize_money: 100_000)
+      TournamentResult.create!(tournament: tournament, golfer: g2, position: 2, prize_money: 80_000)
+      TournamentResult.create!(tournament: tournament, golfer: g3, position: 3, prize_money: 50_000)
+      TournamentResult.create!(tournament: tournament, golfer: g4, position: 4, prize_money: 10_000)
+
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body.scan("Counted").size).to eq(3)
+      expect(response.body.scan("Dropped").size).to eq(1)
+      expect(response.body).to include("$230,000")
+    end
   end
 end

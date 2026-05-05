@@ -160,5 +160,26 @@ RSpec.describe Pool, type: :model do
       # Raw bonus 500 * 20 = 10_000, below 100_000 cap
       expect(pool.total_points_for(user)).to eq(50_000 + 10_000)
     end
+
+    it "counts only the top 3 golfer scores from a 4-golfer pick" do
+      g1 = Golfer.create!(name: "G1", external_id: "301")
+      g2 = Golfer.create!(name: "G2", external_id: "302")
+      g3 = Golfer.create!(name: "G3", external_id: "303")
+      g4 = Golfer.create!(name: "G4", external_id: "304")
+
+      pick = Pick.create!(user: user, pool_tournament: pool_tournament)
+      PickGolfer.create!(pick: pick, golfer: g1, slot: 1)
+      PickGolfer.create!(pick: pick, golfer: g2, slot: 2)
+      PickGolfer.create!(pick: pick, golfer: g3, slot: 3)
+      PickGolfer.create!(pick: pick, golfer: g4, slot: 4)
+
+      TournamentResult.create!(tournament: tournament, golfer: g1, position: 1, prize_money: 100_000)
+      TournamentResult.create!(tournament: tournament, golfer: g2, position: 2, prize_money: 80_000)
+      TournamentResult.create!(tournament: tournament, golfer: g3, position: 3, prize_money: 50_000)
+      TournamentResult.create!(tournament: tournament, golfer: g4, position: 4, prize_money: 10_000)
+
+      # Top 3 should count: 100k + 80k + 50k (drop 10k)
+      expect(pool.total_points_for(user)).to eq(230_000)
+    end
   end
 end

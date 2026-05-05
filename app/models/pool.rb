@@ -25,7 +25,8 @@ class Pool < ApplicationRecord
   end
 
   # Standings: total points per user from their picks in this pool's tournaments.
-  # Points = prize money + LongShot bonus (20 × American odds) only when the golfer makes the cut; otherwise 0 for that pick.
+  # For each 4-golfer pick, only the top 3 golfer scores count.
+  # Points per golfer = prize money + LongShot bonus (20 × American odds) only when the golfer makes the cut; otherwise 0 for that pick.
   # Returns array of [ user, total_points ] sorted by total descending.
   def standings
     users
@@ -40,13 +41,15 @@ class Pool < ApplicationRecord
       pick = Pick.find_by(user: user, pool_tournament: pool_tournament)
       next 0.to_d unless pick
 
-      pick.golfers.sum do |golfer|
+      golfer_scores = pick.golfers.map do |golfer|
         result = TournamentResult.find_by(tournament: tournament, golfer: golfer)
         base = result ? (result.prize_money.to_d || 0) : 0.to_d
         odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
         bonus = (odds_row && result&.made_cut?) ? tournament.capped_longshot_bonus(odds_row.american_odds) : 0.to_d
         base + bonus
       end
+
+      golfer_scores.sort.reverse.first(3).sum
     end
   end
 
