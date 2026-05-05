@@ -9,8 +9,8 @@ RSpec.describe LockOddsJob, type: :job do
   it "creates odds rows for golfers in the pool tournament based on futures data" do
     client = instance_double(BallDontLie::Client)
     allow(BallDontLie::Client).to receive(:new).and_return(client)
-    allow(client).to receive(:futures).and_return(
-      "data" => [
+    allow(client).to receive(:fetch_all_futures).and_return(
+      [
         {
           "market_type" => "tournament_winner",
           "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
@@ -36,8 +36,8 @@ RSpec.describe LockOddsJob, type: :job do
   it "ignores futures that are not tournament_winner market type" do
     client = instance_double(BallDontLie::Client)
     allow(BallDontLie::Client).to receive(:new).and_return(client)
-    allow(client).to receive(:futures).and_return(
-      "data" => [
+    allow(client).to receive(:fetch_all_futures).and_return(
+      [
         {
           "market_type" => "make_the_cut",
           "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
