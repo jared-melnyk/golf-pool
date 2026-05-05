@@ -23,10 +23,6 @@ class PoolTournamentsController < ApplicationController
       redirect_to @pool, alert: "Only the pool creator can add or remove tournaments."
       return
     end
-    if pt.tournament.started?
-      redirect_to @pool, alert: "Cannot remove a tournament that has already started."
-      return
-    end
     pt.destroy!
     redirect_to @pool, notice: "Tournament removed from pool."
   end

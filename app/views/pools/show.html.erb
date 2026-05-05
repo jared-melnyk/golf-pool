@@ -43,14 +43,25 @@
   <ul class="space-y-4">
     <% @pool.tournaments.order(:starts_at).each do |t| %>
       <% pt = @pool_tournaments.find { |p| p.tournament_id == t.id } %>
+      <% has_pool_picks = (@picks_by_tournament_and_user&.[](t.id) || {}).any? %>
       <li class="space-y-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
         <div class="flex items-start gap-2 flex-wrap">
           <div class="flex-1 min-w-0">
             <%= render "picks/tournament_with_picks", tournament: t, pool: @pool, pick: @my_picks_by_tournament&.[](t.id), pool_tournament: pt %>
+            <% if pt && !has_pool_picks %>
+              <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 mt-2">
+                No picks submitted
+              </span>
+            <% end %>
           </div>
           <div class="flex items-center gap-2">
-            <% if pt && @pool.creator?(current_user) && !t.started? %>
-              <%= button_to "Remove", pool_pool_tournament_path(@pool, pt), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Removal cannot be undone. Are you sure?" } }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+            <% if pt && @pool.creator?(current_user) %>
+              <% confirm_message = if has_pool_picks
+                "Are you sure? This will remove the tournament from this pool, and any tournament results and picks history will be removed from pool results."
+              else
+                "Are you sure? This will remove the tournament from this pool."
+              end %>
+              <%= button_to "Remove", pool_pool_tournament_path(@pool, pt), method: :delete, form: { class: "inline-block", data: { turbo_confirm: confirm_message } }, class: "rounded px-2 py-1 text-sm text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
             <% end %>
             <% if pt && t.started? %>
               <% if t.results_synced_at.present? %>
