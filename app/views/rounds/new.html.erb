@@ -1,0 +1,69 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Create round</h1>
+    <p class="text-sm text-gray-600 mt-1">
+      Search for a course, select a tee, and snapshot 18-hole handicap fields for this event.
+    </p>
+  </div>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">1) Find course</h2>
+    <%= form_with url: new_event_round_path(@event), method: :get, local: true, class: "flex flex-wrap items-end gap-2" do |f| %>
+      <div class="min-w-64 flex-1">
+        <%= f.label :search_query, "Course or club name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :search_query, value: @search_query, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+      <%= f.submit "Search", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+    <% end %>
+
+    <% if @course_search_results.any? %>
+      <ul class="mt-3 space-y-2">
+        <% @course_search_results.each do |course| %>
+          <li>
+            <%= link_to "#{course["club_name"]} · #{course["course_name"]}", new_event_round_path(@event, search_query: @search_query, course_id: course["id"]), class: "text-emerald-700 hover:underline" %>
+            <span class="text-sm text-gray-500">(<%= course.dig("location", "city") %><%= ", #{course.dig("location", "state")}" if course.dig("location", "state").present? %>)</span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">2) Create snapshot</h2>
+    <%= form_with model: @round, url: event_rounds_path(@event), method: :post, local: true, class: "space-y-4" do |f| %>
+      <% if @round.errors.any? %>
+        <ul class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+          <% @round.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <div>
+        <%= f.label :name, "Round name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.text_field :name, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.label :played_on, "Date played", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.date_field :played_on, required: true, class: "rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.label :golf_course_api_course_id, "Course ID", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.number_field :golf_course_api_course_id, required: true, value: @selected_course&.dig("id"), class: "rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.label :tee_selector, "Tee (18-hole only)", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :tee_selector, @tee_options.map { |option| [ option[:label], option[:value] ] }, { include_blank: "Select a tee" }, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.submit "Create round", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      </div>
+    <% end %>
+  </section>
+
+  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>

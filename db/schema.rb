@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_204350) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_030100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_204350) do
     t.datetime "updated_at", null: false
     t.index ["creator_id"], name: "index_pools_on_creator_id"
     t.index ["token"], name: "index_pools_on_token", unique: true
+  end
+
+  create_table "rounds", force: :cascade do |t|
+    t.string "club_name"
+    t.string "course_name", null: false
+    t.decimal "course_rating", precision: 5, scale: 2, null: false
+    t.jsonb "course_snapshot", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.integer "golf_course_api_course_id", null: false
+    t.integer "hole_handicaps", default: [], null: false, array: true
+    t.integer "hole_pars", default: [], null: false, array: true
+    t.string "name", null: false
+    t.integer "par_total", null: false
+    t.date "played_on", null: false
+    t.integer "slope_rating", null: false
+    t.string "tee_gender", null: false
+    t.string "tee_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_rounds_on_event_id"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
@@ -308,6 +328,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_204350) do
   add_foreign_key "pool_users", "pools"
   add_foreign_key "pool_users", "users"
   add_foreign_key "pools", "users", column: "creator_id"
+  add_foreign_key "rounds", "events"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

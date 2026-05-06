@@ -42,6 +42,33 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(event.name)
+      expect(response.body).to include("commissioner-managed")
+    end
+
+    it "shows round details to any event member" do
+      event.rounds.create!(
+        name: "Round 1",
+        played_on: Date.new(2026, 6, 10),
+        golf_course_api_course_id: 99,
+        course_name: "Course No. 1",
+        club_name: "Murray Golf Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: BigDecimal("72.1"),
+        slope_rating: 131,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: {}
+      )
+      event.event_memberships.create!(user: player, role: "player")
+      allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(player)
+
+      get event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Round 1")
+      expect(response.body).to include("Course No. 1")
     end
   end
 
