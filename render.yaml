@@ -38,5 +38,6 @@ services:
       - key: DATABASE_URL
         sync: false
       # Add BALLDONTLIE_API_KEY in Render dashboard (Environment) for PGA API
+      # Optional for on-course features: GOLF_COURSE_API_KEY (golfcourseapi.com), server-side only
       # For custom domain (e.g. subdomain longshot.jaredmelnyk.com): add APP_HOST in Environment
       # For password reset email: add SMTP_ADDRESS, SMTP_PORT (default 587), SMTP_USER_NAME, SMTP_PASSWORD (e.g. SendGrid API key)

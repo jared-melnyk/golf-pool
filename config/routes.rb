@@ -17,6 +17,13 @@ Rails.application.routes.draw do
 
   resources :tournaments, only: [ :index, :show ]
 
+  resource :profile, only: [ :edit, :update ]
+
+  resources :events, param: :token do
+    post :join, on: :member
+    resources :event_memberships, only: [ :destroy, :update ]
+  end
+
   post "sync/tournament_results/:tournament_id", to: "sync#tournament_results", as: :sync_tournament_results
   post "sync/field", to: "sync#field", as: :sync_field
 

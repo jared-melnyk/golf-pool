@@ -1,0 +1,20 @@
+<div class="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">On-Course events</h1>
+  <p class="mb-6">
+    <%= link_to "New event", new_event_path, class: "inline-block bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium no-underline" %>
+  </p>
+  <% if @events.any? %>
+    <ul class="list-disc list-inside space-y-2">
+      <% @events.each do |event| %>
+        <li>
+          <%= link_to event.name, event_path(event), class: "text-emerald-600 hover:underline" %>
+          <% if event.status != "active" %>
+            <span class="text-xs text-gray-500">(<%= event.status.humanize %>)</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-gray-600">No events yet. Create one or use an invite link to join.</p>
+  <% end %>
+</div>

@@ -52,13 +52,21 @@
           <aside data-sidebar-target="panel" class="fixed left-0 top-0 z-50 h-full w-48 -translate-x-full transition-transform duration-200 ease-out bg-white border-r border-gray-200 p-4 pt-20 md:relative md:translate-x-0 md:h-full md:min-h-screen md:w-48 md:pt-4 md:flex-shrink-0">
             <nav class="space-y-1">
               <%= link_to "Rules", rules_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(rules_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
-              <%= link_to "My Pools", pools_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pools_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Pools", pools_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pools_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+              <%= link_to "On-Course", events_path, class: "block rounded px-3 py-2 text-sm no-underline " + (controller_name == "events" ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
               <%= link_to "Tournaments", tournaments_path, class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(tournaments_path) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Profile", edit_profile_path, class: "block rounded px-3 py-2 text-sm no-underline " + (controller_name == "profiles" ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
               <% if @pool && @pool.users.include?(current_user) %>
                 <div class="pt-2 mt-2 border-t border-gray-200">
                   <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This pool</div>
                   <%= link_to @pool.name, pool_path(@pool), class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pool_path(@pool)) ? "bg-gray-100 font-medium text-gray-900" : "text-emerald-600 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
                   <%= link_to "My picks", pool_picks_path(@pool), class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(pool_picks_path(@pool)) ? "bg-gray-100 font-medium text-gray-900" : "text-gray-700 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
+                </div>
+              <% end %>
+              <% if @event && @event.member?(current_user) %>
+                <div class="pt-2 mt-2 border-t border-gray-200">
+                  <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This event</div>
+                  <%= link_to @event.name, event_path(@event), class: "block rounded px-3 py-2 text-sm no-underline " + (current_page?(event_path(@event)) ? "bg-gray-100 font-medium text-gray-900" : "text-emerald-600 hover:bg-gray-100"), data: { action: "click->sidebar#close" } %>
                 </div>
               <% end %>
             </nav>
