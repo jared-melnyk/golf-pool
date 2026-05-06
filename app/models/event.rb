@@ -3,6 +3,7 @@ class Event < ApplicationRecord
 
   has_many :event_memberships, dependent: :destroy
   has_many :users, through: :event_memberships
+  has_many :rounds, dependent: :destroy
 
   before_validation :generate_token, on: :create
 
