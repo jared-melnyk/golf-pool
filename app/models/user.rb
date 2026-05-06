@@ -5,8 +5,14 @@ class User < ApplicationRecord
   has_many :pools, through: :pool_users
   has_many :picks, dependent: :destroy
 
+  has_many :event_memberships, dependent: :destroy
+  has_many :events, through: :event_memberships
+
   validates :email, presence: true, uniqueness: true
   validates :name, presence: true
+  validates :ghin_handicap_index,
+            numericality: { greater_than_or_equal_to: -54, less_than_or_equal_to: 54 },
+            allow_nil: true
 
   def generate_password_reset_token
     raw_token = SecureRandom.urlsafe_base64(32)

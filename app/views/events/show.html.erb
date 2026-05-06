@@ -1,0 +1,68 @@
+<h1 class="text-2xl font-bold text-gray-900 mb-2"><%= @event.name %></h1>
+<p class="text-gray-600 mb-4">
+  Status:
+  <span class="font-medium text-gray-800"><%= @event.status.titleize %></span>
+  <% if @membership.commissioner? %>
+    <span class="text-emerald-700">· You are a commissioner</span>
+  <% else %>
+    <span class="text-gray-700">· Player</span>
+  <% end %>
+</p>
+
+<% if @event.commissioner?(current_user) %>
+  <%= form_with model: @event, url: event_path(@event), method: :patch, local: true, class: "mb-6 flex flex-wrap items-end gap-3" do |f| %>
+    <div>
+      <%= f.label :status, class: "block text-sm font-medium text-gray-700 mb-1" %>
+      <%= f.select :status, Event::STATUSES.map { |s| [ s.titleize, s ] }, {}, class: "rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+    </div>
+    <div>
+      <%= f.submit "Update status", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+    </div>
+  <% end %>
+<% end %>
+
+<p class="mb-4" data-controller="clipboard" data-invite-url="<%= event_url(@event) %>">
+  <button type="button"
+          data-action="click->clipboard#copy"
+          class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
+    Copy invite link
+  </button>
+  <span data-clipboard-target="feedback" class="ml-2 text-sm text-gray-600 hidden">Link copied!</span>
+</p>
+
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-900 mb-3">Members</h2>
+  <ol class="list-decimal list-inside space-y-2">
+    <% @memberships.each do |em| %>
+      <li class="flex flex-wrap items-center justify-between gap-2">
+        <span>
+          <%= em.user.name %>
+          <span class="text-sm text-gray-500">— <%= em.role.titleize %></span>
+          <% if em.user.ghin_handicap_index.present? %>
+            <span class="text-sm text-gray-500">(HI <%= em.user.ghin_handicap_index %>)</span>
+          <% end %>
+        </span>
+        <span class="flex flex-wrap gap-2 items-center">
+          <% if @event.commissioner?(current_user) && em.player? %>
+            <%= button_to "Make commissioner", event_event_membership_path(@event, em), method: :patch, params: { event_membership: { role: "commissioner" } }, form: { class: "inline-block", data: { turbo_confirm: "Promote #{em.user.name} to commissioner?" } }, class: "rounded px-2 py-1 text-xs text-emerald-700 border border-emerald-300 hover:border-emerald-400" %>
+          <% end %>
+          <% if em.user_id == current_user.id %>
+            <%= button_to "Leave", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Leave this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% elsif @event.commissioner?(current_user) && em.player? %>
+            <%= button_to "Remove", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Remove #{em.user.name} from this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% end %>
+        </span>
+      </li>
+    <% end %>
+  </ol>
+</section>
+
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-900 mb-2">On-course games</h2>
+  <p class="text-gray-600 text-sm leading-relaxed">
+    Rounds, course data, and Best Ball scoring will show here in upcoming releases.
+    Set your <%= link_to "GHIN handicap index", edit_profile_path, class: "text-emerald-700 hover:underline" %> on your profile for net games.
+  </p>
+</section>
+
+<%= link_to "← All events", events_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
