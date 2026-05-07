@@ -75,6 +75,9 @@
             · <%= round.played_on.strftime("%b %-d, %Y") %>
             · <%= round.course_name %>
             · <%= round.tee_gender.titleize %> <%= round.tee_name %>
+            <% if round.tee_total_yards.present? %>
+              · <%= number_with_delimiter(round.tee_total_yards) %> yds
+            <% end %>
             · Rating <%= round.course_rating %> / Slope <%= round.slope_rating %>
           </span>
         </li>

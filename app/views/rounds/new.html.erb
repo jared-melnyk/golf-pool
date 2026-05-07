@@ -16,7 +16,7 @@
       <%= f.submit "Search", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
     <% end %>
 
-    <% if @course_search_results.any? %>
+    <% if @course_search_results.any? && @selected_course.blank? %>
       <ul class="mt-3 space-y-2">
         <% @course_search_results.each do |course| %>
           <li>
@@ -42,6 +42,7 @@
       <div>
         <%= f.label :name, "Round name", class: "block text-sm font-medium text-gray-700 mb-1" %>
         <%= f.text_field :name, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+        <p class="mt-1 text-xs text-gray-500">Defaults from selected course; you can edit this.</p>
       </div>
 
       <div>
@@ -56,13 +57,13 @@
           type="text"
           value="<%= @selected_course.present? ? "#{@selected_course["club_name"]} · #{@selected_course["course_name"]} (ID #{@selected_course["id"]})" : "Choose a course from search results above" %>"
           readonly
-          class="w-full rounded border border-gray-300 px-3 py-2 bg-gray-50 text-gray-700"
+          class="w-full rounded border border-gray-300 px-3 py-2 bg-gray-50 <%= @selected_course.present? ? "text-gray-700" : "text-gray-500 italic" %>"
         />
       </div>
 
       <div>
         <%= f.label :tee_selector, "Tee (18-hole only)", class: "block text-sm font-medium text-gray-700 mb-1" %>
-        <%= f.select :tee_selector, @tee_options.map { |option| [ option[:label], option[:value] ] }, { include_blank: "Select a tee" }, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+        <%= f.select :tee_selector, @tee_options.map { |option| [ option[:label], option[:value] ] }, { include_blank: @selected_course.present? ? "Select a tee" : "Select a course first" }, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
         <% if @selected_course.present? && @tee_options.empty? %>
           <p class="mt-1 text-sm text-amber-700">No supported 18-hole male tees were found for this course.</p>
         <% end %>
