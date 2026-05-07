@@ -1,12 +1,12 @@
 <%# Renders one tournament with either "Picks TBD" or a bulleted list of the user's picks. %>
-<%# Locals: tournament, pool, pick (optional), pool_tournament (optional — for odds display) %>
+<%# Locals: tournament, pool, pick (optional), pool_tournament (optional — for bonus display) %>
 <%= tournament.name %> (<%= tournament.starts_at&.strftime("%b %d") %>)
-<div class="text-sm text-gray-500">Max LongShot bonus: <%= tournament.max_longshot_bonus.positive? ? "$#{number_with_delimiter(tournament.max_longshot_bonus.to_i)}" : "TBD" %></div>
+<div class="text-sm text-gray-500">Max Cut Made Bonus: <%= tournament.max_cut_made_bonus.positive? ? "$#{number_with_delimiter(tournament.max_cut_made_bonus.to_i)}" : "TBD" %></div>
 <% if pick&.pick_golfers&.any? %>
   <ul class="list-disc list-inside ml-4 mt-1 space-y-0.5 text-gray-700">
     <% pick.pick_golfers.order(:slot).each do |pg| %>
       <% odds = pool_tournament&.pool_tournament_odds&.find { |o| o.golfer_id == pg.golfer_id }&.american_odds %>
-      <li><%= golfer_name_with_odds(pg.golfer&.name, odds, max_bonus: tournament.max_longshot_bonus) %></li>
+      <li><%= golfer_name_with_bonus(pg.golfer&.name, odds, tournament: tournament) %></li>
     <% end %>
   </ul>
   <% unless tournament.picks_locked? %>

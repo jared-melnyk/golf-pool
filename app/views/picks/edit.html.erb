@@ -1,6 +1,6 @@
 <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit picks — <%= @tournament.name %></h1>
-<p class="text-gray-600 text-sm mb-4">Bonus values are shown when available from sportsbooks; some players (often long shots) may not have listed odds.</p>
-<p class="text-sm text-gray-500 mb-4">Max LongShot bonus: <%= @tournament.max_longshot_bonus.positive? ? "$#{number_with_delimiter(@tournament.max_longshot_bonus.to_i)}" : "TBD" %></p>
+<p class="text-gray-600 text-sm mb-4">Cut Made Bonus values are shown when available from sportsbooks; some players may not have listed odds.</p>
+<p class="text-sm text-gray-500 mb-4">Max Cut Made Bonus: <%= @tournament.max_cut_made_bonus.positive? ? "$#{number_with_delimiter(@tournament.max_cut_made_bonus.to_i)}" : "TBD" %></p>
 
 <% if @pick.errors.any? %>
   <ul class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">

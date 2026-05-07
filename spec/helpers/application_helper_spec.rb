@@ -20,25 +20,6 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
-  describe "#golfer_name_with_odds" do
-    it "appends asterisk when at max longshot bonus" do
-      result = helper.golfer_name_with_odds("Scottie", 500, max_bonus: 10_000)
-      expect(result).to include("*")
-      expect(result).to eq("Scottie (+500)*")
-    end
-
-    it "does not append asterisk when max_bonus is not passed" do
-      result = helper.golfer_name_with_odds("Scottie", 500)
-      expect(result).not_to include("*")
-      expect(result).to eq("Scottie (+500)")
-    end
-
-    it "does not append asterisk when not at cap" do
-      result = helper.golfer_name_with_odds("Scottie", 400, max_bonus: 10_000)
-      expect(result).not_to include("*")
-    end
-  end
-
   describe "#golfer_name_with_bonus" do
     it "shows capped bonus amount with label and asterisk at cap" do
       tournament = Tournament.new(total_prize_pool: 100_000, starts_at: Time.current)
@@ -59,6 +40,22 @@ RSpec.describe ApplicationHelper, type: :helper do
       result = helper.golfer_name_with_bonus("Scottie", nil, tournament: tournament)
 
       expect(result).to eq("Scottie")
+    end
+  end
+
+  describe "#cut_made_bonus_label" do
+    it "returns a cut made bonus label and cap asterisk" do
+      tournament = Tournament.new(total_prize_pool: 100_000, starts_at: Time.current)
+      result = helper.cut_made_bonus_label(500, tournament: tournament)
+
+      expect(result).to eq("Cut Made Bonus: $10,000*")
+    end
+
+    it "returns em dash when odds are missing" do
+      tournament = Tournament.new(total_prize_pool: 1_000_000, starts_at: Time.current)
+      result = helper.cut_made_bonus_label(nil, tournament: tournament)
+
+      expect(result).to eq("—")
     end
   end
 end

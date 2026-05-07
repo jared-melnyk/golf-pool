@@ -51,18 +51,27 @@ class Tournament < ApplicationRecord
     started?
   end
 
-  # Maximum longshot bonus per pick: 10% of tournament total prize pool (advertised purse).
+  # Maximum Cut Made Bonus per pick: 10% of tournament total prize pool (advertised purse).
   # Prize pool is expected to be set from API or manually and is static; when nil, max bonus is 0.
-  def max_longshot_bonus
+  def max_cut_made_bonus
     (total_prize_pool.to_d || 0) * 0.10
   end
 
-  # LongShot bonus (20 × |american_odds|) capped at max_longshot_bonus. Used for display and by Pool scoring.
-  def capped_longshot_bonus(american_odds)
+  # Cut Made Bonus (20 × |american_odds|) capped at max_cut_made_bonus. Used for display and by Pool scoring.
+  def capped_cut_made_bonus(american_odds)
     return 0.to_d if american_odds.nil?
     raw = american_odds.to_d.abs * 20
-    max_bonus = max_longshot_bonus
+    max_bonus = max_cut_made_bonus
     max_bonus.positive? ? [ raw, max_bonus ].min : raw
+  end
+
+  # Backwards-compatible aliases while transitioning internal terminology.
+  def max_longshot_bonus
+    max_cut_made_bonus
+  end
+
+  def capped_longshot_bonus(american_odds)
+    capped_cut_made_bonus(american_odds)
   end
 
   # True if we have already synced results (no need to sync again). We do not use ends_at.
