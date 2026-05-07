@@ -57,6 +57,37 @@ RSpec.describe "Rounds", type: :request do
         expect(response.body).to include("Male")
         expect(response.body).not_to include("Female")
       end
+
+      it "shows tee options when course payload is wrapped under course key" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+        allow(client).to receive(:course).with(id: 99).and_return(
+          {
+            "course" => {
+              "id" => 99,
+              "club_name" => "Murray Golf Club",
+              "course_name" => "Course No. 1",
+              "tees" => {
+                "Men" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
+              }
+            }
+          }
+        )
+
+        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Blue")
+      end
+
+      it "prefills a default round name after selecting a course" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+        allow(Date).to receive(:current).and_return(Date.new(2026, 6, 10))
+
+        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('value="Course No. 1 - 2026-06-10"')
+      end
     end
   end
 
