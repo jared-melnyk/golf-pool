@@ -3,6 +3,13 @@
 require "rails_helper"
 
 RSpec.describe GolfCourseApi::Client do
+  describe ".new" do
+    it "raises MissingApiKeyError when api key is blank" do
+      expect { described_class.new(api_key: "") }.to raise_error(GolfCourseApi::MissingApiKeyError)
+      expect { described_class.new(api_key: "   ") }.to raise_error(GolfCourseApi::MissingApiKeyError)
+    end
+  end
+
   describe "#search_courses" do
     it "returns parsed courses payload" do
       response = instance_double(Net::HTTPOK, code: "200", body: {

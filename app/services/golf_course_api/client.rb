@@ -8,8 +8,8 @@ module GolfCourseApi
     BASE_URL = "https://api.golfcourseapi.com/v1"
 
     def initialize(api_key: nil)
-      @api_key = api_key.presence || ENV["GOLF_COURSE_API_KEY"]
-      raise ArgumentError, "GOLF_COURSE_API_KEY is required" if @api_key.blank?
+      @api_key = api_key.presence || ENV["GOLF_COURSE_API_KEY"].to_s.strip.presence
+      raise MissingApiKeyError if @api_key.blank?
     end
 
     def search_courses(search_query:)
