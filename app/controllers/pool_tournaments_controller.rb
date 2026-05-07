@@ -103,7 +103,7 @@ class PoolTournamentsController < ApplicationController
       if result
         # Official result synced: use made_cut? and show bonus or MC
         if result.made_cut? && odds_row
-          @golfer_bonus_display[gid] = @tournament.capped_longshot_bonus(odds_row.american_odds)
+          @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
         else
           @golfer_bonus_display[gid] = :mc
         end
@@ -116,7 +116,7 @@ class PoolTournamentsController < ApplicationController
         missed_cut = cut_known && round_numbers.any? && !made_cut
 
         if made_cut && odds_row
-          @golfer_bonus_display[gid] = @tournament.capped_longshot_bonus(odds_row.american_odds)
+          @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
         elsif missed_cut
           @golfer_bonus_display[gid] = :mc
         else

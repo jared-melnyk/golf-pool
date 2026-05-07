@@ -56,7 +56,7 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).not_to include("Live scores are temporarily unavailable")
     end
 
-    it "shows Bonus column with — when no tournament results" do
+    it "shows Cut Made Bonus column with — when no tournament results" do
       golfer = Golfer.create!(name: "Scottie", external_id: "185")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
         PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
@@ -74,14 +74,14 @@ RSpec.describe "PoolTournament scores", type: :request do
       get pool_pool_tournament_path(pool, pool_tournament)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Bonus")
+      expect(response.body).to include("Cut Made Bonus")
       expect(response.body).to include("Scottie")
       # No TournamentResult => bonus cell shows "—"
-      expect(response.body).to match(/Total.*Bonus/m)
+      expect(response.body).to match(/Total.*Cut Made Bonus/m)
       expect(response.body).to include("—")
     end
 
-    it "shows LongShot bonus amount when golfer made cut and has odds" do
+    it "shows Cut Made Bonus amount when golfer made cut and has odds" do
       tournament.update!(total_prize_pool: 10_000_000)
       golfer = Golfer.create!(name: "Scottie", external_id: "185")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
@@ -105,7 +105,7 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("10,000").or include("$10,000")
     end
 
-    it "shows MC in Bonus column when golfer missed the cut" do
+    it "shows MC in Cut Made Bonus column when golfer missed the cut" do
       golfer = Golfer.create!(name: "Rory", external_id: "282")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
         PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
@@ -127,7 +127,7 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("MC")
     end
 
-    it "shows LongShot bonus from live round data when no TournamentResult yet (round 3+ = made cut)" do
+    it "shows Cut Made Bonus from live round data when no TournamentResult yet (round 3+ = made cut)" do
       tournament.update!(total_prize_pool: 10_000_000)
       golfer = Golfer.create!(name: "Scottie", external_id: "185")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
