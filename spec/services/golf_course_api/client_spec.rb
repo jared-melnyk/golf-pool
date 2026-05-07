@@ -5,6 +5,9 @@ require "rails_helper"
 RSpec.describe GolfCourseApi::Client do
   describe ".new" do
     it "raises MissingApiKeyError when api key is blank" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return(nil)
+
       expect { described_class.new(api_key: "") }.to raise_error(GolfCourseApi::MissingApiKeyError)
       expect { described_class.new(api_key: "   ") }.to raise_error(GolfCourseApi::MissingApiKeyError)
     end
