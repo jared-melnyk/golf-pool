@@ -7,6 +7,13 @@ class Round < ApplicationRecord
   validates :tee_gender, inclusion: { in: %w[male female] }
   validate :validate_hole_arrays
 
+  def tee_total_yards
+    tees = course_snapshot.is_a?(Hash) ? course_snapshot["tees"] : nil
+    tee_list = tees.is_a?(Hash) ? tees[tee_gender] : nil
+    tee = Array(tee_list).find { |candidate| candidate["tee_name"] == tee_name }
+    tee && tee["total_yards"]
+  end
+
   private
 
   def validate_hole_arrays

@@ -59,7 +59,13 @@ RSpec.describe "Events", type: :request do
         par_total: 72,
         hole_pars: Array.new(18, 4),
         hole_handicaps: (1..18).to_a,
-        course_snapshot: {}
+        course_snapshot: {
+          "tees" => {
+            "male" => [
+              { "tee_name" => "Blue", "total_yards" => 6348 }
+            ]
+          }
+        }
       )
       event.event_memberships.create!(user: player, role: "player")
       allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(player)
@@ -69,6 +75,7 @@ RSpec.describe "Events", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Round 1")
       expect(response.body).to include("Course No. 1")
+      expect(response.body).to include("6,348 yds")
     end
   end
 

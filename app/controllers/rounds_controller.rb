@@ -24,7 +24,7 @@ class RoundsController < ApplicationController
 
     @selected_course = normalize_course_payload(golf_course_client.course(id: params[:course_id].to_i))
     @tee_options = tee_options_for(@selected_course)
-    @round.name = default_round_name_for(@selected_course, @round.played_on)
+    @round.name = default_round_name_for(@selected_course) if @round.name.blank?
   rescue GolfCourseApi::MissingApiKeyError => e
     flash.now[:alert] = e.message
   rescue StandardError => e
@@ -112,9 +112,10 @@ class RoundsController < ApplicationController
 
   def tee_options_for(course_payload)
     male_tees_for(course_payload).each_with_index.map do |tee, index|
+      yards_text = tee["total_yards"].present? ? " · #{helpers.number_with_delimiter(tee["total_yards"])} yds" : ""
       {
         value: "male:#{index}",
-        label: "Male · #{tee["tee_name"]} (Rating #{tee["course_rating"]}, Slope #{tee["slope_rating"]})"
+        label: "Male · #{tee["tee_name"]}#{yards_text} (Rating #{tee["course_rating"]}, Slope #{tee["slope_rating"]})"
       }
     end
   end
@@ -160,9 +161,9 @@ class RoundsController < ApplicationController
     Array(candidates.find(&:present?))
   end
 
-  def default_round_name_for(course_payload, played_on)
+  def default_round_name_for(course_payload)
     course_name = course_payload["course_name"].presence || course_payload["club_name"].presence || "Round"
-    "#{course_name} - #{played_on}"
+    "Round at #{course_name}"
   end
 
   def require_event_not_completed!

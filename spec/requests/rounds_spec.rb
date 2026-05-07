@@ -41,8 +41,8 @@ RSpec.describe "Rounds", type: :request do
             "club_name" => "Murray Golf Club",
             "course_name" => "Course No. 1",
             "tees" => {
-              "male" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ],
-              "female" => [ { "tee_name" => "Gold", "number_of_holes" => 18, "course_rating" => 74.2, "slope_rating" => 136, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
+              "male" => [ { "tee_name" => "Blue", "total_yards" => 6348, "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ],
+              "female" => [ { "tee_name" => "Gold", "total_yards" => 6012, "number_of_holes" => 18, "course_rating" => 74.2, "slope_rating" => 136, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
             }
           }
         )
@@ -56,6 +56,7 @@ RSpec.describe "Rounds", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Male")
         expect(response.body).not_to include("Female")
+        expect(response.body).to include("6,348 yds")
       end
 
       it "shows tee options when course payload is wrapped under course key" do
@@ -67,7 +68,7 @@ RSpec.describe "Rounds", type: :request do
               "club_name" => "Murray Golf Club",
               "course_name" => "Course No. 1",
               "tees" => {
-                "Men" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
+                "Men" => [ { "tee_name" => "Blue", "total_yards" => 6348, "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
               }
             }
           }
@@ -86,7 +87,16 @@ RSpec.describe "Rounds", type: :request do
         get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
 
         expect(response).to have_http_status(:ok)
-        expect(response.body).to include('value="Course No. 1 - 2026-06-10"')
+        expect(response.body).to include('value="Round at Course No. 1"')
+      end
+
+      it "hides search result links after a course is selected" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("course_id=99&amp;search_query=murray")
       end
     end
   end
