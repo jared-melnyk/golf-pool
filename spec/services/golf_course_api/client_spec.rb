@@ -3,8 +3,15 @@
 require "rails_helper"
 
 RSpec.describe GolfCourseApi::Client do
+  describe ".new" do
+    it "raises MissingApiKeyError when api key is blank" do
+      expect { described_class.new(api_key: "") }.to raise_error(GolfCourseApi::MissingApiKeyError)
+      expect { described_class.new(api_key: "   ") }.to raise_error(GolfCourseApi::MissingApiKeyError)
+    end
+  end
+
   describe "#search_courses" do
-    it "returns parsed courses payload" do
+    it "returns parsed courses payload and sends Authorization Key header" do
       response = instance_double(Net::HTTPOK, code: "200", body: {
         courses: [
           {
@@ -16,7 +23,15 @@ RSpec.describe GolfCourseApi::Client do
         ]
       }.to_json)
       allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
-      allow(Net::HTTP).to receive(:start).and_return(response)
+      allow(Net::HTTP).to receive(:start) do |_host, _port, use_ssl:, &block|
+        expect(use_ssl).to eq(true)
+        http = instance_double(Net::HTTP)
+        allow(http).to receive(:request) do |request|
+          expect(request["Authorization"]).to eq("Key test-key")
+          response
+        end
+        block.call(http)
+      end
 
       client = described_class.new(api_key: "test-key")
       result = client.search_courses(search_query: "pinehurst")

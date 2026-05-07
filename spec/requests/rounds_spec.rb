@@ -12,34 +12,51 @@ RSpec.describe "Rounds", type: :request do
   end
 
   describe "GET /events/:event_token/rounds/new" do
-    let(:client) { instance_double(GolfCourseApi::Client) }
+    it "shows setup instructions when GOLF_COURSE_API_KEY is not set" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return(nil)
 
-    before do
-      allow(GolfCourseApi::Client).to receive(:new).and_return(client)
-      allow(client).to receive(:search_courses).and_return(
-        { "courses" => [ { "id" => 99, "club_name" => "Murray Golf Club", "course_name" => "Course No. 1", "location" => { "city" => "Murray", "state" => "KY" } } ] }
-      )
-      allow(client).to receive(:course).with(id: 99).and_return(
-        {
-          "id" => 99,
-          "club_name" => "Murray Golf Club",
-          "course_name" => "Course No. 1",
-          "tees" => {
-            "male" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ],
-            "female" => [ { "tee_name" => "Gold", "number_of_holes" => 18, "course_rating" => 74.2, "slope_rating" => 136, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
-          }
-        }
-      )
-    end
-
-    it "shows only male tee options in v1" do
       allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
 
-      get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+      get new_event_round_path(event), params: { search_query: "pinehurst" }
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Male")
-      expect(response.body).not_to include("Female")
+      expect(response.body).to include("GOLF_COURSE_API_KEY")
+      expect(response.body).to include(".env.example")
+    end
+
+    context "when GOLF_COURSE_API_KEY is configured" do
+      let(:client) { instance_double(GolfCourseApi::Client) }
+
+      before do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
+        allow(GolfCourseApi::Client).to receive(:new).and_return(client)
+        allow(client).to receive(:search_courses).and_return(
+          { "courses" => [ { "id" => 99, "club_name" => "Murray Golf Club", "course_name" => "Course No. 1", "location" => { "city" => "Murray", "state" => "KY" } } ] }
+        )
+        allow(client).to receive(:course).with(id: 99).and_return(
+          {
+            "id" => 99,
+            "club_name" => "Murray Golf Club",
+            "course_name" => "Course No. 1",
+            "tees" => {
+              "male" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ],
+              "female" => [ { "tee_name" => "Gold", "number_of_holes" => 18, "course_rating" => 74.2, "slope_rating" => 136, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
+            }
+          }
+        )
+      end
+
+      it "shows only male tee options in v1" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Male")
+        expect(response.body).not_to include("Female")
+      end
     end
   end
 
@@ -47,6 +64,8 @@ RSpec.describe "Rounds", type: :request do
     let(:client) { instance_double(GolfCourseApi::Client) }
 
     before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
       allow(GolfCourseApi::Client).to receive(:new).and_return(client)
       allow(client).to receive(:course).with(id: 99).and_return(
         {

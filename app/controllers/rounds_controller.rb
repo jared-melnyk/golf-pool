@@ -13,12 +13,19 @@ class RoundsController < ApplicationController
 
     return if @search_query.blank?
 
+    unless golf_course_api_key_configured?
+      flash.now[:alert] = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
+      return
+    end
+
     @course_search_results = golf_course_client.search_courses(search_query: @search_query).fetch("courses", [])
 
     return if params[:course_id].blank?
 
     @selected_course = golf_course_client.course(id: params[:course_id].to_i)
     @tee_options = tee_options_for(@selected_course)
+  rescue GolfCourseApi::MissingApiKeyError => e
+    flash.now[:alert] = e.message
   rescue StandardError => e
     flash.now[:alert] = "Could not load GolfCourseAPI data: #{e.message}"
   end
@@ -54,6 +61,14 @@ class RoundsController < ApplicationController
       @tee_options = []
       render :new, status: :unprocessable_entity
     end
+  rescue GolfCourseApi::MissingApiKeyError => e
+    @round = @event.rounds.new(round_params.except(:tee_selector))
+    @search_query = ""
+    @course_search_results = []
+    @selected_course = nil
+    @tee_options = []
+    flash.now[:alert] = e.message
+    render :new, status: :unprocessable_entity
   rescue StandardError => e
     @round = @event.rounds.new(round_params.except(:tee_selector))
     @search_query = ""
@@ -84,6 +99,10 @@ class RoundsController < ApplicationController
 
   def round_params
     params.require(:round).permit(:name, :played_on, :golf_course_api_course_id, :tee_selector)
+  end
+
+  def golf_course_api_key_configured?
+    ENV["GOLF_COURSE_API_KEY"].to_s.strip.present?
   end
 
   def golf_course_client
