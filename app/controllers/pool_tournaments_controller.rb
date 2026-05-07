@@ -100,7 +100,7 @@ class PoolTournamentsController < ApplicationController
       result = results_by_golfer[gid]
       odds_row = odds_by_golfer[gid]
 
-      if result
+      if result && @tournament.completed?
         # Official result synced: use made_cut? and show bonus or MC
         if result.made_cut? && odds_row
           @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
