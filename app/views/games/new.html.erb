@@ -1,0 +1,40 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Create game</h1>
+    <p class="text-sm text-gray-600 mt-1">Choose the round and game type.</p>
+  </div>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <%= form_with model: @game, url: event_games_path(@event), method: :post, local: true, class: "space-y-4" do |f| %>
+      <% if @game.errors.any? %>
+        <ul class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+          <% @game.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+        </ul>
+      <% end %>
+
+      <div>
+        <%= f.label :round_id, "Round", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :round_id,
+              @rounds.map { |r| ["#{r.name} · #{r.played_on.strftime("%b %-d")} · #{r.course_name}", r.id] },
+              { include_blank: "Select a round" },
+              required: true,
+              class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.label :game_type, "Game type", class: "block text-sm font-medium text-gray-700 mb-1" %>
+        <%= f.select :game_type,
+              Game::GAME_TYPES.map { |t| [t.gsub("_", " ").titleize, t] },
+              {},
+              required: true,
+              class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500" %>
+      </div>
+
+      <div>
+        <%= f.submit "Create game", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      </div>
+    <% end %>
+  </section>
+
+  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>

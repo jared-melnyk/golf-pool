@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_030100) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_11_185310) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,11 +34,51 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_030100) do
     t.index ["token"], name: "index_events_on_token", unique: true
   end
 
+  create_table "game_team_players", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_team_id", null: false
+    t.decimal "snapshot_handicap_index", precision: 5, scale: 1
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["game_team_id", "user_id"], name: "index_game_team_players_on_game_team_id_and_user_id", unique: true
+    t.index ["game_team_id"], name: "index_game_team_players_on_game_team_id"
+    t.index ["user_id"], name: "index_game_team_players_on_user_id"
+  end
+
+  create_table "game_teams", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_game_teams_on_game_id"
+  end
+
+  create_table "games", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "game_type", default: "best_ball", null: false
+    t.bigint "round_id", null: false
+    t.boolean "submitted", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_games_on_event_id"
+    t.index ["round_id"], name: "index_games_on_round_id"
+  end
+
   create_table "golfers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "external_id"
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "hole_scores", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_team_player_id", null: false
+    t.integer "gross_score"
+    t.integer "hole_number", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_team_player_id", "hole_number"], name: "index_hole_scores_on_game_team_player_id_and_hole_number", unique: true
+    t.index ["game_team_player_id"], name: "index_hole_scores_on_game_team_player_id"
   end
 
   create_table "pick_golfers", force: :cascade do |t|
@@ -317,6 +357,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_030100) do
 
   add_foreign_key "event_memberships", "events"
   add_foreign_key "event_memberships", "users"
+  add_foreign_key "game_team_players", "game_teams"
+  add_foreign_key "game_team_players", "users"
+  add_foreign_key "game_teams", "games"
+  add_foreign_key "games", "events"
+  add_foreign_key "games", "rounds"
+  add_foreign_key "hole_scores", "game_team_players"
   add_foreign_key "pick_golfers", "golfers"
   add_foreign_key "pick_golfers", "picks"
   add_foreign_key "picks", "pool_tournaments"

@@ -23,6 +23,13 @@ Rails.application.routes.draw do
     post :join, on: :member
     resources :event_memberships, only: [ :destroy, :update ]
     resources :rounds, only: [ :new, :create ]
+    resources :games, only: [ :new, :create, :show ] do
+      member do
+        get :edit_teams
+        patch :update_teams
+      end
+      resources :hole_scores, only: [ :update ]
+    end
   end
 
   post "sync/tournament_results/:tournament_id", to: "sync#tournament_results", as: :sync_tournament_results

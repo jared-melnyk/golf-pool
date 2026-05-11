@@ -1,0 +1,59 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Set up teams</h1>
+    <p class="text-sm text-gray-600 mt-1">
+      <%= @game.round.name %> · <%= @game.game_type.gsub("_", " ").titleize %>
+    </p>
+  </div>
+
+  <%= form_with url: update_teams_event_game_path(@event, @game), method: :patch, local: true, class: "space-y-6" do |f| %>
+    <% if flash[:alert] %>
+      <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] %></p>
+    <% end %>
+
+    <% 2.times do |i| %>
+      <% team = @game_teams[i] %>
+      <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+        <h2 class="text-base font-semibold text-gray-900 mb-3">Team <%= i + 1 %></h2>
+
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+          <input
+            type="text"
+            name="teams[<%= i %>][name]"
+            value="<%= team&.name %>"
+            placeholder="e.g. Team A"
+            class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Players (select 1–4)</label>
+          <% current_ids = team&.game_team_players&.map(&:user_id) || [] %>
+          <% @members.each do |user| %>
+            <label class="flex items-center gap-2 mb-1 text-sm">
+              <input
+                type="checkbox"
+                name="teams[<%= i %>][user_ids][]"
+                value="<%= user.id %>"
+                <%= "checked" if current_ids.include?(user.id) %>
+                class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <%= user.name %>
+              <% if user.ghin_handicap_index.present? %>
+                <span class="text-gray-400 text-xs">(HI <%= user.ghin_handicap_index %>)</span>
+              <% end %>
+            </label>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <div>
+      <%= f.submit "Save teams", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      <%= link_to "Cancel", event_game_path(@event, @game), class: "ml-3 text-sm text-gray-600 hover:text-gray-800 underline" %>
+    </div>
+  <% end %>
+
+  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>
