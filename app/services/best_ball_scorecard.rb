@@ -35,7 +35,8 @@ class BestBallScorecard
       { hole_number: h, best_ball_net: nets.any? ? nets.min : nil }
     end
 
-    total = hole_scores.sum { |s| s[:best_ball_net].to_i }
+    nets = hole_scores.map { |s| s[:best_ball_net] }
+    total = nets.any?(&:nil?) ? nil : nets.sum
 
     { id: team.id, name: team.name, players: players_data, hole_scores: hole_scores, total_net_strokes: total }
   end
