@@ -183,6 +183,43 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("10,000").or include("$10,000")
     end
 
+    it "uses synthetic cut line for completed no-cut tournaments" do
+      pool_tournament
+      tournament.update!(total_prize_pool: 10_000_000)
+      winner = Golfer.create!(name: "Winner", external_id: "winner-no-cut")
+      tournament.update!(champion_golfer: winner)
+
+      field_golfers = 10.times.map do |idx|
+        g = Golfer.create!(name: "NC#{idx}", external_id: "no-cut-#{idx}")
+        TournamentField.create!(tournament: tournament, golfer: g)
+        TournamentResult.create!(tournament: tournament, golfer: g, position: idx + 1, prize_money: 1000)
+        g
+      end
+      in_cut = field_golfers[4] # position 5
+      out_cut = field_golfers[7] # position 8
+
+      pick = Pick.create!(user: member, pool_tournament: pool_tournament)
+      PickGolfer.create!(pick: pick, golfer: in_cut, slot: 1)
+      PickGolfer.create!(pick: pick, golfer: out_cut, slot: 2)
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: in_cut, american_odds: 500, vendor: "dk", locked_at: Time.current)
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: out_cut, american_odds: 500, vendor: "dk", locked_at: Time.current)
+
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("synthetic cut line")
+      expect(response.body).to include("$10,000")
+      expect(response.body).to include("MC")
+    end
+
     it "marks top 3 golfer scores as counted and one as dropped" do
       pool_tournament
       winner = Golfer.create!(name: "Winner", external_id: "9991")

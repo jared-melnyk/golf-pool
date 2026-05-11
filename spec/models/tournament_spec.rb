@@ -123,6 +123,39 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "cut type and synthetic cut line" do
+    it "infers no-cut tournaments when nearly all field golfers have positive earnings" do
+      tournament = Tournament.create!(name: "No-Cut Event", starts_at: 5.days.ago)
+      winner = Golfer.create!(name: "Winner", external_id: "w1")
+      tournament.update!(champion_golfer: winner)
+
+      10.times do |idx|
+        golfer = Golfer.create!(name: "G#{idx}", external_id: "n#{idx}")
+        TournamentField.create!(tournament: tournament, golfer: golfer)
+        TournamentResult.create!(tournament: tournament, golfer: golfer, position: idx + 1, prize_money: (idx == 9 ? 0 : 1000))
+      end
+
+      expect(tournament.no_cut_event?).to be true
+    end
+
+    it "uses top 45% plus ties for synthetic cut eligibility in no-cut tournaments" do
+      tournament = Tournament.create!(name: "No-Cut Event", starts_at: 5.days.ago)
+      winner = Golfer.create!(name: "Winner", external_id: "w2")
+      tournament.update!(champion_golfer: winner)
+
+      positions = [1, 2, 3, 4, 5, 5, 7, 8, 9, 10]
+      results = positions.each_with_index.map do |pos, idx|
+        golfer = Golfer.create!(name: "T#{idx}", external_id: "t#{idx}")
+        TournamentField.create!(tournament: tournament, golfer: golfer)
+        TournamentResult.create!(tournament: tournament, golfer: golfer, position: pos, prize_money: 1000)
+      end
+
+      expect(tournament.synthetic_cut_line_position).to eq(5)
+      eligible_positions = results.select { |r| tournament.bonus_cut_eligible_result?(r) }.map(&:position)
+      expect(eligible_positions).to eq([1, 2, 3, 4, 5, 5])
+    end
+  end
+
   describe "#picks_locked?" do
     it "is false before midnight Central on the start date" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")
