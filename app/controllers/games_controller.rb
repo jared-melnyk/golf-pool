@@ -36,14 +36,16 @@ class GamesController < ApplicationController
   end
 
   def update_teams
-    @game.game_teams.destroy_all
-    teams_params.each_value do |team_data|
-      next if team_data[:name].blank?
+    ApplicationRecord.transaction do
+      @game.game_teams.destroy_all
+      teams_params.each_value do |team_data|
+        next if team_data[:name].blank?
 
-      team = @game.game_teams.create!(name: team_data[:name])
-      Array(team_data[:user_ids]).compact_blank.each do |uid|
-        user = @event.users.find_by(id: uid)
-        GameTeamPlayer.create!(game_team: team, user: user) if user
+        team = @game.game_teams.create!(name: team_data[:name])
+        Array(team_data[:user_ids]).compact_blank.each do |uid|
+          user = @event.users.find_by(id: uid)
+          GameTeamPlayer.create!(game_team: team, user: user) if user
+        end
       end
     end
     redirect_to event_game_path(@event, @game), notice: "Teams saved."
