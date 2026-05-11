@@ -36,6 +36,36 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#tournament_results_earnings_incomplete?" do
+    it "returns false when there is no champion yet" do
+      tournament = Tournament.create!(name: "Open", starts_at: 1.day.from_now, champion_golfer_id: nil)
+      expect(tournament.tournament_results_earnings_incomplete?).to be false
+    end
+
+    it "returns true when champion has no tournament result row" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Broken", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
+      expect(tournament.tournament_results_earnings_incomplete?).to be true
+    end
+
+    it "returns true when champion result has nil or zero prize money" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Stale", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: nil)
+      expect(tournament.reload.tournament_results_earnings_incomplete?).to be true
+
+      tournament.tournament_results.first.update!(prize_money: 0)
+      expect(tournament.reload.tournament_results_earnings_incomplete?).to be true
+    end
+
+    it "returns false when champion has positive prize money" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Done", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position: 1, prize_money: 1_500_000)
+      expect(tournament.reload.tournament_results_earnings_incomplete?).to be false
+    end
+  end
+
   describe ".addable_to_pool" do
     it "includes tournaments with no champion yet" do
       t = Tournament.create!(name: "Open", starts_at: 1.day.from_now, champion_golfer_id: nil)
@@ -143,7 +173,7 @@ RSpec.describe Tournament, type: :model do
       winner = Golfer.create!(name: "Winner", external_id: "w2")
       tournament.update!(champion_golfer: winner)
 
-      positions = [1, 2, 3, 4, 5, 5, 7, 8, 9, 10]
+      positions = [ 1, 2, 3, 4, 5, 5, 7, 8, 9, 10 ]
       results = positions.each_with_index.map do |pos, idx|
         golfer = Golfer.create!(name: "T#{idx}", external_id: "t#{idx}")
         TournamentField.create!(tournament: tournament, golfer: golfer)
@@ -152,7 +182,7 @@ RSpec.describe Tournament, type: :model do
 
       expect(tournament.synthetic_cut_line_position).to eq(5)
       eligible_positions = results.select { |r| tournament.bonus_cut_eligible_result?(r) }.map(&:position)
-      expect(eligible_positions).to eq([1, 2, 3, 4, 5, 5])
+      expect(eligible_positions).to eq([ 1, 2, 3, 4, 5, 5 ])
     end
   end
 

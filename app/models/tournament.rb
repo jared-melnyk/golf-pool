@@ -117,6 +117,16 @@ class Tournament < ApplicationRecord
     results_synced_at.present? && champion_golfer_id.present?
   end
 
+  # The BallDontLie API can return positions (and set a winner) before earnings are populated.
+  # In that case we still mark the tournament completed, but every golfer shows $0 / MC until
+  # results are re-synced. Auto-sync must keep trying while the champion row has no real prize.
+  def tournament_results_earnings_incomplete?
+    return false if champion_golfer_id.blank?
+
+    wr = tournament_results.find_by(golfer_id: champion_golfer_id)
+    wr.nil? || wr.prize_money.blank? || wr.prize_money.to_d <= 0
+  end
+
   private
 
   def effective_field_size_for_cut
