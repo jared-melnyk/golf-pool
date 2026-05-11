@@ -1,5 +1,6 @@
 class Round < ApplicationRecord
   belongs_to :event
+  has_many :games, dependent: :destroy
 
   validates :name, :played_on, :course_name, :tee_name, :tee_gender, presence: true
   validates :golf_course_api_course_id, :slope_rating, :par_total, presence: true
