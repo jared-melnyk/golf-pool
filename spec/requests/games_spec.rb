@@ -40,6 +40,25 @@ RSpec.describe "Games", type: :request do
       get event_game_path(event, game)
       expect(response).to have_http_status(:ok)
     end
+
+    context "with teams set up" do
+      let(:player1) { User.create!(name: "Alice", email: "alice@test.com", password: "pw", ghin_handicap_index: 18.0) }
+      let(:player2) { User.create!(name: "Bob", email: "bob@test.com", password: "pw", ghin_handicap_index: 0.0) }
+
+      before do
+        EventMembership.create!(event: event, user: player1, role: "player")
+        EventMembership.create!(event: event, user: player2, role: "player")
+        team = GameTeam.create!(game: game, name: "Team Alpha")
+        GameTeamPlayer.create!(game_team: team, user: player1)
+        GameTeamPlayer.create!(game_team: team, user: player2)
+      end
+
+      it "renders scorecard with team name" do
+        get event_game_path(event, game)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Team Alpha")
+      end
+    end
   end
 
   describe "GET /events/:event_token/games/:id/edit_teams" do
