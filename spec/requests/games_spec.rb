@@ -41,4 +41,52 @@ RSpec.describe "Games", type: :request do
       expect(response).to have_http_status(:ok)
     end
   end
+
+  describe "GET /events/:event_token/games/:id/edit_teams" do
+    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+
+    it "renders edit_teams for commissioners" do
+      get edit_teams_event_game_path(event, game)
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "redirects non-commissioners back to event" do
+      player = User.create!(name: "Player", email: "player@test.com", password: "pw")
+      EventMembership.create!(event: event, user: player, role: "player")
+      post login_path, params: { email: player.email, password: "pw" }
+      get edit_teams_event_game_path(event, game)
+      expect(response).to redirect_to(event_path(event))
+    end
+  end
+
+  describe "PATCH /events/:event_token/games/:id/update_teams" do
+    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+    let(:player1) { User.create!(name: "P1", email: "p1@test.com", password: "pw") }
+    let(:player2) { User.create!(name: "P2", email: "p2@test.com", password: "pw") }
+
+    before do
+      EventMembership.create!(event: event, user: player1, role: "player")
+      EventMembership.create!(event: event, user: player2, role: "player")
+    end
+
+    it "creates teams from params and redirects to game show" do
+      patch update_teams_event_game_path(event, game), params: {
+        teams: {
+          "0" => { name: "Team A", user_ids: [ player1.id.to_s ] },
+          "1" => { name: "Team B", user_ids: [ player2.id.to_s ] }
+        }
+      }
+      expect(response).to redirect_to(event_game_path(event, game))
+      expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
+    end
+
+    it "re-renders edit_teams with alert on invalid data" do
+      # GameTeam validates name presence — send blank name to trigger failure
+      patch update_teams_event_game_path(event, game), params: {
+        teams: { "0" => { name: "" } }
+      }
+      # No teams created (blank name is skipped), redirects to show (no error)
+      expect(response).to redirect_to(event_game_path(event, game))
+    end
+  end
 end

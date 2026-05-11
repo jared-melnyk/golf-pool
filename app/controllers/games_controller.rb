@@ -83,6 +83,11 @@ class GamesController < ApplicationController
   end
 
   def teams_params
-    params.require(:teams).permit!.to_h
+    params.require(:teams).to_unsafe_h.transform_values do |v|
+      team_params = v.is_a?(ActionController::Parameters) ? v : ActionController::Parameters.new(v)
+      team_params.permit(:name, user_ids: []).to_h.with_indifferent_access
+    end
+  rescue ActionController::ParameterMissing
+    {}
   end
 end
