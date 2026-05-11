@@ -1,0 +1,25 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900"><%= @game.round.name %> — <%= @game.game_type.gsub("_", " ").titleize %></h1>
+    <p class="text-sm text-gray-500 mt-1"><%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %></p>
+    <% if @event.commissioner?(current_user) %>
+      <p class="mt-2">
+        <%= link_to "Edit teams", edit_teams_event_game_path(@event, @game),
+              class: "text-sm text-emerald-700 hover:underline" %>
+      </p>
+    <% end %>
+  </div>
+
+  <% if @scorecard[:teams].empty? %>
+    <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <p class="text-gray-600">No teams set up yet.</p>
+      <% if @event.commissioner?(current_user) %>
+        <%= link_to "Set up teams →", edit_teams_event_game_path(@event, @game), class: "mt-2 inline-block text-emerald-700 hover:underline text-sm" %>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
+  <% end %>
+
+  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>
