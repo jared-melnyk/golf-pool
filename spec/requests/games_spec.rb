@@ -80,13 +80,12 @@ RSpec.describe "Games", type: :request do
       expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
     end
 
-    it "re-renders edit_teams with alert on invalid data" do
-      # GameTeam validates name presence — send blank name to trigger failure
+    it "skips blank team names and redirects to game show" do
       patch update_teams_event_game_path(event, game), params: {
         teams: { "0" => { name: "" } }
       }
-      # No teams created (blank name is skipped), redirects to show (no error)
       expect(response).to redirect_to(event_game_path(event, game))
+      expect(game.game_teams.reload).to be_empty
     end
   end
 end
