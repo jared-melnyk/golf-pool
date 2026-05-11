@@ -6,7 +6,7 @@ class Game < ApplicationRecord
   has_many :game_teams, dependent: :destroy
   has_many :game_team_players, through: :game_teams
 
-  validates :game_type, inclusion: { in: GAME_TYPES }
+  validates :game_type, presence: true, inclusion: { in: GAME_TYPES }
 
   def playing_handicap_allowance_percent
     case game_type
