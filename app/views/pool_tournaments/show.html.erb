@@ -22,6 +22,12 @@
   </p>
 <% end %>
 
+<% if @tournament.completed? && @tournament.no_cut_event? %>
+  <p class="mb-4 text-sm text-indigo-800 bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
+    This event was treated as a no-cut tournament. Cut Made Bonus eligibility uses a synthetic cut line: top 45% of the field, plus ties.
+  </p>
+<% end %>
+
 <% rounds = (1..4).to_a %>
 
 <div class="mt-4 space-y-6">

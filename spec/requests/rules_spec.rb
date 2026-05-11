@@ -10,6 +10,7 @@ RSpec.describe "Rules", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("How to Win")
+        expect(response.body).to include("top 45% of the field, plus ties")
       end
     end
 

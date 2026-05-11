@@ -74,8 +74,69 @@ class Tournament < ApplicationRecord
     capped_cut_made_bonus(american_odds)
   end
 
+  # A tournament is inferred as no-cut when at least 90% of the field has positive earnings.
+  # We infer this only after completion, to avoid volatile mid-tournament classification.
+  def no_cut_event?
+    return false unless completed?
+
+    field_size = effective_field_size_for_cut
+    return false if field_size.zero?
+
+    made_cut_count = tournament_results.where("prize_money > 0").count
+    made_cut_count >= (field_size * 0.90).ceil
+  end
+
+  # For no-cut events, we create a synthetic cut: top 45% of field, plus ties.
+  # Returns the position number at the cut line (e.g. 5 means position <= 5 earns bonus).
+  def synthetic_cut_line_position
+    return nil unless no_cut_event?
+
+    positions = tournament_results.where.not(position: nil).order(:position).pluck(:position)
+    return nil if positions.empty?
+
+    cutoff_index = [ synthetic_cut_count - 1, positions.length - 1 ].min
+    positions[cutoff_index]
+  end
+
+  # Unified bonus eligibility rule:
+  # - normal cut events: use made_cut?
+  # - no-cut events: use synthetic cut line position
+  def bonus_cut_eligible_result?(result)
+    return false if result.nil?
+
+    if no_cut_event?
+      cutoff = synthetic_cut_line_position
+      cutoff.present? && result.position.present? && result.position <= cutoff
+    else
+      result.made_cut?
+    end
+  end
+
   # True if we have already synced results (no need to sync again). We do not use ends_at.
   def results_synced_since_completion?
     results_synced_at.present? && champion_golfer_id.present?
+  end
+
+  # The BallDontLie API can return positions (and set a winner) before earnings are populated.
+  # In that case we still mark the tournament completed, but every golfer shows $0 / MC until
+  # results are re-synced. Auto-sync must keep trying while the champion row has no real prize.
+  def tournament_results_earnings_incomplete?
+    return false if champion_golfer_id.blank?
+
+    wr = tournament_results.find_by(golfer_id: champion_golfer_id)
+    wr.nil? || wr.prize_money.blank? || wr.prize_money.to_d <= 0
+  end
+
+  private
+
+  def effective_field_size_for_cut
+    field_count = tournament_fields.count
+    return field_count if field_count.positive?
+
+    tournament_results.count
+  end
+
+  def synthetic_cut_count
+    (effective_field_size_for_cut * 0.45).ceil
   end
 end

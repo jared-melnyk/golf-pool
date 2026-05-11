@@ -161,6 +161,35 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(50_000 + 10_000)
     end
 
+    it "applies synthetic cut line for no-cut tournaments so outside top 45% gets no bonus" do
+      no_cut_tournament = Tournament.create!(name: "No-Cut", starts_at: 6.days.ago)
+      no_cut_pt = PoolTournament.create!(pool: pool, tournament: no_cut_tournament)
+      winner = Golfer.create!(name: "Winner", external_id: "nc-winner")
+      no_cut_tournament.update!(champion_golfer: winner)
+
+      # Build a 10-player field with all golfers earning money (no-cut profile).
+      10.times do |idx|
+        g = Golfer.create!(name: "NC#{idx}", external_id: "nc#{idx}")
+        TournamentField.create!(tournament: no_cut_tournament, golfer: g)
+        TournamentResult.create!(tournament: no_cut_tournament, golfer: g, position: idx + 1, prize_money: 1000)
+      end
+
+      outside_cut = no_cut_tournament.tournament_results.find_by(position: 8).golfer
+      pick = Pick.create!(user: user, pool_tournament: no_cut_pt)
+      PickGolfer.create!(pick: pick, golfer: outside_cut, slot: 1)
+      PoolTournamentOdds.create!(
+        pool_tournament: no_cut_pt,
+        golfer: outside_cut,
+        american_odds: 500,
+        vendor: "fanduel",
+        locked_at: Time.current
+      )
+
+      expect(no_cut_tournament.no_cut_event?).to be true
+      # Earnings still count, but bonus should not apply outside synthetic top 45%.
+      expect(pool.total_points_for(user)).to eq(1000)
+    end
+
     it "counts only the top 3 golfer scores from a 4-golfer pick" do
       g1 = Golfer.create!(name: "G1", external_id: "301")
       g2 = Golfer.create!(name: "G2", external_id: "302")

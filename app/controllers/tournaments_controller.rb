@@ -18,10 +18,9 @@ class TournamentsController < ApplicationController
       @tournament.reload
     end
 
-    # Sync results when tournament is not yet completed or has no results, unless we have
-    # already synced after completion. We intentionally avoid using ends_at here and rely
-    # on whether a champion / results exist.
-    if !@tournament.completed? && !@tournament.results_synced_since_completion?
+    # Sync results until we have a champion with real earnings, or we have not completed yet.
+    # Re-sync when earnings were still blank/zero after an early API response (same as pool view).
+    if !@tournament.results_synced_since_completion? || @tournament.tournament_results_earnings_incomplete?
       sync_results
       @tournament.reload
     end

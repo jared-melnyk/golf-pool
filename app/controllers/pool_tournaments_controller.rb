@@ -32,13 +32,12 @@ class PoolTournamentsController < ApplicationController
     @pool = @pool_tournament.pool
     @tournament = @pool_tournament.tournament
 
-    # If the tournament has an external_id and we haven't synced results since completion
-    # (no winner / prize money populated), try to sync them so completion, prize money,
-    # and points are up to date when viewing scores from the pool context. We intentionally
-    # do NOT rely on ends_at from the API, since it can be unreliable.
+    # If the tournament has an external_id, try to sync results so prize money and standings
+    # stay current when viewing scores from the pool context. We intentionally do NOT rely on
+    # ends_at from the API. We also re-sync when the API previously returned a winner but left
+    # earnings at zero/nil (see Tournament#tournament_results_earnings_incomplete?).
     if @tournament.external_id.present? &&
-        !@tournament.completed? &&
-        !@tournament.results_synced_since_completion?
+        (!@tournament.results_synced_since_completion? || @tournament.tournament_results_earnings_incomplete?)
       begin
         BallDontLie::SyncTournamentResults.new(tournament: @tournament).call
         @tournament.reload
@@ -100,9 +99,9 @@ class PoolTournamentsController < ApplicationController
       result = results_by_golfer[gid]
       odds_row = odds_by_golfer[gid]
 
-      if result
+      if result && @tournament.completed?
         # Official result synced: use made_cut? and show bonus or MC
-        if result.made_cut? && odds_row
+        if @tournament.bonus_cut_eligible_result?(result) && odds_row
           @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
         else
           @golfer_bonus_display[gid] = :mc
