@@ -295,5 +295,75 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("synthetic cut line")
       expect(response.body).to include("was <strong>+5</strong>")
     end
+
+    context "with persisted TournamentRoundResult rows" do
+      let!(:golfer) { Golfer.create!(name: "Scottie", external_id: "185") }
+      let!(:pick) do
+        Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+          PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
+        end
+      end
+
+      before do
+        TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 1, score_to_par: -3, last_hole_completed: 18)
+        TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 2, score_to_par: -1, last_hole_completed: 18)
+        tournament.update_column(:live_results_synced_at, 5.seconds.ago)
+      end
+
+      it "renders from DB without calling the API and without enqueuing a refresh" do
+        expect(BallDontLie::Client).not_to receive(:new)
+        expect {
+          get pool_pool_tournament_path(pool, pool_tournament)
+        }.not_to have_enqueued_job(RefreshLiveResultsJob)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Scottie")
+        expect(response.body).to include("-3")
+        expect(response.body).to include("-1")
+      end
+
+      it "enqueues RefreshLiveResultsJob when the snapshot is stale" do
+        tournament.update_column(:live_results_synced_at, 2.minutes.ago)
+
+        expect {
+          get pool_pool_tournament_path(pool, pool_tournament)
+        }.to have_enqueued_job(RefreshLiveResultsJob).with(tournament.id)
+      end
+
+      it "does not enqueue RefreshLiveResultsJob for a completed tournament" do
+        winner = Golfer.create!(name: "Winner", external_id: "9991")
+        tournament.update!(champion_golfer: winner)
+        TournamentResult.create!(tournament: tournament, golfer: winner, position: 1, prize_money: 2_000_000)
+        tournament.update_column(:live_results_synced_at, 2.minutes.ago)
+
+        expect(BallDontLie::Client).not_to receive(:new)
+        expect {
+          get pool_pool_tournament_path(pool, pool_tournament)
+        }.not_to have_enqueued_job(RefreshLiveResultsJob)
+      end
+    end
+
+    context "with no persisted round data (cold start)" do
+      let!(:golfer) { Golfer.create!(name: "Scottie", external_id: "185") }
+      let!(:pick) do
+        Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+          PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
+        end
+      end
+
+      it "runs a synchronous SyncRoundResults and renders the resulting rows" do
+        svc = instance_double(BallDontLie::SyncRoundResults)
+        expect(BallDontLie::SyncRoundResults).to receive(:new).with(tournament: tournament, player_ids: include(185)).and_return(svc)
+        expect(svc).to receive(:call) do
+          TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 1, score_to_par: -2, last_hole_completed: 18)
+          tournament.update_column(:live_results_synced_at, Time.current)
+          { created: 1, updated: 0, rounds_seen: 1 }
+        end
+
+        get pool_pool_tournament_path(pool, pool_tournament)
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("-2")
+      end
+    end
   end
 end

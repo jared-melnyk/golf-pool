@@ -123,8 +123,10 @@ module BallDontLie
     def fetch_all(key, **opts)
       all = []
       cursor = nil
+      first_page = true
       loop do
-        sleep RATE_LIMIT_DELAY
+        sleep RATE_LIMIT_DELAY unless first_page
+        first_page = false
         resp = yield cursor
         data = resp["data"] || []
         all.concat(data)

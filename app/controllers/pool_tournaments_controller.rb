@@ -32,20 +32,6 @@ class PoolTournamentsController < ApplicationController
     @pool = @pool_tournament.pool
     @tournament = @pool_tournament.tournament
 
-    # If the tournament has an external_id, try to sync results so prize money and standings
-    # stay current when viewing scores from the pool context. We intentionally do NOT rely on
-    # ends_at from the API. We also re-sync when the API previously returned a winner but left
-    # earnings at zero/nil (see Tournament#tournament_results_earnings_incomplete?).
-    if @tournament.external_id.present? &&
-        (!@tournament.results_synced_since_completion? || @tournament.tournament_results_earnings_incomplete?)
-      begin
-        BallDontLie::SyncTournamentResults.new(tournament: @tournament).call
-        @tournament.reload
-      rescue => e
-        Rails.logger.error("[PoolTournament scores] Failed to auto-sync results for tournament #{@tournament.id}: #{e.class}: #{e.message}")
-      end
-    end
-
     unless @pool.users.include?(current_user)
       redirect_to @pool, alert: "You must be a member of this pool to view scores."
       return
@@ -56,8 +42,8 @@ class PoolTournamentsController < ApplicationController
       .where(pool_tournament: @pool_tournament)
       .group_by(&:user)
 
-    pga_tournament_id = @tournament.external_id&.to_i
-    player_ids = @picks_by_user.values.flatten.flat_map { |pick| pick.golfers.map { |g| g.external_id&.to_i } }.compact.uniq
+    picked_golfers = @picks_by_user.values.flatten.flat_map(&:golfers).uniq
+    player_ids = picked_golfers.map { |g| g.external_id&.to_i }.compact.reject(&:zero?).uniq
 
     if @tournament.completed? && @tournament.no_cut_event?
       field_ids = @tournament.tournament_results.includes(:golfer).filter_map { |tr| tr.golfer&.external_id&.to_i }
@@ -68,35 +54,51 @@ class PoolTournamentsController < ApplicationController
     @round_results = {}
     @current_round = nil
 
-    if pga_tournament_id.present? && player_ids.any?
-      client = BallDontLie::Client.new
-      raw_data = client.fetch_all_player_round_results(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
-      formatter = BallDontLie::PlayerRoundResultsFormatter.new(raw_data)
+    if @tournament.external_id.present? && player_ids.any?
+      relevant_golfer_ids = Golfer.where(external_id: player_ids.map(&:to_s)).pluck(:id)
 
-      # When the tournament has started, fetch hole-by-hole scorecards so we can show
-      # intra-round (live) scores. We always try when started? — merge only fills rounds
-      # that don't already have data from player_round_results, so syncing results
-      # mid-tournament does not prevent live scores from showing.
-      if @tournament.started?
-        Rails.logger.warn "[Live scores] Fetching scorecards tournament_id=#{pga_tournament_id} player_count=#{player_ids.size}"
-        cards = client.fetch_all_player_scorecards(tournament_ids: [ pga_tournament_id ], player_ids: player_ids)
-        if cards.present?
-          formatter.merge_scorecard_live!(cards)
-          Rails.logger.warn "[Live scores] Merged #{cards.size} scorecard rows for tournament #{pga_tournament_id}"
-        else
-          Rails.logger.warn "[Live scores] Scorecards API returned 0 rows tournament_id=#{pga_tournament_id} player_ids=#{player_ids.take(5)}#{player_ids.size > 5 ? '...' : ''}"
+      rows = TournamentRoundResult
+               .where(tournament_id: @tournament.id, golfer_id: relevant_golfer_ids)
+               .includes(:golfer)
+               .to_a
+
+      if rows.empty? && (@tournament.started? || @tournament.completed?)
+        begin
+          BallDontLie::SyncRoundResults.new(tournament: @tournament, player_ids: player_ids).call
+          rows = TournamentRoundResult
+                   .where(tournament_id: @tournament.id, golfer_id: relevant_golfer_ids)
+                   .includes(:golfer)
+                   .to_a
+        rescue => e
+          Rails.logger.error("[PoolTournament scores] Synchronous SyncRoundResults failed for tournament #{@tournament.id}: #{e.class}: #{e.message}")
         end
       end
 
-      @round_results = formatter.by_player_id
-      @current_round = formatter.current_round_number
+      by_player_external_id = rows.group_by { |r| r.golfer.external_id&.to_i }.compact
+      @round_results = build_round_results_hash(by_player_external_id)
+      @current_round = rows.map(&:round_number).max if rows.any?
+
+      if @tournament.started? && !@tournament.completed?
+        stale = @tournament.live_results_synced_at.nil? || @tournament.live_results_synced_at < 30.seconds.ago
+        RefreshLiveResultsJob.perform_later(@tournament.id) if stale
+      end
 
       if @tournament.completed? && @tournament.no_cut_event?
         @synthetic_cut_marginal_total_to_par = @tournament.marginal_bonus_eligible_total_to_par(@round_results)
       end
     end
 
-    # Bonus column: use TournamentResult when synced; otherwise infer made cut from live round data (round 3+ = made cut).
+    if @tournament.external_id.present? &&
+        @tournament.completed? &&
+        @tournament.tournament_results_earnings_incomplete?
+      begin
+        BallDontLie::SyncTournamentResults.new(tournament: @tournament).call
+        @tournament.reload
+      rescue => e
+        Rails.logger.error("[PoolTournament scores] Failed to auto-sync results for tournament #{@tournament.id}: #{e.class}: #{e.message}")
+      end
+    end
+
     golfers_by_id = {}
     @picks_by_user.values.flatten.each { |pick| pick.golfers.each { |g| golfers_by_id[g.id] = g } }
     golfer_ids = golfers_by_id.keys
@@ -110,14 +112,12 @@ class PoolTournamentsController < ApplicationController
       odds_row = odds_by_golfer[gid]
 
       if result && @tournament.completed?
-        # Official result synced: use made_cut? and show bonus or MC
         if @tournament.bonus_cut_eligible_result?(result) && odds_row
           @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
         else
           @golfer_bonus_display[gid] = :mc
         end
       elsif golfer && @round_results.present?
-        # No result yet: infer from live round data (round 3 or 4 = made cut)
         player_result = @round_results[golfer.external_id&.to_i] || {}
         round_numbers = (player_result[:rounds] || {}).keys
         made_cut = round_numbers.any? { |r| r >= 3 }
@@ -136,11 +136,34 @@ class PoolTournamentsController < ApplicationController
       end
     end
 
-    # Prize money: show only when tournament is completed (from TournamentResult).
     @golfer_prize_money = {}
     golfer_ids.each do |gid|
       result = results_by_golfer[gid]
       @golfer_prize_money[gid] = @tournament.completed? && result ? (result.prize_money.to_d || 0) : nil
     end
+  end
+
+  private
+
+  def build_round_results_hash(round_rows_by_player_external_id)
+    result = {}
+    round_rows_by_player_external_id.each do |player_external_id, rows|
+      rounds = {}
+      rows.each do |row|
+        rounds[row.round_number] = {
+          score: nil,
+          par_relative: row.par_relative,
+          score_to_par: row.score_to_par,
+          last_hole_completed: row.last_hole_completed
+        }
+      end
+      total = rounds.values.sum { |r| (r[:score_to_par] || 0).to_i }
+      result[player_external_id] = {
+        rounds: rounds,
+        total_to_par: rounds.any? ? total : nil,
+        position: nil
+      }
+    end
+    result
   end
 end

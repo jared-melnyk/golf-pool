@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_223725) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -330,11 +330,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_190000) do
     t.index ["tournament_id"], name: "index_tournament_results_on_tournament_id"
   end
 
+  create_table "tournament_round_results", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "golfer_id", null: false
+    t.integer "last_hole_completed"
+    t.integer "round_number", null: false
+    t.integer "score_to_par"
+    t.bigint "tournament_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["golfer_id"], name: "index_tournament_round_results_on_golfer_id"
+    t.index ["tournament_id", "golfer_id", "round_number"], name: "idx_trr_tournament_golfer_round", unique: true
+    t.index ["tournament_id"], name: "index_tournament_round_results_on_tournament_id"
+  end
+
   create_table "tournaments", force: :cascade do |t|
     t.bigint "champion_golfer_id"
     t.datetime "created_at", null: false
     t.datetime "ends_at"
     t.string "external_id"
+    t.datetime "live_results_synced_at"
     t.string "name"
     t.datetime "results_synced_at"
     t.datetime "starts_at"
@@ -386,5 +400,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_190000) do
   add_foreign_key "tournament_fields", "tournaments"
   add_foreign_key "tournament_results", "golfers"
   add_foreign_key "tournament_results", "tournaments"
+  add_foreign_key "tournament_round_results", "golfers"
+  add_foreign_key "tournament_round_results", "tournaments"
   add_foreign_key "tournaments", "golfers", column: "champion_golfer_id"
 end
