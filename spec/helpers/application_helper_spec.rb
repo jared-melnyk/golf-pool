@@ -43,6 +43,15 @@ RSpec.describe ApplicationHelper, type: :helper do
     end
   end
 
+  describe "#format_total_to_par" do
+    it "formats par-relative integers like the results table" do
+      expect(helper.format_total_to_par(nil)).to eq("—")
+      expect(helper.format_total_to_par(0)).to eq("E")
+      expect(helper.format_total_to_par(3)).to eq("+3")
+      expect(helper.format_total_to_par(-2)).to eq("-2")
+    end
+  end
+
   describe "#cut_made_bonus_label" do
     it "returns a cut made bonus label and cap asterisk" do
       tournament = Tournament.new(total_prize_pool: 100_000, starts_at: Time.current)

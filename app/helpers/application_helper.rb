@@ -30,4 +30,14 @@ module ApplicationHelper
   def at_max_longshot_bonus?(american_odds, max_bonus)
     at_max_cut_made_bonus?(american_odds, max_bonus)
   end
+
+  # Total score-to-par for display (E / +n / negative), matching pool tournament results table.
+  def format_total_to_par(ttp)
+    return "—" if ttp.nil?
+
+    v = ttp.to_i
+    return "E" if v.zero?
+
+    v.positive? ? "+#{v}" : v.to_s
+  end
 end

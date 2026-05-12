@@ -59,6 +59,12 @@ class PoolTournamentsController < ApplicationController
     pga_tournament_id = @tournament.external_id&.to_i
     player_ids = @picks_by_user.values.flatten.flat_map { |pick| pick.golfers.map { |g| g.external_id&.to_i } }.compact.uniq
 
+    if @tournament.completed? && @tournament.no_cut_event?
+      field_ids = @tournament.tournament_results.includes(:golfer).filter_map { |tr| tr.golfer&.external_id&.to_i }
+      player_ids = (player_ids + field_ids).uniq.reject(&:zero?)
+    end
+
+    @synthetic_cut_marginal_total_to_par = nil
     @round_results = {}
     @current_round = nil
 
@@ -84,6 +90,10 @@ class PoolTournamentsController < ApplicationController
 
       @round_results = formatter.by_player_id
       @current_round = formatter.current_round_number
+
+      if @tournament.completed? && @tournament.no_cut_event?
+        @synthetic_cut_marginal_total_to_par = @tournament.marginal_bonus_eligible_total_to_par(@round_results)
+      end
     end
 
     # Bonus column: use TournamentResult when synced; otherwise infer made cut from live round data (round 3+ = made cut).

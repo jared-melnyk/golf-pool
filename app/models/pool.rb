@@ -37,20 +37,25 @@ class Pool < ApplicationRecord
 
   def total_points_for(user)
     pool_tournaments.includes(:tournament).sum do |pool_tournament|
-      tournament = pool_tournament.tournament
-      pick = Pick.find_by(user: user, pool_tournament: pool_tournament)
-      next 0.to_d unless pick
-
-      golfer_scores = pick.golfers.map do |golfer|
-        result = TournamentResult.find_by(tournament: tournament, golfer: golfer)
-        base = result ? (result.prize_money.to_d || 0) : 0.to_d
-        odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
-        bonus = (odds_row && tournament.bonus_cut_eligible_result?(result)) ? tournament.capped_cut_made_bonus(odds_row.american_odds) : 0.to_d
-        base + bonus
-      end
-
-      golfer_scores.sort.reverse.first(3).sum
+      points_for_pool_tournament(user, pool_tournament)
     end
+  end
+
+  # Top-3-of-4 scoring for one pool member and one pool tournament (same rules as standings).
+  def points_for_pool_tournament(user, pool_tournament)
+    tournament = pool_tournament.tournament
+    pick = Pick.find_by(user: user, pool_tournament: pool_tournament)
+    return 0.to_d unless pick
+
+    golfer_scores = pick.golfers.map do |golfer|
+      result = TournamentResult.find_by(tournament: tournament, golfer: golfer)
+      base = result ? (result.prize_money.to_d || 0) : 0.to_d
+      odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
+      bonus = (odds_row && tournament.bonus_cut_eligible_result?(result)) ? tournament.capped_cut_made_bonus(odds_row.american_odds) : 0.to_d
+      base + bonus
+    end
+
+    golfer_scores.sort.reverse.first(3).sum
   end
 
   private

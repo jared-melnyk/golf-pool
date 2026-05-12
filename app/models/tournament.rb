@@ -112,6 +112,31 @@ class Tournament < ApplicationRecord
     end
   end
 
+  # For no-cut messaging: among golfers eligible for Cut Made Bonus (position rule), the worst
+  # (numerically highest) final total_to_par from round results keyed by API player id, or nil.
+  def marginal_bonus_eligible_total_to_par(round_results_by_player_id)
+    return nil if round_results_by_player_id.blank?
+
+    max_par = nil
+    tournament_results.includes(:golfer).find_each do |result|
+      next unless bonus_cut_eligible_result?(result)
+
+      golfer = result.golfer
+      next if golfer.blank? || golfer.external_id.blank?
+
+      pid = golfer.external_id.to_i
+      next if pid.zero?
+
+      row = round_results_by_player_id[pid]
+      ttp = row&.fetch(:total_to_par, nil)
+      next if ttp.nil?
+
+      v = ttp.to_i
+      max_par = max_par.nil? ? v : [ max_par, v ].max
+    end
+    max_par
+  end
+
   # True if we have already synced results (no need to sync again). We do not use ends_at.
   def results_synced_since_completion?
     results_synced_at.present? && champion_golfer_id.present?

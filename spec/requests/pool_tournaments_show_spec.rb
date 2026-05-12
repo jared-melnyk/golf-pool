@@ -255,6 +255,45 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body.scan("Counted").size).to eq(3)
       expect(response.body.scan("Dropped").size).to eq(1)
       expect(response.body).to include("$230,000")
+      expect(response.body).to include("line-through")
+      expect(response.body).to include("Excluded golfers do not count toward the Total row")
+    end
+
+    it "shows marginal total-to-par on synthetic-cut banner when round data covers the field" do
+      pool_tournament
+      tournament.update!(total_prize_pool: 10_000_000, external_id: "555")
+      winner = Golfer.create!(name: "Champ", external_id: "11000")
+      tournament.update!(champion_golfer: winner)
+
+      10.times do |i|
+        g = Golfer.create!(name: "F#{i}", external_id: (11_001 + i).to_s)
+        TournamentField.create!(tournament: tournament, golfer: g)
+        TournamentResult.create!(tournament: tournament, golfer: g, position: i + 1, prize_money: 1000)
+      end
+
+      pick = Pick.create!(user: member, pool_tournament: pool_tournament)
+      PickGolfer.create!(pick: pick, golfer: Golfer.find_by!(external_id: "11001"), slot: 1)
+      PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: Golfer.find_by!(external_id: "11001"), american_odds: 500, vendor: "dk", locked_at: Time.current)
+
+      raw_round_results = (0..9).map do |i|
+        pid = 11_001 + i
+        val = i < 5 ? (i + 1) : 50
+        { "player" => { "id" => pid }, "round_number" => 1, "par_relative_score" => val }
+      end
+
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: raw_round_results,
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: []
+      )
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("synthetic cut line")
+      expect(response.body).to include("was <strong>+5</strong>")
     end
   end
 end

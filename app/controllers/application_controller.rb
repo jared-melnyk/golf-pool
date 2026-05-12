@@ -8,11 +8,22 @@ class ApplicationController < ActionController::Base
   before_action :require_login
 
   helper_method :current_user
+  helper_method :current_user_admin?
 
   private
 
   def current_user
     @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
+  end
+
+  def current_user_admin?
+    current_user&.admin?
+  end
+
+  def require_admin
+    return if current_user_admin?
+
+    redirect_to root_path, alert: "Not authorized."
   end
 
   def require_login

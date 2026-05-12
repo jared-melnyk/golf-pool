@@ -186,6 +186,44 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#marginal_bonus_eligible_total_to_par" do
+    it "returns the maximum total_to_par among bonus-eligible results that appear in round data" do
+      tournament = Tournament.create!(name: "NC", starts_at: 5.days.ago)
+      winner = Golfer.create!(name: "W", external_id: "900")
+      tournament.update!(champion_golfer: winner)
+
+      (1..10).each do |i|
+        g = Golfer.create!(name: "P#{i}", external_id: (800 + i).to_s)
+        TournamentField.create!(tournament: tournament, golfer: g)
+        TournamentResult.create!(tournament: tournament, golfer: g, position: i, prize_money: 1000)
+      end
+
+      expect(tournament.no_cut_event?).to be true
+
+      round_results = {
+        801 => { total_to_par: -2 },
+        802 => { total_to_par: 0 },
+        803 => { total_to_par: 1 },
+        804 => { total_to_par: 4 },
+        805 => { total_to_par: 2 },
+        806 => { total_to_par: 99 }
+      }
+
+      expect(tournament.marginal_bonus_eligible_total_to_par(round_results)).to eq(4)
+    end
+
+    it "returns nil when round results are blank or omit eligible players" do
+      tournament = Tournament.create!(name: "NC2", starts_at: 5.days.ago)
+      winner = Golfer.create!(name: "W2", external_id: "901")
+      tournament.update!(champion_golfer: winner)
+      g = Golfer.create!(name: "P1", external_id: "802")
+      TournamentField.create!(tournament: tournament, golfer: g)
+      TournamentResult.create!(tournament: tournament, golfer: g, position: 1, prize_money: 1000)
+
+      expect(tournament.marginal_bonus_eligible_total_to_par({})).to be_nil
+    end
+  end
+
   describe "#picks_locked?" do
     it "is false before midnight Central on the start date" do
       starts_at = Time.zone.parse("2026-03-10 12:00:00")
