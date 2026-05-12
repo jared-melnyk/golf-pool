@@ -78,11 +78,19 @@
         </div>
 
         <% if pt %>
-          <%= render "picks/tournament_pool_picks",
-            pool: @pool,
-            pool_tournament: pt,
-            tournament: t,
-            picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
+          <% if t.completed? %>
+            <%= render "pools/tournament_completed_summary",
+              pool: @pool,
+              pool_tournament: pt,
+              tournament: t,
+              picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
+          <% else %>
+            <%= render "picks/tournament_pool_picks",
+              pool: @pool,
+              pool_tournament: pt,
+              tournament: t,
+              picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
+          <% end %>
         <% end %>
       </li>
     <% end %>

@@ -4,6 +4,11 @@
     Enter your current GHIN handicap index (honor system). Used for on-course net games when those features go live.
   </p>
 
+  <div class="mb-6 text-sm text-gray-700">
+    <p class="font-medium text-gray-900">Email: <%= @user.email %></p>
+    <p class="text-xs text-gray-500 mt-1">Sign-in email is shown for your reference only; it cannot be changed here.</p>
+  </div>
+
   <%= form_with model: @user, url: profile_path, method: :patch, local: true, class: "space-y-4" do |f| %>
     <% if @user.errors.any? %>
       <ul class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">

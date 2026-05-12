@@ -3,9 +3,16 @@
 require "rails_helper"
 
 RSpec.describe "Tournaments", type: :request do
-  let(:user) { User.create!(name: "Test User", email: "test@example.com", password: "password") }
+  let(:admin) { User.create!(name: "Test User", email: "test@example.com", password: "password", admin: true) }
 
-  before { post login_path, params: { email: user.email, password: "password" } }
+  before { post login_path, params: { email: admin.email, password: "password" } }
+
+  describe "GET /tournaments" do
+    it "returns success for an admin" do
+      get tournaments_path
+      expect(response).to have_http_status(:ok)
+    end
+  end
 
   describe "GET /tournaments/:id" do
     it "returns success and shows the tournament" do
@@ -32,6 +39,25 @@ RSpec.describe "Tournaments", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Scottie Scheffler")
       expect(response.body).to include("1 —")
+    end
+  end
+
+  describe "authorization" do
+    let(:member) { User.create!(name: "Member", email: "member@example.com", password: "password", admin: false) }
+    let(:tournament) { Tournament.create!(name: "Private", starts_at: 1.day.from_now, ends_at: 4.days.from_now) }
+
+    before { post login_path, params: { email: member.email, password: "password" } }
+
+    it "redirects non-admin from tournaments index" do
+      get tournaments_path
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:alert]).to eq("Not authorized.")
+    end
+
+    it "redirects non-admin from tournament show" do
+      get tournament_path(tournament)
+      expect(response).to redirect_to(root_path)
     end
   end
 end

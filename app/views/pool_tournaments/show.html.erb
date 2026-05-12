@@ -25,6 +25,9 @@
 <% if @tournament.completed? && @tournament.no_cut_event? %>
   <p class="mb-4 text-sm text-indigo-800 bg-indigo-50 border border-indigo-200 rounded px-3 py-2">
     This event was treated as a no-cut tournament. Cut Made Bonus eligibility uses a synthetic cut line: top 45% of the field, plus ties.
+    <% if @synthetic_cut_marginal_total_to_par.present? %>
+      The worst (highest) score-to-par among players eligible for the Cut Made Bonus was <strong><%= format_total_to_par(@synthetic_cut_marginal_total_to_par) %></strong>.
+    <% end %>
   </p>
 <% end %>
 
@@ -73,6 +76,7 @@
               <% bonus_val = @golfer_bonus_display[golfer.id] %>
               <% bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0 %>
               <% total_earnings = (prize.present? || bonus_val.is_a?(Numeric)) ? (prize.to_d + bonus_num) : nil %>
+              <% dropped = counted_golfer_ids.exclude?(golfer.id) %>
               <tr>
                 <td class="px-3 py-3 align-top">
                   <div class="flex flex-col gap-1">
@@ -104,17 +108,7 @@
                   </td>
                 <% end %>
                 <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
-                  <% label =
-                    if total_to_par.nil?
-                      "—"
-                    elsif total_to_par.to_i.zero?
-                      "E"
-                    elsif total_to_par.to_i.positive?
-                      "+#{total_to_par.to_i}"
-                    else
-                      total_to_par.to_i.to_s
-                    end %>
-                  <span class="font-semibold text-gray-900"><%= label %></span>
+                  <span class="font-semibold text-gray-900"><%= format_total_to_par(total_to_par) %></span>
                   <% if player_result[:position].present? %>
                     <span class="ml-1 text-xs text-gray-500">(<%= player_result[:position] %>)</span>
                   <% end %>
@@ -139,7 +133,12 @@
                   <% if total_earnings.nil? %>
                     —
                   <% else %>
-                    $<%= number_with_delimiter(total_earnings.to_i) %>
+                    <% amt = "$#{number_with_delimiter(total_earnings.to_i)}" %>
+                    <% if dropped %>
+                      <span class="line-through text-gray-400 decoration-gray-400"><%= amt %></span>
+                    <% else %>
+                      <%= amt %>
+                    <% end %>
                   <% end %>
                 </td>
               </tr>
@@ -169,7 +168,7 @@
                 </td>
               <% end %>
               <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
-                <%= any_round_data ? format_score.call(total_to_par_sum) : "—" %>
+                <%= any_round_data ? format_total_to_par(total_to_par_sum) : "—" %>
               </td>
               <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
                 <% if @tournament.completed? %>
@@ -187,6 +186,7 @@
             </tr>
           </tbody>
         </table>
+        <p class="text-xs text-gray-500 mt-2">Excluded golfers do not count toward the Total row.</p>
       </div>
     </div>
   <% end %>

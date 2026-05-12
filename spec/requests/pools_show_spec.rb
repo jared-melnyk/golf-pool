@@ -67,4 +67,17 @@ RSpec.describe "Pools show", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("No picks submitted")
   end
+
+  it "shows completed tournament results summary instead of the pool picks grid" do
+    winner = Golfer.create!(name: "Winner", external_id: "993")
+    tournament.update!(starts_at: 3.days.ago, ends_at: 1.day.ago, champion_golfer: winner)
+    Pick.create!(user: creator, pool_tournament: pool_tournament)
+
+    get pool_path(pool)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Results summary for #{tournament.name}")
+    expect(response.body).to include("Tournament total")
+    expect(response.body).not_to include("Pool picks for #{tournament.name}")
+  end
 end

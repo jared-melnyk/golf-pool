@@ -211,4 +211,30 @@ RSpec.describe Pool, type: :model do
       expect(pool.total_points_for(user)).to eq(230_000)
     end
   end
+
+  describe "#points_for_pool_tournament" do
+    it "returns the top-3 sum for a single pool tournament" do
+      g1 = Golfer.create!(name: "G1", external_id: "401")
+      g2 = Golfer.create!(name: "G2", external_id: "402")
+      g3 = Golfer.create!(name: "G3", external_id: "403")
+      g4 = Golfer.create!(name: "G4", external_id: "404")
+
+      pick = Pick.create!(user: user, pool_tournament: pool_tournament)
+      PickGolfer.create!(pick: pick, golfer: g1, slot: 1)
+      PickGolfer.create!(pick: pick, golfer: g2, slot: 2)
+      PickGolfer.create!(pick: pick, golfer: g3, slot: 3)
+      PickGolfer.create!(pick: pick, golfer: g4, slot: 4)
+
+      TournamentResult.create!(tournament: tournament, golfer: g1, position: 1, prize_money: 100_000)
+      TournamentResult.create!(tournament: tournament, golfer: g2, position: 2, prize_money: 80_000)
+      TournamentResult.create!(tournament: tournament, golfer: g3, position: 3, prize_money: 50_000)
+      TournamentResult.create!(tournament: tournament, golfer: g4, position: 4, prize_money: 10_000)
+
+      expect(pool.points_for_pool_tournament(user, pool_tournament)).to eq(230_000)
+    end
+
+    it "returns zero when the user has no pick for that pool tournament" do
+      expect(pool.points_for_pool_tournament(user, pool_tournament)).to eq(0)
+    end
+  end
 end

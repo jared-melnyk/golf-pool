@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class SyncController < ApplicationController
+  before_action :require_admin
+
   def field
     tournament = Tournament.find(params[:tournament_id])
     result = BallDontLie::SyncTournamentField.new(tournament: tournament).call

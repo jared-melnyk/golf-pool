@@ -1,4 +1,6 @@
 class TournamentsController < ApplicationController
+  before_action :require_admin
+
   def index
     @tournaments = Tournament.order(starts_at: :asc)
   end
