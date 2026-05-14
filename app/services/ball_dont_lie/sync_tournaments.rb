@@ -15,7 +15,15 @@ module BallDontLie
         rec.name = t["name"]
         rec.starts_at = parse_date(t["start_date"])
         rec.ends_at = parse_end_date(t["end_date"], rec.starts_at) # may be set to nil if API data is invalid
-        rec.total_prize_pool = parse_purse(t["purse"])
+
+        parsed_purse = parse_purse(t["purse"])
+        rec.total_prize_pool = parsed_purse
+
+        if parsed_purse.nil? || !parsed_purse.positive?
+          fallback = previous_season_purse_for(t["name"])
+          rec.fallback_prize_pool = fallback if fallback&.positive?
+        end
+
         if rec.new_record?
           rec.save!
           created += 1
@@ -50,6 +58,33 @@ module BallDontLie
       BigDecimal(cleaned)
     rescue ArgumentError, TypeError
       nil
+    end
+
+    # Returns the previous-season parsed purse for a given tournament name, or nil
+    # when no positive match exists. The previous-season list is fetched lazily and
+    # memoized so we hit the API at most once per sync run.
+    def previous_season_purse_for(name)
+      key = name.to_s.downcase.strip
+      return nil if key.blank?
+
+      previous_season_purse_by_name[key]
+    end
+
+    def previous_season_purse_by_name
+      @previous_season_purse_by_name ||= load_previous_season_purse_by_name
+    end
+
+    def load_previous_season_purse_by_name
+      rows = @client.fetch_all_tournaments(season: @season - 1)
+      rows.each_with_object({}) do |t, h|
+        key = t["name"].to_s.downcase.strip
+        next if key.blank?
+        purse = parse_purse(t["purse"])
+        h[key] = purse if purse&.positive?
+      end
+    rescue => e
+      Rails.logger.warn("[BallDontLie::SyncTournaments] failed to fetch previous season #{@season - 1} for fallback: #{e.class}: #{e.message}")
+      {}
     end
   end
 end
