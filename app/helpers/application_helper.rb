@@ -27,6 +27,16 @@ module ApplicationHelper
     at_cap ? "#{base}*" : base
   end
 
+  # Page-level label for the maximum Cut Made Bonus on a tournament. Appends
+  # "(estimated)" when the cap is derived from fallback_prize_pool or the global
+  # default, so users understand the displayed cap may change once the official
+  # purse is announced.
+  def max_cut_made_bonus_label(tournament)
+    max = tournament.max_cut_made_bonus
+    amount = "$#{number_with_delimiter(max.to_i)}"
+    tournament.prize_pool_known? ? amount : "#{amount} (estimated)"
+  end
+
   def at_max_longshot_bonus?(american_odds, max_bonus)
     at_max_cut_made_bonus?(american_odds, max_bonus)
   end

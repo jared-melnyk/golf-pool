@@ -52,18 +52,39 @@ class Tournament < ApplicationRecord
     started?
   end
 
-  # Maximum Cut Made Bonus per pick: 10% of tournament total prize pool (advertised purse).
-  # Prize pool is expected to be set from API or manually and is static; when nil, max bonus is 0.
-  def max_cut_made_bonus
-    (total_prize_pool.to_d || 0) * 0.10
+  DEFAULT_FALLBACK_PRIZE_POOL = BigDecimal("20000000")
+
+  # True only when the API has provided a real positive purse for this tournament.
+  # When false, the max bonus comes from fallback_prize_pool or the global default,
+  # and the UI should disclose that the cap is estimated.
+  def prize_pool_known?
+    total_prize_pool.to_d.positive?
   end
 
-  # Cut Made Bonus (20 × |american_odds|) capped at max_cut_made_bonus. Used for display and by Pool scoring.
+  # Best available prize pool for cap math. Prefers the real API purse, then the
+  # cached previous-year fallback, then a conservative global default. Always positive.
+  def effective_prize_pool
+    candidate = total_prize_pool.to_d
+    return candidate if candidate.positive?
+
+    candidate = fallback_prize_pool.to_d
+    return candidate if candidate.positive?
+
+    DEFAULT_FALLBACK_PRIZE_POOL
+  end
+
+  # Maximum Cut Made Bonus per pick: 10% of the effective prize pool.
+  def max_cut_made_bonus
+    effective_prize_pool * 0.10
+  end
+
+  # Cut Made Bonus (20 × |american_odds|) capped at max_cut_made_bonus.
+  # max_cut_made_bonus is always positive, so the cap is always enforced.
   def capped_cut_made_bonus(american_odds)
     return 0.to_d if american_odds.nil?
+
     raw = american_odds.to_d.abs * 20
-    max_bonus = max_cut_made_bonus
-    max_bonus.positive? ? [ raw, max_bonus ].min : raw
+    [ raw, max_cut_made_bonus ].min
   end
 
   # Backwards-compatible aliases while transitioning internal terminology.

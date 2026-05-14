@@ -129,9 +129,63 @@ RSpec.describe Tournament, type: :model do
       expect(tournament.max_longshot_bonus).to eq(1_000_000)
     end
 
-    it "returns 0 when total_prize_pool is nil" do
-      tournament = Tournament.create!(name: "No purse", total_prize_pool: nil)
-      expect(tournament.max_longshot_bonus).to eq(0)
+    it "falls back to 10% of fallback_prize_pool when total_prize_pool is nil" do
+      tournament = Tournament.create!(name: "Estimated", total_prize_pool: nil, fallback_prize_pool: 18_000_000)
+      expect(tournament.max_longshot_bonus).to eq(1_800_000)
+    end
+
+    it "falls back to 10% of the global default when both purses are nil or zero" do
+      tournament = Tournament.create!(name: "Unknown", total_prize_pool: nil, fallback_prize_pool: nil)
+      expect(tournament.max_longshot_bonus).to eq(2_000_000)
+
+      tournament.update!(total_prize_pool: 0, fallback_prize_pool: 0)
+      expect(tournament.reload.max_longshot_bonus).to eq(2_000_000)
+    end
+  end
+
+  describe "#prize_pool_known?" do
+    it "is true when total_prize_pool is positive" do
+      tournament = Tournament.create!(name: "Known", total_prize_pool: 19_000_000)
+      expect(tournament.prize_pool_known?).to be true
+    end
+
+    it "is false when total_prize_pool is nil" do
+      tournament = Tournament.create!(name: "Unknown", total_prize_pool: nil, fallback_prize_pool: 19_000_000)
+      expect(tournament.prize_pool_known?).to be false
+    end
+
+    it "is false when total_prize_pool is zero" do
+      tournament = Tournament.create!(name: "Zero", total_prize_pool: 0, fallback_prize_pool: 19_000_000)
+      expect(tournament.prize_pool_known?).to be false
+    end
+  end
+
+  describe "#effective_prize_pool" do
+    it "prefers total_prize_pool when positive" do
+      tournament = Tournament.create!(name: "Real", total_prize_pool: 19_000_000, fallback_prize_pool: 17_000_000)
+      expect(tournament.effective_prize_pool).to eq(19_000_000)
+    end
+
+    it "uses fallback_prize_pool when total_prize_pool is missing or zero" do
+      tournament = Tournament.create!(name: "Fallback", total_prize_pool: 0, fallback_prize_pool: 21_500_000)
+      expect(tournament.effective_prize_pool).to eq(21_500_000)
+    end
+
+    it "uses the global default when both values are missing or non-positive" do
+      tournament = Tournament.create!(name: "Default", total_prize_pool: nil, fallback_prize_pool: nil)
+      expect(tournament.effective_prize_pool).to eq(20_000_000)
+    end
+  end
+
+  describe "#capped_cut_made_bonus with missing purse" do
+    it "still caps the bonus when total_prize_pool is nil (no more uncapped fallthrough)" do
+      tournament = Tournament.create!(name: "Major TBD", total_prize_pool: nil)
+      expect(tournament.capped_cut_made_bonus(500_000)).to eq(2_000_000)
+    end
+
+    it "respects fallback_prize_pool when total_prize_pool is zero" do
+      tournament = Tournament.create!(name: "Major TBD", total_prize_pool: 0, fallback_prize_pool: 19_000_000)
+      expect(tournament.capped_cut_made_bonus(500_000)).to eq(1_900_000)
     end
   end
 
