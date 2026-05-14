@@ -67,4 +67,26 @@ RSpec.describe ApplicationHelper, type: :helper do
       expect(result).to eq("—")
     end
   end
+
+  describe "#max_cut_made_bonus_label" do
+    it "renders a plain dollar amount when the API purse is known" do
+      tournament = Tournament.new(name: "Known", total_prize_pool: 19_000_000, starts_at: Time.current)
+      expect(helper.max_cut_made_bonus_label(tournament)).to eq("$1,900,000")
+    end
+
+    it "appends (estimated) when the cap comes from fallback_prize_pool" do
+      tournament = Tournament.new(name: "Fallback", total_prize_pool: nil, fallback_prize_pool: 19_000_000, starts_at: Time.current)
+      expect(helper.max_cut_made_bonus_label(tournament)).to eq("$1,900,000 (estimated)")
+    end
+
+    it "appends (estimated) when the cap comes from the global default" do
+      tournament = Tournament.new(name: "Default", total_prize_pool: nil, fallback_prize_pool: nil, starts_at: Time.current)
+      expect(helper.max_cut_made_bonus_label(tournament)).to eq("$2,000,000 (estimated)")
+    end
+
+    it "appends (estimated) when total_prize_pool is zero (API said \"$0\")" do
+      tournament = Tournament.new(name: "Zero purse", total_prize_pool: 0, fallback_prize_pool: 19_000_000, starts_at: Time.current)
+      expect(helper.max_cut_made_bonus_label(tournament)).to eq("$1,900,000 (estimated)")
+    end
+  end
 end
