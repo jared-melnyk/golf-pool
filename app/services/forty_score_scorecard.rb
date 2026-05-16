@@ -1,0 +1,140 @@
+# frozen_string_literal: true
+
+# Forty Score per https://www.thefriedegg.com/articles/how-to-play-golf-game-40-score —
+# each foursome selects exactly 40 counted net strokes across up to four players × 18 holes;
+# winning group is most net under par on those counted holes.
+#
+# Returns {
+#   teams: [
+#     {
+#       id:, name:, players: [... same hole shape as Best Ball + included_in_forty_score ],
+#       selected_count:, total_selected_net:, total_selected_par:, net_under_par:
+#     }
+#   ],
+#   leaderboard: [ { rank:, team_name:, net_under_par:, total_selected_net:, total_selected_par: } ]
+# }
+class FortyScoreScorecard
+  def initialize(game)
+    @game = game
+    @round = game.round
+    @allowance = game.playing_handicap_allowance_percent
+  end
+
+  def call
+    teams_data = @game.game_teams.includes(game_team_players: [ :user, :hole_scores ]).map do |team|
+      build_team(team)
+    end
+
+    { teams: teams_data, leaderboard: build_leaderboard(teams_data) }
+  end
+
+  private
+
+  def build_team(team)
+    players_data = team.game_team_players.map { |gtp| build_player(gtp) }
+
+    total_selected_net = 0
+    total_selected_par = 0
+    selected_count = 0
+
+    players_data.each do |p|
+      p[:hole_scores].each do |row|
+        next unless row[:included_in_forty_score]
+        next if row[:net_score].nil?
+
+        selected_count += 1
+        total_selected_net += row[:net_score]
+        total_selected_par += @round.hole_pars[row[:hole_number] - 1]
+      end
+    end
+
+    net_under_par =
+      if selected_count == 40
+        total_selected_par - total_selected_net
+      end
+
+    {
+      id: team.id,
+      name: team.name,
+      players: players_data,
+      selected_count: selected_count,
+      total_selected_net: selected_count == 40 ? total_selected_net : nil,
+      total_selected_par: selected_count == 40 ? total_selected_par : nil,
+      net_under_par: net_under_par
+    }
+  end
+
+  def build_player(gtp)
+    hi = gtp.snapshot_handicap_index.to_f
+    ch = course_handicap(hi)
+    ph = playing_handicap(ch)
+    scores_by_hole = gtp.hole_scores.index_by(&:hole_number)
+
+    hole_scores = (1..18).map do |h|
+      rec = scores_by_hole[h]
+      strokes = strokes_on_hole(ph, h)
+      gross = rec&.gross_score
+      net = gross ? gross - strokes : nil
+      {
+        hole_number: h,
+        gross_score: gross,
+        net_score: net,
+        strokes_received: strokes,
+        included_in_forty_score: rec&.included_in_forty_score == true
+      }
+    end
+
+    {
+      name: gtp.user.name,
+      course_handicap: ch,
+      playing_handicap: ph,
+      hole_scores: hole_scores
+    }
+  end
+
+  def course_handicap(hi)
+    slope = @round.slope_rating.to_f
+    rating = @round.course_rating.to_f
+    par = @round.par_total.to_f
+    (hi * (slope / 113.0) + (rating - par)).round
+  end
+
+  def playing_handicap(ch)
+    (ch * @allowance / 100.0).round
+  end
+
+  def strokes_on_hole(playing_handicap, hole_number)
+    return 0 if playing_handicap <= 0
+
+    si = @round.hole_handicaps[hole_number - 1]
+    base = playing_handicap / 18
+    remainder = playing_handicap % 18
+    base + (si <= remainder ? 1 : 0)
+  end
+
+  def build_leaderboard(teams_data)
+    rows = teams_data.map do |t|
+      {
+        team_name: t[:name],
+        net_under_par: t[:net_under_par],
+        total_selected_net: t[:total_selected_net],
+        total_selected_par: t[:total_selected_par]
+      }
+    end
+
+    complete = rows.select { |r| r[:net_under_par].present? }
+    incomplete = rows.reject { |r| r[:net_under_par].present? }
+    sorted = complete.sort_by { |r| [ -r[:net_under_par], r[:team_name] ] }
+
+    ranked = []
+    sorted.each_with_index do |row, idx|
+      if idx.positive? && sorted[idx - 1][:net_under_par] == row[:net_under_par]
+        ranked << row.merge(rank: ranked[idx - 1][:rank])
+      else
+        ranked << row.merge(rank: idx + 1)
+      end
+    end
+
+    ranked + incomplete.map { |r| r.merge(rank: nil) }
+  end
+end
