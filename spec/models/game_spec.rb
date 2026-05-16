@@ -34,6 +34,16 @@ RSpec.describe Game, type: :model do
     expect(game).not_to be_valid
   end
 
+  it "is valid with forty_score game type" do
+    game = Game.new(event: event, round: round, game_type: "forty_score")
+    expect(game).to be_valid
+  end
+
+  it "uses 100% playing handicap allowance for forty_score" do
+    game = Game.new(event: event, round: round, game_type: "forty_score")
+    expect(game.playing_handicap_allowance_percent).to eq(100)
+  end
+
   it "defaults submitted to false" do
     game = Game.new(event: event, round: round, game_type: "best_ball")
     expect(game.submitted).to eq(false)

@@ -18,7 +18,11 @@
       <% end %>
     </div>
   <% else %>
-    <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
+    <% if @game.forty_score? %>
+      <%= render "scorecard_forty_score", scorecard: @scorecard, game: @game, event: @event %>
+    <% else %>
+      <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
+    <% end %>
   <% end %>
 
   <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>

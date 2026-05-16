@@ -20,14 +20,19 @@ class GamesController < ApplicationController
   end
 
   def show
-    @scorecard = BestBallScorecard.new(
-      @game.tap { |g|
-        ActiveRecord::Associations::Preloader.new(
-          records: [ g ],
-          associations: { game_teams: { game_team_players: [ :user, :hole_scores ] } }
-        ).call
-      }
-    ).call
+    preloaded = @game.tap do |g|
+      ActiveRecord::Associations::Preloader.new(
+        records: [ g ],
+        associations: { game_teams: { game_team_players: [ :user, :hole_scores ] } }
+      ).call
+    end
+
+    @scorecard =
+      if @game.forty_score?
+        FortyScoreScorecard.new(preloaded).call
+      else
+        BestBallScorecard.new(preloaded).call
+      end
   end
 
   def edit_teams
@@ -47,12 +52,14 @@ class GamesController < ApplicationController
           GameTeamPlayer.create!(game_team: team, user: user) if user
         end
       end
+
+      enforce_forty_score_team_sizes! if @game.forty_score?
     end
     redirect_to event_game_path(@event, @game), notice: "Teams saved."
   rescue ActiveRecord::RecordInvalid => e
     @members = @event.users.order(:name)
     @game_teams = @game.game_teams.includes(game_team_players: :user)
-    flash.now[:alert] = "Could not save teams: #{e.message}"
+    flash.now[:alert] = "Could not save teams: #{e.record&.errors&.full_messages&.to_sentence || e.message}"
     render :edit_teams, status: :unprocessable_entity
   end
 
@@ -89,5 +96,15 @@ class GamesController < ApplicationController
     end
   rescue ActionController::ParameterMissing
     {}
+  end
+
+  def enforce_forty_score_team_sizes!
+    @game.game_teams.reload.each do |team|
+      n = team.game_team_players.size
+      next if n == 4
+
+      team.errors.add(:base, "40 Score requires exactly 4 players per group (#{team.name} has #{n}).")
+      raise ActiveRecord::RecordInvalid.new(team)
+    end
   end
 end

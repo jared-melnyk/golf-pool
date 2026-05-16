@@ -4,4 +4,32 @@ class HoleScore < ApplicationRecord
   validates :hole_number, inclusion: { in: 1..18 }
   validates :gross_score, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :hole_number, uniqueness: { scope: :game_team_player_id }
+
+  validate :forty_pick_requires_gross, if: -> { forty_score_game? && included_in_forty_score? }
+  validate :forty_pick_team_cap, if: -> { forty_score_game? && included_in_forty_score? }
+
+  private
+
+  def forty_score_game?
+    game_team_player&.game_team&.game&.forty_score?
+  end
+
+  def forty_pick_requires_gross
+    return if gross_score.present?
+
+    errors.add(:included_in_forty_score, "requires a gross score for this hole")
+  end
+
+  def forty_pick_team_cap
+    team_id = game_team_player.game_team_id
+    teammate_ids = GameTeamPlayer.where(game_team_id: team_id).pluck(:id)
+
+    relation = HoleScore.where(game_team_player_id: teammate_ids, included_in_forty_score: true)
+    relation = relation.where.not(id: id) if persisted?
+
+    tally = relation.count + 1
+    return if tally <= 40
+
+    errors.add(:included_in_forty_score, "would exceed the 40-count limit for this group")
+  end
 end
