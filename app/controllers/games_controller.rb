@@ -101,9 +101,12 @@ class GamesController < ApplicationController
   def enforce_forty_score_team_sizes!
     @game.game_teams.reload.each do |team|
       n = team.game_team_players.size
-      next if n == 4
+      next if FortyScore.valid_team_size?(n)
 
-      team.errors.add(:base, "40 Score requires exactly 4 players per group (#{team.name} has #{n}).")
+      team.errors.add(
+        :base,
+        "40 Score requires 3 or 4 players per group (#{team.name} has #{n})."
+      )
       raise ActiveRecord::RecordInvalid.new(team)
     end
   end

@@ -21,15 +21,18 @@ class HoleScore < ApplicationRecord
   end
 
   def forty_pick_team_cap
-    team_id = game_team_player.game_team_id
-    teammate_ids = GameTeamPlayer.where(game_team_id: team_id).pluck(:id)
+    team = game_team_player.game_team
+    player_count = team.game_team_players.count
+    limit = FortyScore.target_pick_count(player_count)
+
+    teammate_ids = GameTeamPlayer.where(game_team_id: team.id).pluck(:id)
 
     relation = HoleScore.where(game_team_player_id: teammate_ids, included_in_forty_score: true)
     relation = relation.where.not(id: id) if persisted?
 
     tally = relation.count + 1
-    return if tally <= 40
+    return if tally <= limit
 
-    errors.add(:included_in_forty_score, "would exceed the 40-count limit for this group")
+    errors.add(:included_in_forty_score, "would exceed the #{limit}-count limit for this group")
   end
 end

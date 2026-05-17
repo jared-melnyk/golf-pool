@@ -83,6 +83,43 @@ RSpec.describe HoleScore, type: :model do
       hs = HoleScore.find_by!(game_team_player: ed_gtp, hole_number: 1)
       hs.assign_attributes(included_in_forty_score: true, gross_score: hs.gross_score)
       expect(hs).not_to be_valid
+      expect(hs.errors[:included_in_forty_score].first).to include("40-count limit")
+    end
+
+    context "with a threesome" do
+      let(:threesome_game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+      let(:threesome_team) { GameTeam.create!(game: threesome_game, name: "Threesome") }
+      let(:p1_user) { User.create!(name: "P1", email: "p1-threesome@test.com", password: "password123") }
+      let(:p1_gtp) { GameTeamPlayer.create!(game_team: threesome_team, user: p1_user) }
+      let!(:threesome_players) do
+        %w[t2@test.com t3@test.com].map do |email|
+          u = User.create!(name: email, email: email, password: "password123")
+          GameTeamPlayer.create!(game_team: threesome_team, user: u)
+        end
+      end
+      let(:p2_gtp) { threesome_players[0] }
+      let(:p3_gtp) { threesome_players[1] }
+
+      before do
+        [ p1_gtp, p2_gtp, p3_gtp ].each do |p|
+          (1..18).each do |h|
+            HoleScore.create!(game_team_player: p, hole_number: h, gross_score: 5)
+          end
+        end
+        HoleScore.where(game_team_player_id: p1_gtp.id).update_all(included_in_forty_score: true)
+        HoleScore.where(game_team_player_id: p2_gtp.id).update_all(included_in_forty_score: true)
+        (1..12).each do |h|
+          HoleScore.find_by!(game_team_player_id: p3_gtp.id, hole_number: h).update_columns(included_in_forty_score: true)
+        end
+        HoleScore.where(game_team_player_id: p3_gtp.id).where("hole_number > 12").update_all(included_in_forty_score: false)
+      end
+
+      it "cannot exceed thirty counted scores for the group" do
+        hs = HoleScore.find_by!(game_team_player: p3_gtp, hole_number: 13)
+        hs.assign_attributes(included_in_forty_score: true, gross_score: hs.gross_score)
+        expect(hs).not_to be_valid
+        expect(hs.errors[:included_in_forty_score].first).to include("30-count limit")
+      end
     end
 
     it "ignores forty pick limits for best_ball games" do
