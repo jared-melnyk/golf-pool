@@ -49,18 +49,22 @@ RSpec.describe FortyScoreScorecard do
   it "sums par and net for exactly 40 picked scores" do
     t = scorecard[:teams].first
     expect(t[:selected_count]).to eq(40)
+    expect(t[:target_pick_count]).to eq(40)
+    expect(t[:player_count]).to eq(4)
     expect(t[:total_selected_net]).to eq(160)
     expect(t[:total_selected_par]).to eq(160)
-    expect(t[:net_under_par]).to eq(0)
+    expect(t[:actual_vs_par]).to eq(0)
+    expect(t[:competition_vs_par]).to eq(0)
   end
 
-  it "shows nil vs par until 40 selections are locked in" do
+  it "shows nil vs par until target selections are locked in" do
     HoleScore.where(game_team_player: gtp_carol, hole_number: 4).update_all(included_in_forty_score: false)
     game.reload
     card = FortyScoreScorecard.new(game).call
     t = card[:teams].first
     expect(t[:selected_count]).to eq(39)
-    expect(t[:net_under_par]).to be_nil
+    expect(t[:actual_vs_par]).to be_nil
+    expect(t[:competition_vs_par]).to be_nil
   end
 
   it "uses full (100%) playing handicap for alice with index 18 vs best ball allowance" do
@@ -95,7 +99,75 @@ RSpec.describe FortyScoreScorecard do
     ga = lbs.find { |row| row[:team_name] == "Foursome A" }
     expect(gb[:rank]).to eq(1)
     expect(ga[:rank]).to eq(2)
-    expect(gb[:net_under_par]).to eq(40)
-    expect(ga[:net_under_par]).to eq(0)
+    expect(gb[:competition_vs_par]).to eq(40)
+    expect(ga[:competition_vs_par]).to eq(0)
+  end
+
+  describe "threesome" do
+    let(:threesome_game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+    let(:threesome_team) { GameTeam.create!(game: threesome_game, name: "Threesome") }
+    let(:t1) { User.create!(name: "T1", email: "t1@test.com", password: "pw", ghin_handicap_index: 0.0) }
+    let(:t2) { User.create!(name: "T2", email: "t2@test.com", password: "pw", ghin_handicap_index: 0.0) }
+    let(:t3) { User.create!(name: "T3", email: "t3@test.com", password: "pw", ghin_handicap_index: 0.0) }
+    let(:gtp1) { GameTeamPlayer.create!(game_team: threesome_team, user: t1) }
+    let(:gtp2) { GameTeamPlayer.create!(game_team: threesome_team, user: t2) }
+    let(:gtp3) { GameTeamPlayer.create!(game_team: threesome_team, user: t3) }
+
+    before do
+      [ gtp1, gtp2, gtp3 ].each do |gtp|
+        (1..18).each do |h|
+          HoleScore.create!(game_team_player: gtp, hole_number: h, gross_score: 4)
+        end
+      end
+    end
+
+    it "computes actual and competition vs par with 30 picks" do
+      (1..10).each { |h| HoleScore.where(game_team_player: gtp1, hole_number: h).update_all(gross_score: 3, included_in_forty_score: true) }
+      (11..18).each { |h| HoleScore.where(game_team_player: gtp1, hole_number: h).update_all(included_in_forty_score: false) }
+      (1..10).each { |h| HoleScore.where(game_team_player: gtp2, hole_number: h).update_all(gross_score: 3, included_in_forty_score: true) }
+      (11..18).each { |h| HoleScore.where(game_team_player: gtp2, hole_number: h).update_all(included_in_forty_score: false) }
+      (1..10).each { |h| HoleScore.where(game_team_player: gtp3, hole_number: h).update_all(gross_score: 3, included_in_forty_score: true) }
+      (11..18).each { |h| HoleScore.where(game_team_player: gtp3, hole_number: h).update_all(included_in_forty_score: false) }
+
+      card = FortyScoreScorecard.new(threesome_game.reload).call
+      t = card[:teams].sole
+      expect(t[:selected_count]).to eq(30)
+      expect(t[:target_pick_count]).to eq(30)
+      expect(t[:actual_vs_par]).to eq(30)
+      expect(t[:competition_vs_par]).to eq(40)
+    end
+
+    it "shows nil vs par until 30 selections are complete" do
+      (1..10).each { |h| HoleScore.where(game_team_player: gtp1, hole_number: h).update_all(included_in_forty_score: true) }
+      (1..10).each { |h| HoleScore.where(game_team_player: gtp2, hole_number: h).update_all(included_in_forty_score: true) }
+      (1..9).each { |h| HoleScore.where(game_team_player: gtp3, hole_number: h).update_all(included_in_forty_score: true) }
+
+      card = FortyScoreScorecard.new(threesome_game.reload).call
+      t = card[:teams].sole
+      expect(t[:selected_count]).to eq(29)
+      expect(t[:actual_vs_par]).to be_nil
+      expect(t[:competition_vs_par]).to be_nil
+    end
+  end
+
+  it "ranks mixed-size teams by competition vs par" do
+    threesome = GameTeam.create!(game: game, name: "Threesome Leaders")
+    users = 3.times.map { |i| User.create!(name: "TS#{i}", email: "ts#{i}@t.com", password: "pw", ghin_handicap_index: 0.0) }
+    gtps = users.map { |u| GameTeamPlayer.create!(game_team: threesome, user: u) }
+    gtps.each do |gtp|
+      (1..18).each { |h| HoleScore.create!(game_team_player: gtp, hole_number: h, gross_score: 4) }
+    end
+    slots = gtps.flat_map { |g| (1..18).map { |h| [ g.id, h ] } }.first(30)
+    slots.each do |gid, h|
+      HoleScore.find_by!(game_team_player_id: gid, hole_number: h).update!(gross_score: 3, included_in_forty_score: true)
+    end
+
+    lbs = FortyScoreScorecard.new(Game.includes(game_teams: { game_team_players: :hole_scores }).find(game.id)).call[:leaderboard]
+    ts = lbs.find { |r| r[:team_name] == "Threesome Leaders" }
+    ga = lbs.find { |r| r[:team_name] == "Foursome A" }
+    expect(ts[:actual_vs_par]).to eq(30)
+    expect(ts[:competition_vs_par]).to eq(40)
+    expect(ts[:rank]).to eq(1)
+    expect(ga[:rank]).to eq(2)
   end
 end

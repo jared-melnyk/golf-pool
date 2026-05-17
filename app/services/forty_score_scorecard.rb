@@ -1,17 +1,22 @@
 # frozen_string_literal: true
 
 # Forty Score per https://www.thefriedegg.com/articles/how-to-play-golf-game-40-score —
-# each foursome selects exactly 40 counted net strokes across up to four players × 18 holes;
-# winning group is most net under par on those counted holes.
+# each group selects counted net strokes (30 for threesomes, 40 for foursomes);
+# leaderboard ranks on competition vs par (40-hole equivalent for threesomes).
 #
 # Returns {
 #   teams: [
 #     {
 #       id:, name:, players: [... same hole shape as Best Ball + included_in_forty_score ],
-#       selected_count:, total_selected_net:, total_selected_par:, net_under_par:
+#       player_count:, target_pick_count:, selected_count:,
+#       total_selected_net:, total_selected_par:,
+#       actual_vs_par:, competition_vs_par:
 #     }
 #   ],
-#   leaderboard: [ { rank:, team_name:, net_under_par:, total_selected_net:, total_selected_par: } ]
+#   leaderboard: [
+#     { rank:, team_name:, player_count:, target_pick_count:,
+#       actual_vs_par:, competition_vs_par:, total_selected_net:, total_selected_par: }
+#   ]
 # }
 class FortyScoreScorecard
   def initialize(game)
@@ -48,19 +53,30 @@ class FortyScoreScorecard
       end
     end
 
-    net_under_par =
-      if selected_count == 40
+    player_count = team.game_team_players.size
+    target = FortyScore.target_pick_count(player_count)
+
+    actual_vs_par =
+      if selected_count == target
         total_selected_par - total_selected_net
       end
+
+    competition_vs_par = FortyScore.competition_vs_par(
+      actual_vs_par: actual_vs_par,
+      player_count: player_count
+    )
 
     {
       id: team.id,
       name: team.name,
       players: players_data,
+      player_count: player_count,
+      target_pick_count: target,
       selected_count: selected_count,
-      total_selected_net: selected_count == 40 ? total_selected_net : nil,
-      total_selected_par: selected_count == 40 ? total_selected_par : nil,
-      net_under_par: net_under_par
+      total_selected_net: selected_count == target ? total_selected_net : nil,
+      total_selected_par: selected_count == target ? total_selected_par : nil,
+      actual_vs_par: actual_vs_par,
+      competition_vs_par: competition_vs_par
     }
   end
 
@@ -116,19 +132,22 @@ class FortyScoreScorecard
     rows = teams_data.map do |t|
       {
         team_name: t[:name],
-        net_under_par: t[:net_under_par],
+        player_count: t[:player_count],
+        target_pick_count: t[:target_pick_count],
+        actual_vs_par: t[:actual_vs_par],
+        competition_vs_par: t[:competition_vs_par],
         total_selected_net: t[:total_selected_net],
         total_selected_par: t[:total_selected_par]
       }
     end
 
-    complete = rows.select { |r| r[:net_under_par].present? }
-    incomplete = rows.reject { |r| r[:net_under_par].present? }
-    sorted = complete.sort_by { |r| [ -r[:net_under_par], r[:team_name] ] }
+    complete = rows.select { |r| r[:competition_vs_par].present? }
+    incomplete = rows.reject { |r| r[:competition_vs_par].present? }
+    sorted = complete.sort_by { |r| [ -r[:competition_vs_par], r[:team_name] ] }
 
     ranked = []
     sorted.each_with_index do |row, idx|
-      if idx.positive? && sorted[idx - 1][:net_under_par] == row[:net_under_par]
+      if idx.positive? && sorted[idx - 1][:competition_vs_par] == row[:competition_vs_par]
         ranked << row.merge(rank: ranked[idx - 1][:rank])
       else
         ranked << row.merge(rank: idx + 1)

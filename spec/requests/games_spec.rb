@@ -142,7 +142,20 @@ RSpec.describe "Games", type: :request do
         expect(game.game_teams.reload.sole.game_team_players.size).to eq(4)
       end
 
-      it "rejects a group without exactly four golfers" do
+      it "accepts a threesome of three players" do
+        patch update_teams_event_game_path(event, game), params: {
+          teams: {
+            "0" => {
+              name: "Threesome",
+              user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s)
+            }
+          }
+        }
+        expect(response).to redirect_to(event_game_path(event, game))
+        expect(game.game_teams.reload.sole.game_team_players.size).to eq(3)
+      end
+
+      it "rejects a group with only two golfers" do
         patch update_teams_event_game_path(event, game), params: {
           teams: {
             "0" => {

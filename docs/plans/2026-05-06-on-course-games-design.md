@@ -228,6 +228,23 @@ Minor follow-ups for handicap (§7):
 
 ---
 
+## Appendix A — 40 Score (threesomes and foursomes)
+
+LongShot extends classic [40 Score](https://www.thefriedegg.com/articles/how-to-play-golf-game-40-score) (foursome, 40 counted net strokes) as follows:
+
+| Players | Counted picks | Actual vs par | Leaderboard (competition vs par) |
+|--------:|--------------:|---------------|----------------------------------|
+| 4 | 40 | Sum of (par − net) on counted holes | Same as actual |
+| 3 | 30 | Same formula on 30 holes | `(actual × 4/3).round` (40-hole equivalent) |
+| 2 | — | **Not supported** | — |
+
+- **Sign:** positive = under par.
+- **Completion:** totals appear only when every counted hole has a gross and the group has exactly its target pick count.
+- **Mixed event:** teams of 3 and 4 may play in the same game; each team uses its own target and multiplier.
+- **Pick cap:** enforced per team via `FortyScore.target_pick_count`.
+
+---
+
 ## 14. Changelog
 
 | Date | Change |
@@ -235,3 +252,4 @@ Minor follow-ups for handicap (§7):
 | 2026-05-06 | Initial consolidated design spec authored from handoff + design conversations. |
 | 2026-05-07 | §8: Leaderboard ties — **T1** / **T3** competition ranking; item 4 closed. Section numbers 9–14 adjusted. |
 | 2026-05-07 | §10 updates: item 5 closed (**manual refresh v1**), item 6 closed (lifecycle/join behavior), v1 assumptions set to **18 holes + same tees**; 9-hole deferred to v2/v3. |
+| 2026-05-17 | Appendix A: 40 Score threesome support (30 picks, competition scaling, no pairs). |

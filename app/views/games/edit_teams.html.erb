@@ -4,6 +4,9 @@
     <p class="text-sm text-gray-600 mt-1">
       <%= @game.round.name %> · <%= @game.game_type.gsub("_", " ").titleize %>
     </p>
+    <% if @game.forty_score? %>
+      <p class="text-sm text-amber-800 mt-2">40 Score groups need 3 or 4 players each.</p>
+    <% end %>
   </div>
 
   <%= form_with url: update_teams_event_game_path(@event, @game), method: :patch, local: true, class: "space-y-6" do |f| %>
@@ -28,7 +31,9 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Players (select 1–4)</label>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Players (select <%= @game.forty_score? ? "3–4" : "1–4" %>)
+          </label>
           <% current_ids = team&.game_team_players&.map(&:user_id) || [] %>
           <% @members.each do |user| %>
             <label class="flex items-center gap-2 mb-1 text-sm">
