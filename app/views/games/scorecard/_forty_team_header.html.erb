@@ -1,0 +1,10 @@
+<%# locals: game_team, team_data %>
+<p class="text-xs text-gray-600" id="<%= dom_id(game_team, "forty_header_stats") %>">
+  <%= team_data[:selected_count] %> / <%= team_data[:target_pick_count] %> picks
+  <% if team_data[:actual_vs_par] %>
+    · Actual <%= "%+d" % team_data[:actual_vs_par] %>
+    · Competition <%= "%+d" % team_data[:competition_vs_par] %>
+    (<span title="Counted net strokes"><%= team_data[:total_selected_net] %></span> net /
+    <%= team_data[:total_selected_par] %> par)
+  <% end %>
+</p>

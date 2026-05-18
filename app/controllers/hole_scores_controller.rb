@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 class HoleScoresController < ApplicationController
+  include GameScorecardBuilder
+
+  helper Games::ScorecardHelper
+
   before_action :set_event
   before_action :set_game
   before_action :require_event_member!
@@ -22,7 +26,7 @@ class HoleScoresController < ApplicationController
     score = @gtp.hole_scores.find_by(hole_number: hole_num)
 
     unless score&.gross_score.present?
-      redirect_to event_game_path(@event, @game), alert: "Enter a gross score before counting this hole toward 40 Score."
+      render_scorecard_update(alert: "Enter a gross score before counting this hole toward 40 Score.")
       return
     end
 
@@ -30,9 +34,9 @@ class HoleScoresController < ApplicationController
     score.included_in_forty_score = want
     score.save!
 
-    redirect_to event_game_path(@event, @game), notice: "Pick updated."
+    render_scorecard_update
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to event_game_path(@event, @game), alert: e.record.errors.full_messages.to_sentence
+    render_scorecard_update(alert: e.record.errors.full_messages.to_sentence)
   end
 
   def update_gross_score
@@ -46,9 +50,26 @@ class HoleScoresController < ApplicationController
       score.save!
     end
 
-    redirect_to event_game_path(@event, @game), notice: "Score saved."
+    render_scorecard_update
   rescue ActiveRecord::RecordInvalid => e
-    redirect_to event_game_path(@event, @game), alert: "Invalid score: #{e.message}"
+    render_scorecard_update(alert: "Invalid score: #{e.message}")
+  end
+
+  def render_scorecard_update(notice: nil, alert: nil)
+    @hole_number = params[:hole_number].to_i
+    @game_team = @gtp.game_team
+    @forty_pick_only = forty_pick_only?
+    @scorecard = build_game_scorecard(@game.reload)
+    @team_data = scorecard_team_for(@scorecard, @game_team)
+    @gtps_by_name = scorecard_gtps_by_name(@game, @scorecard) if @game.forty_score?
+
+    flash.now[:notice] = notice if notice
+    flash.now[:alert] = alert if alert
+
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_to event_game_path(@event, @game), notice: notice, alert: alert }
+    end
   end
 
   def forty_pick_only?

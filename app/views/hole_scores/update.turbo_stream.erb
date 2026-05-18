@@ -1,0 +1,73 @@
+<%= turbo_stream.update "scorecard_flash" do %>
+  <%= render "games/scorecard/flash", message: flash[:notice], type: :notice if flash[:notice].present? %>
+  <%= render "games/scorecard/flash", message: flash[:alert], type: :alert if flash[:alert].present? %>
+<% end %>
+
+<% player_hole = @team_data[:players].find { |p| p[:name] == @gtp.user.name }&.then { |p| p[:hole_scores].find { |s| s[:hole_number] == @hole_number } } %>
+<% team_hole = @team_data[:hole_scores]&.find { |s| s[:hole_number] == @hole_number } %>
+
+<% unless @forty_pick_only %>
+<%= turbo_stream.replace dom_id(@gtp, "net_hole_#{@hole_number}") do %>
+  <%= render "games/scorecard/net_cell",
+        gtp: @gtp,
+        hole_number: @hole_number,
+        net_score: player_hole&.dig(:net_score) %>
+<% end %>
+<% end %>
+
+<% unless @game.forty_score? %>
+  <%= turbo_stream.replace dom_id(@game_team, "best_ball_hole_#{@hole_number}") do %>
+    <%= render "games/scorecard/best_ball_cell",
+          game_team: @game_team,
+          hole_number: @hole_number,
+          best_ball_net: team_hole&.dig(:best_ball_net) %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game_team, "total_net") do %>
+    <%= render "games/scorecard/team_total",
+          game_team: @game_team,
+          total_net_strokes: @team_data[:total_net_strokes] %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+    <%= render "games/scorecard/leaderboard_best_ball", game: @game, scorecard: @scorecard %>
+  <% end %>
+<% else %>
+  <% if @forty_pick_only %>
+    <%= turbo_stream.replace dom_id(@gtp, "forty_pick_hole_#{@hole_number}") do %>
+      <%= render "games/scorecard/forty_pick_cell",
+            gtp: @gtp,
+            game_team: @game_team,
+            hole_number: @hole_number,
+            player_hole: player_hole,
+            event: @event,
+            game: @game,
+            can_edit: scorecard_can_edit?(@game, @event) %>
+    <% end %>
+  <% else %>
+    <% @team_data[:players].each do |player| %>
+      <% gtp = @gtps_by_name[player[:name]] %>
+      <% next unless gtp %>
+
+      <% ph = player[:hole_scores].find { |s| s[:hole_number] == @hole_number } %>
+      <%= turbo_stream.replace dom_id(gtp, "forty_pick_hole_#{@hole_number}") do %>
+        <%= render "games/scorecard/forty_pick_cell",
+              gtp: gtp,
+              game_team: @game_team,
+              hole_number: @hole_number,
+              player_hole: ph,
+              event: @event,
+              game: @game,
+              can_edit: scorecard_can_edit?(@game, @event) %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game_team, "forty_header_stats") do %>
+    <%= render "games/scorecard/forty_team_header", game_team: @game_team, team_data: @team_data %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+    <%= render "games/scorecard/leaderboard_forty_score", game: @game, scorecard: @scorecard %>
+  <% end %>
+<% end %>

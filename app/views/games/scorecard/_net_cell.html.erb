@@ -1,0 +1,8 @@
+<%# locals: gtp, hole_number, net_score %>
+<% if gtp %>
+  <td class="py-1 pr-3 text-gray-500 text-xs" id="<%= dom_id(gtp, "net_hole_#{hole_number}") %>">
+    <%= net_score || "—" %>
+  </td>
+<% else %>
+  <td class="py-1 pr-3 text-gray-500 text-xs"><%= net_score || "—" %></td>
+<% end %>

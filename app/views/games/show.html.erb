@@ -18,6 +18,7 @@
       <% end %>
     </div>
   <% else %>
+    <div id="scorecard_flash"></div>
     <% if @game.forty_score? %>
       <%= render "scorecard_forty_score", scorecard: @scorecard, game: @game, event: @event %>
     <% else %>

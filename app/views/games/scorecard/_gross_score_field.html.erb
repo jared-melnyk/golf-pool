@@ -1,0 +1,24 @@
+<%# locals: gtp, hole_number, gross_score, event, game, can_edit %>
+<% if can_edit %>
+  <%= form_with url: event_game_hole_score_path(event, game, gtp),
+        method: :patch,
+        class: "inline",
+        data: {
+          controller: "score-entry",
+          score_entry_last_value_value: gross_score.to_s,
+          turbo: true
+        } do %>
+    <%= hidden_field_tag :hole_number, hole_number %>
+    <%= number_field_tag :gross_score,
+          gross_score,
+          min: 1, max: 15, size: 3,
+          id: dom_id(gtp, "gross_hole_#{hole_number}"),
+          class: "w-12 rounded border border-gray-300 px-1 py-0.5 text-center text-sm focus:ring-1 focus:ring-emerald-500",
+          data: {
+            score_entry_target: "input",
+            action: "blur->score-entry#saveIfDirty"
+          } %>
+  <% end %>
+<% else %>
+  <span class="text-gray-700"><%= gross_score || "—" %></span>
+<% end %>
