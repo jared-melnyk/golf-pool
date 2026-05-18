@@ -61,7 +61,6 @@ class HoleScoresController < ApplicationController
     @forty_pick_only = forty_pick_only?
     @scorecard = build_game_scorecard(@game.reload)
     @team_data = scorecard_team_for(@scorecard, @game_team)
-    @gtps_by_name = scorecard_gtps_by_name(@game, @scorecard) if @game.forty_score?
 
     flash.now[:notice] = notice if notice
     flash.now[:alert] = alert if alert

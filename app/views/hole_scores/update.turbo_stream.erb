@@ -45,8 +45,9 @@
             can_edit: scorecard_can_edit?(@game, @event) %>
     <% end %>
   <% else %>
+    <% gtps_for_team = @game_team.game_team_players.index_by { |gtp| gtp.user.name } %>
     <% @team_data[:players].each do |player| %>
-      <% gtp = @gtps_by_name[player[:name]] %>
+      <% gtp = gtps_for_team[player[:name]] %>
       <% next unless gtp %>
 
       <% ph = player[:hole_scores].find { |s| s[:hole_number] == @hole_number } %>
