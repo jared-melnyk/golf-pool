@@ -61,14 +61,16 @@ RSpec.describe "Pools show", type: :request do
     expect(response.body).not_to include("tournament results and picks history will be removed")
   end
 
-  it "shows no picks submitted badge when tournament has no pool picks" do
+  it "shows the member summary table with pick badges" do
     get pool_path(pool)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("No picks submitted")
+    expect(response.body).to include("Max Bonus")
+    expect(response.body).to include("Total Earnings")
+    expect(response.body).to include("No pick")
   end
 
-  it "shows completed tournament results summary instead of the pool picks grid" do
+  it "shows completed tournament totals in the member table" do
     winner = Golfer.create!(name: "Winner", external_id: "993")
     tournament.update!(starts_at: 3.days.ago, ends_at: 1.day.ago, champion_golfer: winner)
     Pick.create!(user: creator, pool_tournament: pool_tournament)
@@ -76,8 +78,27 @@ RSpec.describe "Pools show", type: :request do
     get pool_path(pool)
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Results summary for #{tournament.name}")
-    expect(response.body).to include("Tournament total")
+    expect(response.body).to include("Completed")
     expect(response.body).not_to include("Pool picks for #{tournament.name}")
+    expect(response.body).not_to include("Results summary for #{tournament.name}")
+  end
+
+  it "hides another member's max bonus until picks are fully visible" do
+    g1 = Golfer.create!(name: "Golfer", external_id: "881")
+    pick = Pick.create!(user: member, pool_tournament: pool_tournament)
+    PickGolfer.create!(pick: pick, golfer: g1, slot: 1)
+    PoolTournamentOdds.create!(
+      pool_tournament: pool_tournament,
+      golfer: g1,
+      american_odds: 500,
+      vendor: "fanduel",
+      locked_at: Time.current
+    )
+
+    get pool_path(pool)
+
+    expect(response).to have_http_status(:ok)
+    # Creator sees own row without a pick; member's max bonus ($10,000) must not leak.
+    expect(response.body).not_to include("$10,000")
   end
 end
