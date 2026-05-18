@@ -18,5 +18,13 @@ module Games
     def scorecard_team_data(scorecard, game_team)
       scorecard[:teams].find { |t| t[:id] == game_team.id }
     end
+
+    # Leaderboard position: "1", "2", or "T2" when multiple teams share the same rank.
+    def scorecard_display_rank(rank, leaderboard)
+      return "—" if rank.nil?
+
+      tied_at_rank = leaderboard.count { |row| row[:rank] == rank }
+      tied_at_rank > 1 ? "T#{rank}" : rank.to_s
+    end
   end
 end
