@@ -36,6 +36,36 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#likely_finished?" do
+    it "returns false when the tournament has not started" do
+      tournament = Tournament.create!(name: "Future", starts_at: 1.day.from_now)
+      expect(tournament.likely_finished?).to be false
+    end
+
+    it "returns false when the tournament already has a champion" do
+      golfer = Golfer.create!(name: "Winner", external_id: "1")
+      tournament = Tournament.create!(name: "Done", starts_at: 5.days.ago, champion_golfer_id: golfer.id)
+      expect(tournament.likely_finished?).to be false
+    end
+
+    it "returns false early in the event" do
+      tournament = Tournament.create!(name: "Live", starts_at: 1.day.ago)
+      expect(tournament.likely_finished?).to be false
+    end
+
+    it "returns true once the event is on its fourth day" do
+      tournament = Tournament.create!(name: "Final day", starts_at: 3.days.ago)
+      expect(tournament.likely_finished?).to be true
+    end
+
+    it "returns true when round 4 scores exist" do
+      tournament = Tournament.create!(name: "Round 4", starts_at: 1.day.ago)
+      golfer = Golfer.create!(name: "Player", external_id: "1")
+      TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 4, score_to_par: -2)
+      expect(tournament.likely_finished?).to be true
+    end
+  end
+
   describe "#tournament_results_earnings_incomplete?" do
     it "returns false when there is no champion yet" do
       tournament = Tournament.create!(name: "Open", starts_at: 1.day.from_now, champion_golfer_id: nil)

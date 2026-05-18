@@ -27,4 +27,27 @@ RSpec.describe BallDontLie::Client do
       client.fetch_all_player_round_results(tournament_ids: [ 1 ], player_ids: [ 1 ])
     end
   end
+
+  describe "#tournament_completed?" do
+    let(:client) { described_class.new(api_key: api_key) }
+
+    it "returns true when the API reports COMPLETED" do
+      allow(client).to receive(:tournament_results).and_return(
+        "data" => [ { "tournament" => { "status" => "COMPLETED" } } ]
+      )
+      expect(client.tournament_completed?(26)).to be true
+    end
+
+    it "returns false when the API reports a live status" do
+      allow(client).to receive(:tournament_results).and_return(
+        "data" => [ { "tournament" => { "status" => "IN_PROGRESS" } } ]
+      )
+      expect(client.tournament_completed?(26)).to be false
+    end
+
+    it "returns false when there are no results yet" do
+      allow(client).to receive(:tournament_results).and_return("data" => [])
+      expect(client.tournament_completed?(26)).to be false
+    end
+  end
 end

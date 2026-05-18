@@ -9,11 +9,26 @@ class RefreshLiveResultsJob < ApplicationJob
 
     BallDontLie::SyncRoundResults.new(tournament: tournament).call
 
-    tournament.reload
-    if tournament.champion_golfer_id.present? && tournament.tournament_results_earnings_incomplete?
-      BallDontLie::SyncTournamentResults.new(tournament: tournament).call
-    end
+    sync_final_results_if_needed!(tournament)
   rescue => e
     Rails.logger.error("RefreshLiveResultsJob failed for tournament #{tournament_id}: #{e.class}: #{e.message}")
+  end
+
+  private
+
+  def sync_final_results_if_needed!(tournament)
+    tournament.reload
+
+    if tournament.champion_golfer_id.present?
+      return unless tournament.tournament_results_earnings_incomplete?
+
+      BallDontLie::SyncTournamentResults.new(tournament: tournament).call
+      return
+    end
+
+    return unless tournament.likely_finished?
+    return unless BallDontLie::Client.new.tournament_completed?(tournament.external_id)
+
+    BallDontLie::SyncTournamentResults.new(tournament: tournament).call
   end
 end
