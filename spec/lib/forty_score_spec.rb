@@ -15,11 +15,11 @@ RSpec.describe FortyScore do
 
   describe ".competition_vs_par" do
     it "rounds threesome actual to nearest whole stroke" do
-      expect(described_class.competition_vs_par(actual_vs_par: 8, player_count: 3)).to eq(11)
+      expect(described_class.competition_vs_par(actual_vs_par: -8, player_count: 3)).to eq(-11)
     end
 
     it "returns actual unchanged for foursomes" do
-      expect(described_class.competition_vs_par(actual_vs_par: 8, player_count: 4)).to eq(8)
+      expect(described_class.competition_vs_par(actual_vs_par: -8, player_count: 4)).to eq(-8)
     end
   end
 
