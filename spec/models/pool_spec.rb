@@ -212,6 +212,37 @@ RSpec.describe Pool, type: :model do
     end
   end
 
+  describe "#max_bonus_top_three_for" do
+    it "returns the sum of the three largest capped bonuses from a four-golfer pick" do
+      g1 = Golfer.create!(name: "G1", external_id: "501")
+      g2 = Golfer.create!(name: "G2", external_id: "502")
+      g3 = Golfer.create!(name: "G3", external_id: "503")
+      g4 = Golfer.create!(name: "G4", external_id: "504")
+
+      pick = Pick.create!(user: user, pool_tournament: pool_tournament)
+      PickGolfer.create!(pick: pick, golfer: g1, slot: 1)
+      PickGolfer.create!(pick: pick, golfer: g2, slot: 2)
+      PickGolfer.create!(pick: pick, golfer: g3, slot: 3)
+      PickGolfer.create!(pick: pick, golfer: g4, slot: 4)
+
+      [ [ g1, 100 ], [ g2, 500 ], [ g3, 200 ], [ g4, 50 ] ].each do |golfer, odds|
+        PoolTournamentOdds.create!(
+          pool_tournament: pool_tournament,
+          golfer: golfer,
+          american_odds: odds,
+          vendor: "fanduel",
+          locked_at: Time.current
+        )
+      end
+
+      expect(pool.max_bonus_top_three_for(user, pool_tournament)).to eq(16_000)
+    end
+
+    it "returns nil when the user has no pick" do
+      expect(pool.max_bonus_top_three_for(user, pool_tournament)).to be_nil
+    end
+  end
+
   describe "#points_for_pool_tournament" do
     it "returns the top-3 sum for a single pool tournament" do
       g1 = Golfer.create!(name: "G1", external_id: "401")

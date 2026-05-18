@@ -40,20 +40,22 @@
 
 <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
   <h2 class="text-lg font-semibold text-gray-900 mb-3">Tournaments in this pool</h2>
-  <ul class="space-y-4">
+  <ul class="space-y-6">
     <% @pool.tournaments.order(:starts_at).each do |t| %>
       <% pt = @pool_tournaments.find { |p| p.tournament_id == t.id } %>
       <% has_pool_picks = (@picks_by_tournament_and_user&.[](t.id) || {}).any? %>
-      <li class="space-y-3 border-b border-gray-100 pb-3 last:border-0 last:pb-0">
-        <div class="flex items-start gap-2 flex-wrap">
-          <div class="flex-1 min-w-0">
-            <%= render "picks/tournament_with_picks", tournament: t, pool: @pool, pick: @my_picks_by_tournament&.[](t.id), pool_tournament: pt %>
-            <% if pt && !has_pool_picks %>
-              <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 mt-2">
-                No picks submitted
-              </span>
+      <li class="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
+        <div class="flex items-start justify-between gap-2 flex-wrap mb-3">
+          <h3 class="text-base font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
+            <%= t.name %>
+            <% if t.completed? %>
+              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">Completed</span>
+            <% elsif t.started? %>
+              <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">In progress</span>
+            <% else %>
+              <span class="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-600">Upcoming</span>
             <% end %>
-          </div>
+          </h3>
           <div class="flex items-center gap-2">
             <% if pt && @pool.creator?(current_user) %>
               <% confirm_message = if has_pool_picks
@@ -78,19 +80,13 @@
         </div>
 
         <% if pt %>
-          <% if t.completed? %>
-            <%= render "pools/tournament_completed_summary",
-              pool: @pool,
-              pool_tournament: pt,
-              tournament: t,
-              picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
-          <% else %>
-            <%= render "picks/tournament_pool_picks",
-              pool: @pool,
-              pool_tournament: pt,
-              tournament: t,
-              picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
-          <% end %>
+          <%= render "pools/tournament_member_table",
+            pool: @pool,
+            pool_tournament: pt,
+            tournament: t,
+            picks_by_user: @picks_by_tournament_and_user&.[](t.id) || {} %>
+        <% else %>
+          <p class="text-sm text-gray-600">Tournament not linked to this pool.</p>
         <% end %>
       </li>
     <% end %>

@@ -41,6 +41,20 @@ class Pool < ApplicationRecord
     end
   end
 
+  # Sum of the three largest capped Cut Made Bonuses from a member's pick (assumes those three make the cut).
+  def max_bonus_top_three_for(user, pool_tournament)
+    pick = Pick.find_by(user: user, pool_tournament: pool_tournament)
+    return nil unless pick&.pick_golfers&.any?
+
+    tournament = pool_tournament.tournament
+    bonuses = pick.golfers.map do |golfer|
+      odds_row = PoolTournamentOdds.find_by(pool_tournament: pool_tournament, golfer: golfer)
+      odds_row ? tournament.capped_cut_made_bonus(odds_row.american_odds) : 0.to_d
+    end
+
+    bonuses.sort.reverse.first(3).sum
+  end
+
   # Top-3-of-4 scoring for one pool member and one pool tournament (same rules as standings).
   def points_for_pool_tournament(user, pool_tournament)
     tournament = pool_tournament.tournament
