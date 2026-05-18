@@ -60,6 +60,13 @@ module BallDontLie
       end
     end
 
+    # Lightweight probe: one API call to see if official final results are available.
+    def tournament_completed?(external_id)
+      resp = tournament_results(tournament_ids: [ external_id.to_i ], per_page: 1)
+      row = (resp["data"] || []).first
+      row&.dig("tournament", "status") == "COMPLETED"
+    end
+
     def fetch_all_player_round_results(tournament_ids:, player_ids:)
       fetch_all("player_round_results", tournament_ids: tournament_ids, player_ids: player_ids) do |c|
         player_round_results(tournament_ids: tournament_ids, player_ids: player_ids, cursor: c, per_page: 100)

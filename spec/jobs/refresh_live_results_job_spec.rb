@@ -45,4 +45,52 @@ RSpec.describe RefreshLiveResultsJob, type: :job do
       described_class.perform_now(tournament.id)
     end
   end
+
+  context "when the tournament likely finished and the API reports completion" do
+    before do
+      tournament.update!(starts_at: 4.days.ago)
+    end
+
+    it "runs SyncTournamentResults after the round sync" do
+      round_svc = instance_double(BallDontLie::SyncRoundResults, call: {})
+      final_svc = instance_double(BallDontLie::SyncTournamentResults, call: {})
+      client = instance_double(BallDontLie::Client, tournament_completed?: true)
+      allow(BallDontLie::SyncRoundResults).to receive(:new).and_return(round_svc)
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+      expect(BallDontLie::SyncTournamentResults).to receive(:new).with(tournament: tournament).and_return(final_svc)
+
+      described_class.perform_now(tournament.id)
+    end
+  end
+
+  context "when the tournament likely finished but the API is not complete yet" do
+    before do
+      tournament.update!(starts_at: 4.days.ago)
+    end
+
+    it "does not run SyncTournamentResults" do
+      round_svc = instance_double(BallDontLie::SyncRoundResults, call: {})
+      client = instance_double(BallDontLie::Client, tournament_completed?: false)
+      allow(BallDontLie::SyncRoundResults).to receive(:new).and_return(round_svc)
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+      expect(BallDontLie::SyncTournamentResults).not_to receive(:new)
+
+      described_class.perform_now(tournament.id)
+    end
+  end
+
+  context "when the tournament is still early in the event" do
+    before do
+      tournament.update!(starts_at: 1.day.ago)
+    end
+
+    it "does not probe or run SyncTournamentResults" do
+      round_svc = instance_double(BallDontLie::SyncRoundResults, call: {})
+      allow(BallDontLie::SyncRoundResults).to receive(:new).and_return(round_svc)
+      expect(BallDontLie::Client).not_to receive(:new)
+      expect(BallDontLie::SyncTournamentResults).not_to receive(:new)
+
+      described_class.perform_now(tournament.id)
+    end
+  end
 end

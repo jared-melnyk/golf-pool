@@ -36,6 +36,14 @@ class Tournament < ApplicationRecord
     champion_golfer_id.present?
   end
 
+  # True when the event may be over but we have not yet synced final results/champion.
+  def likely_finished?
+    return false unless started?
+    return false if completed?
+
+    Time.current >= (starts_at + 3.days) || tournament_round_results.where(round_number: 4).exists?
+  end
+
   def picks_open_at
     return nil if starts_at.blank?
 
