@@ -67,6 +67,36 @@ RSpec.describe "Games", type: :request do
         expect(response.body).to include("Team Alpha")
       end
     end
+
+    context "40 Score with the same players on two teams" do
+      let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+      let(:player1) { User.create!(name: "Alice", email: "alice2@test.com", password: "pw", ghin_handicap_index: 10.0) }
+      let(:player2) { User.create!(name: "Bob", email: "bob2@test.com", password: "pw", ghin_handicap_index: 12.0) }
+      let(:player3) { User.create!(name: "Cara", email: "cara2@test.com", password: "pw", ghin_handicap_index: 14.0) }
+      let!(:team_a) { GameTeam.create!(game: game, name: "Group A") }
+      let!(:team_b) { GameTeam.create!(game: game, name: "Group B") }
+
+      before do
+        [ player1, player2, player3 ].each do |u|
+          EventMembership.create!(event: event, user: u, role: "player")
+          GameTeamPlayer.create!(game_team: team_a, user: u)
+          GameTeamPlayer.create!(game_team: team_b, user: u)
+        end
+      end
+
+      it "renders distinct gross score field ids per team for the same player name" do
+        get event_game_path(event, game)
+
+        gtp_a = GameTeamPlayer.find_by!(game_team: team_a, user: player1)
+        gtp_b = GameTeamPlayer.find_by!(game_team: team_b, user: player1)
+        id_a = ActionView::RecordIdentifier.dom_id(gtp_a, "gross_hole_1")
+        id_b = ActionView::RecordIdentifier.dom_id(gtp_b, "gross_hole_1")
+
+        expect(id_a).not_to eq(id_b)
+        expect(response.body.scan(id_a).size).to eq(1)
+        expect(response.body.scan(id_b).size).to eq(1)
+      end
+    end
   end
 
   describe "GET /events/:event_token/games/:id/edit_teams" do

@@ -26,20 +26,4 @@ module GameScorecardBuilder
   def scorecard_team_for(scorecard, game_team)
     scorecard[:teams].find { |t| t[:id] == game_team.id }
   end
-
-  def scorecard_gtps_by_name(game, scorecard)
-    gtp_by_name = {}
-    scorecard[:teams].each do |team|
-      team[:players].each do |player|
-        next if gtp_by_name.key?(player[:name])
-
-        gtp_by_name[player[:name]] = GameTeamPlayer
-          .joins(:game_team, :user)
-          .where(game_teams: { game_id: game.id })
-          .where(users: { name: player[:name] })
-          .first
-      end
-    end
-    gtp_by_name
-  end
 end

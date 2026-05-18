@@ -2,10 +2,10 @@
     Locals: scorecard (hash from BestBallScorecard), game (Game), event (Event) %>
 
 <% can_edit = scorecard_can_edit?(game, event) %>
-<% gtp_by_name = scorecard_gtp_by_name(game, scorecard) %>
 
 <% scorecard[:teams].each do |team| %>
   <% game_team = game.game_teams.detect { |gt| gt.id == team[:id] } %>
+  <% gtps_for_team = scorecard_gtps_for_team(game_team) %>
   <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm overflow-x-auto mb-4">
     <h2 class="text-base font-semibold text-gray-900 mb-1"><%= team[:name] %></h2>
     <p class="text-xs text-gray-500 mb-3">
@@ -33,7 +33,7 @@
             <td class="py-1 pr-3 text-gray-500"><%= par %></td>
             <% team[:players].each do |player| %>
               <% player_hole = player[:hole_scores].find { |s| s[:hole_number] == h } %>
-              <% gtp = gtp_by_name[player[:name]] %>
+              <% gtp = gtps_for_team[player[:name]] %>
               <td class="py-1 pr-2">
                 <%= render "games/scorecard/gross_score_field",
                       gtp: gtp,

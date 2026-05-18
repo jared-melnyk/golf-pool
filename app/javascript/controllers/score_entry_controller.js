@@ -26,8 +26,13 @@ export default class extends Controller {
     const next = event.relatedTarget
     if (next?.matches?.("[data-score-entry-target='input']") && next.id) {
       this.focusIdValue = next.id
-    } else if (document.activeElement?.id) {
-      this.focusIdValue = document.activeElement.id
+      return
+    }
+
+    // Tab may move focus before blur runs; avoid restoring to this field.
+    const active = document.activeElement
+    if (active?.matches?.("[data-score-entry-target='input']") && active.id && active !== this.inputTarget) {
+      this.focusIdValue = active.id
     }
   }
 
@@ -51,7 +56,10 @@ export default class extends Controller {
     if (!id) return
 
     requestAnimationFrame(() => {
-      document.getElementById(id)?.focus({ preventScroll: true })
+      const el = document.getElementById(id)
+      if (el?.matches?.("[data-score-entry-target='input']")) {
+        el.focus({ preventScroll: true })
+      }
       this.focusIdValue = ""
     })
   }
