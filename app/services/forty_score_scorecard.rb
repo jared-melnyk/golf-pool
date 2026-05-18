@@ -56,9 +56,10 @@ class FortyScoreScorecard
     player_count = team.game_team_players.size
     target = FortyScore.target_pick_count(player_count)
 
+    # Standard golf vs par: Σ(net − par). Negative = under par (displays as e.g. −25).
     actual_vs_par =
       if selected_count == target
-        total_selected_par - total_selected_net
+        total_selected_net - total_selected_par
       end
 
     competition_vs_par = FortyScore.competition_vs_par(
@@ -143,7 +144,7 @@ class FortyScoreScorecard
 
     complete = rows.select { |r| r[:competition_vs_par].present? }
     incomplete = rows.reject { |r| r[:competition_vs_par].present? }
-    sorted = complete.sort_by { |r| [ -r[:competition_vs_par], r[:team_name] ] }
+    sorted = complete.sort_by { |r| [ r[:competition_vs_par], r[:team_name] ] }
 
     ranked = []
     sorted.each_with_index do |row, idx|

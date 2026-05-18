@@ -99,7 +99,7 @@ RSpec.describe FortyScoreScorecard do
     ga = lbs.find { |row| row[:team_name] == "Foursome A" }
     expect(gb[:rank]).to eq(1)
     expect(ga[:rank]).to eq(2)
-    expect(gb[:competition_vs_par]).to eq(40)
+    expect(gb[:competition_vs_par]).to eq(-40)
     expect(ga[:competition_vs_par]).to eq(0)
   end
 
@@ -133,8 +133,13 @@ RSpec.describe FortyScoreScorecard do
       t = card[:teams].sole
       expect(t[:selected_count]).to eq(30)
       expect(t[:target_pick_count]).to eq(30)
-      expect(t[:actual_vs_par]).to eq(30)
-      expect(t[:competition_vs_par]).to eq(40)
+      expect(t[:actual_vs_par]).to eq(-30)
+      expect(t[:competition_vs_par]).to eq(-40)
+
+      manual = t[:players].flat_map { |p| p[:hole_scores] }
+        .select { |row| row[:included_in_forty_score] && row[:net_score] }
+        .sum { |row| row[:net_score] - 4 }
+      expect(t[:actual_vs_par]).to eq(manual)
     end
 
     it "shows nil vs par until 30 selections are complete" do
@@ -165,8 +170,8 @@ RSpec.describe FortyScoreScorecard do
     lbs = FortyScoreScorecard.new(Game.includes(game_teams: { game_team_players: :hole_scores }).find(game.id)).call[:leaderboard]
     ts = lbs.find { |r| r[:team_name] == "Threesome Leaders" }
     ga = lbs.find { |r| r[:team_name] == "Foursome A" }
-    expect(ts[:actual_vs_par]).to eq(30)
-    expect(ts[:competition_vs_par]).to eq(40)
+    expect(ts[:actual_vs_par]).to eq(-30)
+    expect(ts[:competition_vs_par]).to eq(-40)
     expect(ts[:rank]).to eq(1)
     expect(ga[:rank]).to eq(2)
   end
