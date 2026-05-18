@@ -90,7 +90,7 @@ class BestBallScorecard
     teams_with_totals = teams_data.map { |t| { team_name: t[:name], total_net_strokes: t[:total_net_strokes] } }
     sorted = teams_with_totals.sort_by { |t| t[:total_net_strokes] }
 
-    # Competition/ordinal ranking: T1, T3, etc.
+    # Ordinal ranking (1-2-2-4 style); display adds T prefix only for ties.
     ranked = []
     sorted.each_with_index do |team, idx|
       if idx > 0 && sorted[idx - 1][:total_net_strokes] == team[:total_net_strokes]

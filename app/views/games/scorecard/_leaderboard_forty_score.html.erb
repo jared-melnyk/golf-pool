@@ -21,7 +21,7 @@
       <% scorecard[:leaderboard].each do |row| %>
         <tr class="border-b border-gray-100">
           <td class="py-1 pr-3 font-medium">
-            <%= row[:rank] ? "T#{row[:rank]}" : "—" %>
+            <%= scorecard_display_rank(row[:rank], scorecard[:leaderboard]) %>
           </td>
           <td class="py-1 pr-3"><%= row[:team_name] %></td>
           <td class="py-1 pr-3"><%= row[:player_count] %></td>
