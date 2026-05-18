@@ -1,4 +1,5 @@
 module ApplicationHelper
+  include Games::ScorecardHelper
   # True when uncapped bonus (20 * |american_odds|) would be >= max_bonus and max_bonus > 0.
   def at_max_cut_made_bonus?(american_odds, max_bonus)
     return false if max_bonus.blank? || !max_bonus.positive?

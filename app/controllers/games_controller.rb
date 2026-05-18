@@ -1,4 +1,6 @@
 class GamesController < ApplicationController
+  include GameScorecardBuilder
+
   before_action :set_event
   before_action :require_event_member!
   before_action :require_commissioner!, only: [ :new, :create, :edit_teams, :update_teams ]
@@ -20,19 +22,7 @@ class GamesController < ApplicationController
   end
 
   def show
-    preloaded = @game.tap do |g|
-      ActiveRecord::Associations::Preloader.new(
-        records: [ g ],
-        associations: { game_teams: { game_team_players: [ :user, :hole_scores ] } }
-      ).call
-    end
-
-    @scorecard =
-      if @game.forty_score?
-        FortyScoreScorecard.new(preloaded).call
-      else
-        BestBallScorecard.new(preloaded).call
-      end
+    @scorecard = build_game_scorecard(@game)
   end
 
   def edit_teams

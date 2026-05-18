@@ -1,0 +1,4 @@
+<%# locals: message, type: (:notice | :alert) %>
+<% return if message.blank? %>
+<% classes = type == :alert ? "bg-red-50 border-red-200 text-red-800" : "bg-emerald-50 border-emerald-200 text-emerald-800" %>
+<p class="<%= classes %> border px-4 py-2 rounded-lg text-sm mb-4" role="alert"><%= message %></p>

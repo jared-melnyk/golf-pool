@@ -1,0 +1,4 @@
+<%# locals: game_team, hole_number, best_ball_net %>
+<td class="py-1 font-semibold text-emerald-700" id="<%= dom_id(game_team, "best_ball_hole_#{hole_number}") %>">
+  <%= best_ball_net || "—" %>
+</td>

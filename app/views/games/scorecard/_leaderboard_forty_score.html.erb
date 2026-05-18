@@ -1,0 +1,54 @@
+<%# locals: game, scorecard %>
+<section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" id="<%= dom_id(game, :leaderboard) %>">
+  <h2 class="text-base font-semibold text-gray-900 mb-3">Leaderboard</h2>
+  <% complete = scorecard[:leaderboard].select { |row| row[:rank] } %>
+  <% if complete.empty? %>
+    <p class="text-sm text-gray-500">Every group needs all counted picks with gross scores before rankings appear.</p>
+  <% end %>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left text-xs font-medium text-gray-500 border-b border-gray-200">
+        <th class="pb-2 pr-3">Pos</th>
+        <th class="pb-2 pr-3">Team</th>
+        <th class="pb-2 pr-3">Players</th>
+        <th class="pb-2 pr-3">Picks</th>
+        <th class="pb-2 pr-3">Actual vs par</th>
+        <th class="pb-2 pr-3">Competition vs par</th>
+        <th class="pb-2">Counted net</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% scorecard[:leaderboard].each do |row| %>
+        <tr class="border-b border-gray-100">
+          <td class="py-1 pr-3 font-medium">
+            <%= row[:rank] ? "T#{row[:rank]}" : "—" %>
+          </td>
+          <td class="py-1 pr-3"><%= row[:team_name] %></td>
+          <td class="py-1 pr-3"><%= row[:player_count] %></td>
+          <td class="py-1 pr-3">
+            <% if row[:competition_vs_par].nil? %>
+              —
+            <% else %>
+              <%= row[:target_pick_count] %>
+            <% end %>
+          </td>
+          <td class="py-1 pr-3">
+            <% if row[:actual_vs_par].nil? %>
+              —
+            <% else %>
+              <%= "%+d" % row[:actual_vs_par] %>
+            <% end %>
+          </td>
+          <td class="py-1 pr-3 font-semibold text-emerald-700">
+            <% if row[:competition_vs_par].nil? %>
+              —
+            <% else %>
+              <%= "%+d" % row[:competition_vs_par] %>
+            <% end %>
+          </td>
+          <td class="py-1"><%= row[:total_selected_net] || "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

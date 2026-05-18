@@ -1,0 +1,58 @@
+import { Controller } from "@hotwired/stimulus"
+
+// Saves scorecard fields via Turbo without full-page reload.
+// Gross scores save on blur when the value changed; 40 Score picks save on change.
+export default class extends Controller {
+  static targets = ["input"]
+  static values = { lastValue: String, focusId: String }
+
+  saveIfDirty(event) {
+    if (!this.hasInputTarget) return
+
+    const input = this.inputTarget
+    const current = input.value.trim()
+    const last = (this.lastValueValue || "").trim()
+    if (current === last) return
+
+    this.rememberFocus(event)
+    this.element.requestSubmit()
+  }
+
+  submitPick() {
+    this.element.requestSubmit()
+  }
+
+  rememberFocus(event) {
+    const next = event.relatedTarget
+    if (next?.matches?.("[data-score-entry-target='input']") && next.id) {
+      this.focusIdValue = next.id
+    } else if (document.activeElement?.id) {
+      this.focusIdValue = document.activeElement.id
+    }
+  }
+
+  connect() {
+    this.onSubmitEnd = this.handleSubmitEnd.bind(this)
+    this.element.addEventListener("turbo:submit-end", this.onSubmitEnd)
+  }
+
+  disconnect() {
+    this.element.removeEventListener("turbo:submit-end", this.onSubmitEnd)
+  }
+
+  handleSubmitEnd(event) {
+    if (!event.detail.success) return
+
+    if (this.hasInputTarget) {
+      this.lastValueValue = this.inputTarget.value.trim()
+    }
+
+    const id = this.focusIdValue
+    if (!id) return
+
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.focus({ preventScroll: true })
+      this.focusIdValue = ""
+    })
+  }
+}

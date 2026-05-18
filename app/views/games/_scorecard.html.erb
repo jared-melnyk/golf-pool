@@ -1,22 +1,11 @@
 <%# Renders the full Best Ball scorecard with inline score entry and leaderboard.
     Locals: scorecard (hash from BestBallScorecard), game (Game), event (Event) %>
 
-<% can_edit = !game.submitted &&
-    (event.commissioner?(current_user) ||
-     game.game_teams.joins(:game_team_players).where(game_team_players: { user_id: current_user.id }).exists?) %>
-
-<%# Pre-build a map of player name → GameTeamPlayer for score entry URLs %>
-<% gtp_by_name = {} %>
-<% scorecard[:teams].each do |t| %>
-  <% t[:players].each do |p| %>
-    <% gtp_by_name[p[:name]] ||= GameTeamPlayer
-          .joins(:game_team, :user)
-          .where(game_teams: { game_id: game.id })
-          .where(users: { name: p[:name] }).first %>
-  <% end %>
-<% end %>
+<% can_edit = scorecard_can_edit?(game, event) %>
+<% gtp_by_name = scorecard_gtp_by_name(game, scorecard) %>
 
 <% scorecard[:teams].each do |team| %>
+  <% game_team = game.game_teams.detect { |gt| gt.id == team[:id] } %>
   <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm overflow-x-auto mb-4">
     <h2 class="text-base font-semibold text-gray-900 mb-1"><%= team[:name] %></h2>
     <p class="text-xs text-gray-500 mb-3">
@@ -46,28 +35,26 @@
               <% player_hole = player[:hole_scores].find { |s| s[:hole_number] == h } %>
               <% gtp = gtp_by_name[player[:name]] %>
               <td class="py-1 pr-2">
-                <% if can_edit && gtp %>
-                  <%= form_with url: event_game_hole_score_path(event, game, gtp),
-                        method: :patch, local: true, class: "inline" do |f| %>
-                    <%= hidden_field_tag :hole_number, h %>
-                    <%= number_field_tag :gross_score,
-                          player_hole[:gross_score],
-                          min: 1, max: 15, size: 3,
-                          class: "w-12 rounded border border-gray-300 px-1 py-0.5 text-center text-sm focus:ring-1 focus:ring-emerald-500",
-                          onchange: "this.form.submit()" %>
-                  <% end %>
-                <% else %>
-                  <span class="text-gray-700"><%= player_hole[:gross_score] || "—" %></span>
-                <% end %>
+                <%= render "games/scorecard/gross_score_field",
+                      gtp: gtp,
+                      hole_number: h,
+                      gross_score: player_hole[:gross_score],
+                      event: event,
+                      game: game,
+                      can_edit: can_edit && gtp.present? %>
                 <% if player_hole[:strokes_received].to_i > 0 %>
                   <span class="text-xs text-emerald-600 ml-0.5 select-none" title="<%= player_hole[:strokes_received] %> stroke(s) received">·</span>
                 <% end %>
               </td>
-              <td class="py-1 pr-3 text-gray-500 text-xs"><%= player_hole[:net_score] || "—" %></td>
+              <%= render "games/scorecard/net_cell",
+                    gtp: gtp,
+                    hole_number: h,
+                    net_score: player_hole[:net_score] %>
             <% end %>
-            <td class="py-1 font-semibold text-emerald-700">
-              <%= team_hole[:best_ball_net] || "—" %>
-            </td>
+            <%= render "games/scorecard/best_ball_cell",
+                  game_team: game_team,
+                  hole_number: h,
+                  best_ball_net: team_hole[:best_ball_net] %>
           </tr>
         <% end %>
         <tr class="border-t-2 border-gray-300 font-semibold">
@@ -77,41 +64,13 @@
             <td class="pt-2 pr-2"></td>
             <td class="pt-2 pr-3"></td>
           <% end %>
-          <td class="pt-2 text-emerald-700">
-            <%= team[:total_net_strokes] || "—" %>
-          </td>
+          <%= render "games/scorecard/team_total",
+                game_team: game_team,
+                total_net_strokes: team[:total_net_strokes] %>
         </tr>
       </tbody>
     </table>
   </section>
 <% end %>
 
-<%# Leaderboard %>
-<section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-  <h2 class="text-base font-semibold text-gray-900 mb-3">Leaderboard</h2>
-  <% complete_teams = scorecard[:leaderboard].select { |row| row[:total_net_strokes] } %>
-  <% if complete_teams.empty? %>
-    <p class="text-sm text-gray-500">Scores not yet complete.</p>
-  <% else %>
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="text-left text-xs font-medium text-gray-500 border-b border-gray-200">
-          <th class="pb-2 pr-4">Pos</th>
-          <th class="pb-2 pr-4">Team</th>
-          <th class="pb-2">Net Strokes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% scorecard[:leaderboard].each do |row| %>
-          <tr class="border-b border-gray-100">
-            <td class="py-1 pr-4 font-medium">
-              <%= row[:total_net_strokes] ? "T#{row[:rank]}" : "—" %>
-            </td>
-            <td class="py-1 pr-4"><%= row[:team_name] %></td>
-            <td class="py-1"><%= row[:total_net_strokes] || "—" %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% end %>
-</section>
+<%= render "games/scorecard/leaderboard_best_ball", game: game, scorecard: scorecard %>

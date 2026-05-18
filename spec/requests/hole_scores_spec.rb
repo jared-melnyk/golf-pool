@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "HoleScores (40 Score)", type: :request do
+RSpec.describe "HoleScores", type: :request do
   let(:commissioner) { User.create!(name: "Comm", email: "comm-fs@test.com", password: "pw") }
   let(:event) { Event.create!(name: "Out", status: "active") }
   let!(:commissioner_membership) { EventMembership.create!(event: event, user: commissioner, role: "commissioner") }
@@ -21,6 +21,7 @@ RSpec.describe "HoleScores (40 Score)", type: :request do
   let(:cindy) { User.create!(name: "Pc", email: "pc@test.com", password: "pw") }
   let(:dan) { User.create!(name: "Pd", email: "pd@test.com", password: "pw") }
   let!(:gtp_alice) { GameTeamPlayer.create!(game_team: team, user: alice) }
+  let(:turbo_headers) { { "Accept" => "text/vnd.turbo-stream.html" } }
 
   before do
     [ alice, bob, cindy, dan ].each do |u|
@@ -33,14 +34,44 @@ RSpec.describe "HoleScores (40 Score)", type: :request do
     post login_path, params: { email: bob.email, password: "pw" }
   end
 
-  it "lets a teammate toggle another golfer's forty pick" do
-    patch event_game_hole_score_path(event, game, gtp_alice), params: {
-      hole_number: 1,
-      forty_pick_only: "1",
-      included_in_forty_score: "1"
-    }
+  describe "40 Score" do
+    it "lets a teammate toggle another golfer's forty pick via turbo stream" do
+      patch event_game_hole_score_path(event, game, gtp_alice),
+            params: { hole_number: 1, forty_pick_only: "1", included_in_forty_score: "1" },
+            headers: turbo_headers
 
-    expect(response).to redirect_to(event_game_path(event, game))
-    expect(HoleScore.find_by!(game_team_player_id: gtp_alice.id, hole_number: 1).included_in_forty_score).to be(true)
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      expect(response.body).to include("turbo-stream")
+      expect(HoleScore.find_by!(game_team_player_id: gtp_alice.id, hole_number: 1).included_in_forty_score).to be(true)
+    end
+
+    it "updates gross score via turbo stream without redirecting" do
+      gtp_bob = GameTeamPlayer.find_by!(game_team: team, user: bob)
+      patch event_game_hole_score_path(event, game, gtp_bob),
+            params: { hole_number: 2, gross_score: "5" },
+            headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      expect(response).not_to be_redirect
+      expect(HoleScore.find_by!(game_team_player_id: gtp_bob.id, hole_number: 2).gross_score).to eq(5)
+    end
+  end
+
+  describe "Best Ball" do
+    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+    let!(:gtp_bob) { GameTeamPlayer.find_by!(game_team: team, user: bob) }
+
+    it "updates gross score via turbo stream" do
+      patch event_game_hole_score_path(event, game, gtp_bob),
+            params: { hole_number: 1, gross_score: "6" },
+            headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      expect(response.body).to include("net_hole_1")
+      expect(HoleScore.find_by!(game_team_player_id: gtp_bob.id, hole_number: 1).gross_score).to eq(6)
+    end
   end
 end

@@ -1,0 +1,20 @@
+<%# locals: gtp, game_team, hole_number, player_hole, event, game, can_edit %>
+<td class="py-1 pr-3" id="<%= dom_id(gtp, "forty_pick_hole_#{hole_number}") %>">
+  <% if can_edit %>
+    <%= form_with url: event_game_hole_score_path(event, game, gtp),
+          method: :patch,
+          class: "inline-flex items-center gap-1",
+          data: { controller: "score-entry", turbo: true } do %>
+      <%= hidden_field_tag :hole_number, hole_number %>
+      <%= hidden_field_tag :forty_pick_only, "1" %>
+      <%= hidden_field_tag :included_in_forty_score, "0" %>
+      <%= check_box_tag :included_in_forty_score, "1", player_hole[:included_in_forty_score],
+            id: "fs_#{game_team.id}_#{gtp.id}_#{hole_number}",
+            disabled: player_hole[:gross_score].blank?,
+            class: "rounded border-gray-400 text-emerald-600 focus:ring-emerald-500",
+            data: { action: "change->score-entry#submitPick" } %>
+    <% end %>
+  <% else %>
+    <span><%= player_hole[:included_in_forty_score] ? "✓" : "—" %></span>
+  <% end %>
+</td>
