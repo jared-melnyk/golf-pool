@@ -38,4 +38,22 @@ class User < ApplicationRecord
     self.password_reset_sent_at = nil
     update_columns(password_reset_token_digest: nil, password_reset_sent_at: nil)
   end
+
+  def generate_remember_token
+    raw_token = SecureRandom.urlsafe_base64(32)
+    self.remember_token_digest = Digest::SHA256.hexdigest(raw_token)
+    save!
+    raw_token
+  end
+
+  def remember_token_valid?(raw_token)
+    return false if remember_token_digest.blank?
+
+    digest = Digest::SHA256.hexdigest(raw_token.to_s)
+    ActiveSupport::SecurityUtils.secure_compare(digest, remember_token_digest)
+  end
+
+  def clear_remember_token!
+    update_column(:remember_token_digest, nil)
+  end
 end

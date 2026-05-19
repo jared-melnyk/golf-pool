@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::Base
+  include Rememberable
+
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   allow_browser versions: :modern
 
@@ -14,6 +16,7 @@ class ApplicationController < ActionController::Base
 
   def current_user
     @current_user ||= User.find_by(id: session[:user_id]) if session[:user_id]
+    @current_user ||= current_user_from_remember_cookie
   end
 
   def current_user_admin?

@@ -78,6 +78,7 @@ RSpec.describe "Password resets", type: :request do
         user.reload
         expect(user.password_reset_token_digest).to be_nil
         expect(user.password_reset_sent_at).to be_nil
+        expect(user.remember_token_digest).to be_nil
         expect(user.authenticate("newpass123")).to eq(user)
       end
     end

@@ -25,6 +25,7 @@ class PasswordResetsController < ApplicationController
     redirect_to login_path, alert: "That link is invalid or has expired." and return if @user.blank?
     if @user.update(update_params)
       @user.clear_password_reset!
+      @user.clear_remember_token!
       redirect_to login_path, notice: "Password updated. Sign in with your new password."
     else
       render :edit, status: :unprocessable_entity
