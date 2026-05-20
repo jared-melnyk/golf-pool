@@ -1,7 +1,7 @@
 <div class="space-y-6">
   <div>
     <h1 class="text-2xl font-bold text-gray-900">Set up <%= @game.name %></h1>
-    <p class="text-sm text-gray-600 mt-1">Step: <%= @step.titleize %></p>
+    <p class="text-sm text-gray-600 mt-1">Step <%= setup_step_number(@step) %> of 3 · <%= @step.titleize %></p>
   </div>
 
   <% if flash[:alert].present? %>
@@ -9,37 +9,58 @@
   <% end %>
 
   <% if @step == "course" %>
-    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" data-controller="course-search">
       <h2 class="text-lg font-semibold text-gray-900 mb-3">Course & tee</h2>
-      <%= form_with url: game_setup_path(@game), method: :get, local: true, class: "flex flex-wrap items-end gap-2 mb-4" do |f| %>
+
+      <%= form_with url: game_setup_path(@game), method: :patch, local: true, id: "course_save_form", class: "space-y-4" do %>
         <%= hidden_field_tag :step, "course" %>
-        <div class="min-w-64 flex-1">
-          <%= label_tag :search_query, "Course or club name", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= text_field_tag :search_query, @search_query, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500" %>
+
+        <div>
+          <%= label_tag "round[played_on]", "Date played", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= date_field_tag "round[played_on]", @round_played_on,
+                id: "round_played_on",
+                required: true,
+                class: "rounded border border-gray-300 px-3 py-2",
+                data: { action: "change->course-search#syncPlayedOn" } %>
+          <p class="text-xs text-gray-500 mt-1">When is this round?</p>
         </div>
-        <%= submit_tag "Search", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+      <% end %>
+
+      <%= form_with url: game_setup_path(@game), method: :get, local: true,
+            id: "course_search_form",
+            data: { course_search_target: "form" },
+            class: "space-y-2" do %>
+        <%= hidden_field_tag :step, "course" %>
+        <%= hidden_field_tag "round[played_on]", @round_played_on %>
+        <div>
+          <%= label_tag :search_query, "Course or club name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= text_field_tag :search_query, @search_query,
+                autocomplete: "off",
+                placeholder: "Start typing to search…",
+                class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500",
+                data: { course_search_target: "input", action: "input->course-search#search" } %>
+          <p class="text-xs text-gray-500 mt-1">Results update as you type (at least 2 characters).</p>
+        </div>
+        <noscript>
+          <%= submit_tag "Search", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+        </noscript>
       <% end %>
 
       <% if @course_search_results.any? && @selected_course.blank? %>
-        <ul class="space-y-2">
+        <ul class="space-y-2 my-4">
           <% @course_search_results.each do |course| %>
             <li>
               <%= link_to "#{course["club_name"]} · #{course["course_name"]}",
-                    game_setup_path(@game, step: "course", search_query: @search_query, course_id: course["id"]),
+                    game_setup_path(@game, step: "course", search_query: @search_query, course_id: course["id"], round: { played_on: @round_played_on }),
                     class: "text-emerald-700 hover:underline" %>
             </li>
           <% end %>
         </ul>
       <% end %>
 
-      <%= form_with url: game_setup_path(@game), method: :patch, local: true, class: "space-y-4 mt-4" do %>
-        <%= hidden_field_tag :step, "course" %>
+      <div class="space-y-4 border-t border-gray-100 pt-4">
         <div>
-          <%= label_tag "round[played_on]", "Date played", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= date_field_tag "round[played_on]", @round_played_on, required: true, class: "rounded border border-gray-300 px-3 py-2" %>
-        </div>
-        <div>
-          <%= hidden_field_tag "round[golf_course_api_course_id]", @selected_course&.dig("id") %>
+          <%= hidden_field_tag "round[golf_course_api_course_id]", @selected_course&.dig("id"), form: "course_save_form" %>
           <p class="text-sm text-gray-600">
             <% if @selected_course.present? %>
               Selected: <%= @selected_course["club_name"] %> · <%= @selected_course["course_name"] %>
@@ -51,17 +72,23 @@
         <div>
           <%= label_tag "round[tee_selector]", "Tee", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <%= select_tag "round[tee_selector]",
-                options_for_select(@tee_options.map { |o| [ o[:label], o[:value] ] }, params.dig(:round, :tee_selector)),
+                options_for_select(@tee_options.map { |o| [ o[:label], o[:value] ] }, @selected_tee_selector || params.dig(:round, :tee_selector)),
                 include_blank: @selected_course.present? ? "Select a tee" : "Select a course first",
                 required: true,
+                form: "course_save_form",
                 class: "w-full rounded border border-gray-300 px-3 py-2" %>
         </div>
-        <%= submit_tag "Save course", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
-      <% end %>
+        <%= submit_tag "Save & continue", form: "course_save_form", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      </div>
     </section>
   <% elsif @step == "format" %>
     <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
       <h2 class="text-lg font-semibold text-gray-900 mb-3">Game format</h2>
+      <% if @game.round.present? %>
+        <p class="text-sm text-gray-600 mb-4">
+          <%= @game.round.played_on.strftime("%b %-d, %Y") %> · <%= @game.round.club_name %> · <%= @game.round.course_name %>
+        </p>
+      <% end %>
       <%= form_with url: game_setup_path(@game), method: :patch, local: true, class: "space-y-4" do %>
         <%= hidden_field_tag :step, "format" %>
         <% Game::GAME_TYPES.each do |type| %>
@@ -70,20 +97,26 @@
             <%= type.gsub("_", " ").titleize %>
           </label>
         <% end %>
-        <%= submit_tag "Save format", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+        <%= submit_tag "Save & continue", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
       <% end %>
     </section>
   <% else %>
     <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-4">
       <h2 class="text-lg font-semibold text-gray-900">Invite players</h2>
-      <p class="text-sm text-gray-600">Share this link so others can join:</p>
-      <input type="text" readonly value="<%= game_url(@game) %>" class="w-full rounded border border-gray-300 px-3 py-2 bg-gray-50 text-sm" onclick="this.select()" />
-      <p class="flex flex-wrap gap-3">
+      <p class="text-sm text-gray-600">Share this link so others can join the game.</p>
+      <%= render "games/invite_players", game: @game %>
+      <p class="flex flex-wrap gap-3 items-center">
         <%= link_to "Set up teams →", edit_teams_game_path(@game), class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
         <%= link_to "View scorecard", game_path(@game), class: "text-sm text-emerald-700 hover:underline" %>
       </p>
     </section>
   <% end %>
 
-  <%= link_to "← Back to games", games_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <nav class="flex flex-wrap gap-4 text-sm">
+    <% previous = setup_previous_step(@game, @step) %>
+    <% if previous %>
+      <%= link_to "← #{previous[:label]}", previous[:path], class: "text-emerald-700 hover:text-emerald-800 underline" %>
+    <% end %>
+    <%= link_to "← Back to games", games_path, class: "text-emerald-700 hover:text-emerald-800 underline" %>
+  </nav>
 </div>

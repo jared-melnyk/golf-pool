@@ -1,0 +1,21 @@
+<%# Locals: game (Game) — manager-only finalize / reopen controls %>
+<div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <p class="text-sm text-gray-600 mb-3">
+    <% if game.active? %>
+      When the round is finished, finalize scores to lock the scorecard for all players.
+    <% else %>
+      Scores are locked. Reopen the scorecard to allow edits again.
+    <% end %>
+  </p>
+  <div class="flex flex-wrap gap-2">
+    <% if game.active? %>
+      <%= button_to "Finalize scores", complete_game_path(game), method: :patch,
+            form: { data: { turbo_confirm: "Finalize scores and lock the scorecard for everyone?" } },
+            class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+    <% elsif game.completed? %>
+      <%= button_to "Reopen scorecard", reopen_game_path(game), method: :patch,
+            form: { data: { turbo_confirm: "Reopen the scorecard for editing?" } },
+            class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+    <% end %>
+  </div>
+</div>

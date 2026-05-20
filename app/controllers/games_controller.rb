@@ -78,7 +78,7 @@ class GamesController < ApplicationController
 
   def complete
     @game.update!(status: "completed")
-    redirect_to game_path(@game), notice: "Game completed. Scores are locked."
+    redirect_to game_path(@game), notice: "Scores finalized and locked."
   end
 
   def reopen

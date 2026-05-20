@@ -1,0 +1,9 @@
+<%# Locals: game (Game) %>
+<p data-controller="clipboard" data-invite-url="<%= game_url(game) %>">
+  <button type="button"
+          data-action="click->clipboard#copy"
+          class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
+    Invite players
+  </button>
+  <span data-clipboard-target="feedback" class="ml-2 text-sm text-gray-600 hidden">Link copied!</span>
+</p>
