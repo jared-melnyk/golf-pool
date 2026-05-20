@@ -11,7 +11,7 @@ RSpec.describe HoleScore, type: :model do
       hole_pars: Array.new(18, 4), hole_handicaps: (1..18).to_a
     )
   end
-  let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  let(:game) { create_test_game!(event: event, round: round, game_type: "best_ball") }
   let(:team) { GameTeam.create!(game: game, name: "Team A") }
   let(:gtp) { GameTeamPlayer.create!(game_team: team, user: user) }
 
@@ -42,7 +42,7 @@ RSpec.describe HoleScore, type: :model do
   end
 
   describe "forty_score pick rules" do
-    let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+    let(:game) { create_test_game!(event: event, round: round, game_type: "forty_score") }
     let(:team) { GameTeam.create!(game: game, name: "Foursome") }
     let(:bob_gtp) { GameTeamPlayer.create!(game_team: team, user: user) }
     let!(:extra_players) do
@@ -87,7 +87,7 @@ RSpec.describe HoleScore, type: :model do
     end
 
     context "with a threesome" do
-      let(:threesome_game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+      let(:threesome_game) { create_test_game!(event: event, round: round, game_type: "forty_score") }
       let(:threesome_team) { GameTeam.create!(game: threesome_game, name: "Threesome") }
       let(:p1_user) { User.create!(name: "P1", email: "p1-threesome@test.com", password: "password123") }
       let(:p1_gtp) { GameTeamPlayer.create!(game_team: threesome_team, user: p1_user) }
@@ -123,7 +123,7 @@ RSpec.describe HoleScore, type: :model do
     end
 
     it "ignores forty pick limits for best_ball games" do
-      bb_game = Game.create!(event: event, round: round, game_type: "best_ball")
+      bb_game = create_test_game!(event: event, round: round, game_type: "best_ball")
       bb_team = GameTeam.create!(game: bb_game, name: "BB")
       u = User.create!(name: "solo", email: "solo@test.com", password: "password123")
       solo = GameTeamPlayer.create!(game_team: bb_team, user: u)

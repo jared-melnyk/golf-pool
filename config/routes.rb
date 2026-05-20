@@ -19,18 +19,40 @@ Rails.application.routes.draw do
 
   resource :profile, only: [ :edit, :update ]
 
+  resources :games, param: :token do
+    post :join, on: :member
+    resource :setup, only: [ :show, :update ], controller: "game_setups"
+    member do
+      get :edit_teams
+      patch :update_teams
+      patch :complete
+      patch :reopen
+    end
+    resources :game_memberships, only: [ :destroy, :update ]
+    resources :hole_scores, only: [ :update ]
+  end
+
   resources :events, param: :token do
     post :join, on: :member
     resources :event_memberships, only: [ :destroy, :update ]
     resources :rounds, only: [ :new, :create ]
-    resources :games, only: [ :new, :create, :show ] do
-      member do
-        get :edit_teams
-        patch :update_teams
-      end
-      resources :hole_scores, only: [ :update ]
-    end
+    resources :games, only: [ :new, :create ]
   end
+
+  # Legacy bookmarks: /events/:event_token/games/:id → /games/:token
+  get "/events/:event_token/games/:id",
+      to: redirect { |params, _|
+        game = Game.find(params[:id])
+        "/games/#{game.token}"
+      },
+      constraints: { id: /\d+/ }
+
+  get "/events/:event_token/games/:id/edit_teams",
+      to: redirect { |params, _|
+        game = Game.find(params[:id])
+        "/games/#{game.token}/edit_teams"
+      },
+      constraints: { id: /\d+/ }
 
   post "sync/tournament_results/:tournament_id", to: "sync#tournament_results", as: :sync_tournament_results
   post "sync/field", to: "sync#field", as: :sync_field

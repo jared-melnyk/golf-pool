@@ -1,0 +1,8 @@
+<div class="max-w-md mx-auto border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+  <h1 class="text-2xl font-bold text-gray-900 mb-2"><%= @game.name %></h1>
+  <% if @game.round.present? %>
+    <p class="text-sm text-gray-600 mb-4"><%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %></p>
+  <% end %>
+  <p class="text-gray-600 mb-4">You're not in this game yet.</p>
+  <%= button_to "Join this game", join_game_path(@game), method: :post, class: "bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 font-medium" %>
+</div>

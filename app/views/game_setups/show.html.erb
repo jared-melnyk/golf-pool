@@ -1,0 +1,89 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900">Set up <%= @game.name %></h1>
+    <p class="text-sm text-gray-600 mt-1">Step: <%= @step.titleize %></p>
+  </div>
+
+  <% if flash[:alert].present? %>
+    <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] %></p>
+  <% end %>
+
+  <% if @step == "course" %>
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Course & tee</h2>
+      <%= form_with url: game_setup_path(@game), method: :get, local: true, class: "flex flex-wrap items-end gap-2 mb-4" do |f| %>
+        <%= hidden_field_tag :step, "course" %>
+        <div class="min-w-64 flex-1">
+          <%= label_tag :search_query, "Course or club name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= text_field_tag :search_query, @search_query, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500" %>
+        </div>
+        <%= submit_tag "Search", class: "rounded px-4 py-2 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+      <% end %>
+
+      <% if @course_search_results.any? && @selected_course.blank? %>
+        <ul class="space-y-2">
+          <% @course_search_results.each do |course| %>
+            <li>
+              <%= link_to "#{course["club_name"]} · #{course["course_name"]}",
+                    game_setup_path(@game, step: "course", search_query: @search_query, course_id: course["id"]),
+                    class: "text-emerald-700 hover:underline" %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <%= form_with url: game_setup_path(@game), method: :patch, local: true, class: "space-y-4 mt-4" do %>
+        <%= hidden_field_tag :step, "course" %>
+        <div>
+          <%= label_tag "round[played_on]", "Date played", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= date_field_tag "round[played_on]", @round_played_on, required: true, class: "rounded border border-gray-300 px-3 py-2" %>
+        </div>
+        <div>
+          <%= hidden_field_tag "round[golf_course_api_course_id]", @selected_course&.dig("id") %>
+          <p class="text-sm text-gray-600">
+            <% if @selected_course.present? %>
+              Selected: <%= @selected_course["club_name"] %> · <%= @selected_course["course_name"] %>
+            <% else %>
+              Choose a course from search results above.
+            <% end %>
+          </p>
+        </div>
+        <div>
+          <%= label_tag "round[tee_selector]", "Tee", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= select_tag "round[tee_selector]",
+                options_for_select(@tee_options.map { |o| [ o[:label], o[:value] ] }, params.dig(:round, :tee_selector)),
+                include_blank: @selected_course.present? ? "Select a tee" : "Select a course first",
+                required: true,
+                class: "w-full rounded border border-gray-300 px-3 py-2" %>
+        </div>
+        <%= submit_tag "Save course", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      <% end %>
+    </section>
+  <% elsif @step == "format" %>
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">Game format</h2>
+      <%= form_with url: game_setup_path(@game), method: :patch, local: true, class: "space-y-4" do %>
+        <%= hidden_field_tag :step, "format" %>
+        <% Game::GAME_TYPES.each do |type| %>
+          <label class="flex items-center gap-2">
+            <%= radio_button_tag "game[game_type]", type, @game.game_type == type, required: true %>
+            <%= type.gsub("_", " ").titleize %>
+          </label>
+        <% end %>
+        <%= submit_tag "Save format", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      <% end %>
+    </section>
+  <% else %>
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-4">
+      <h2 class="text-lg font-semibold text-gray-900">Invite players</h2>
+      <p class="text-sm text-gray-600">Share this link so others can join:</p>
+      <input type="text" readonly value="<%= game_url(@game) %>" class="w-full rounded border border-gray-300 px-3 py-2 bg-gray-50 text-sm" onclick="this.select()" />
+      <p class="flex flex-wrap gap-3">
+        <%= link_to "Set up teams →", edit_teams_game_path(@game), class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+        <%= link_to "View scorecard", game_path(@game), class: "text-sm text-emerald-700 hover:underline" %>
+      </p>
+    </section>
+  <% end %>
+
+  <%= link_to "← Back to games", games_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>

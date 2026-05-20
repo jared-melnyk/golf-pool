@@ -1,20 +1,44 @@
 <div class="space-y-6">
   <div>
-    <h1 class="text-2xl font-bold text-gray-900"><%= @game.round.name %> — <%= @game.game_type.gsub("_", " ").titleize %></h1>
-    <p class="text-sm text-gray-500 mt-1"><%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %></p>
-    <% if @event.commissioner?(current_user) %>
-      <p class="mt-2">
-        <%= link_to "Edit teams", edit_teams_event_game_path(@event, @game),
+    <h1 class="text-2xl font-bold text-gray-900"><%= @game.name %></h1>
+    <% if @game.round.present? && @game.game_type.present? %>
+      <p class="text-sm text-gray-500 mt-1">
+        <%= @game.game_type.gsub("_", " ").titleize %> · <%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %>
+      </p>
+    <% elsif @game.draft? %>
+      <p class="text-sm text-gray-600 mt-1">Setup in progress.</p>
+      <% if @game.can_manage?(current_user) %>
+        <p class="mt-2"><%= link_to "Continue setup →", game_setup_path(@game), class: "text-sm text-emerald-700 hover:underline" %></p>
+      <% end %>
+    <% end %>
+    <% if @game.can_manage?(current_user) %>
+      <p class="mt-2 flex flex-wrap gap-3 items-center">
+        <%= link_to "Edit teams", edit_teams_game_path(@game),
               class: "text-sm text-emerald-700 hover:underline" %>
+        <% if @game.active? %>
+          <%= button_to "Complete game", complete_game_path(@game), method: :patch,
+                form: { class: "inline-block", data: { turbo_confirm: "Complete this game and lock scores?" } },
+                class: "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+        <% elsif @game.completed? %>
+          <%= button_to "Edit scores", reopen_game_path(@game), method: :patch,
+                form: { class: "inline-block", data: { turbo_confirm: "Reopen scores for editing?" } },
+                class: "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+        <% end %>
       </p>
     <% end %>
   </div>
 
-  <% if @scorecard[:teams].empty? %>
+  <% if @scorecard.blank? %>
+    <% if @game.member?(current_user) && !@game.can_manage?(current_user) %>
+      <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+        <p class="text-gray-600">Waiting for teams to be assigned.</p>
+      </div>
+    <% end %>
+  <% elsif @scorecard[:teams].empty? %>
     <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
       <p class="text-gray-600">No teams set up yet.</p>
-      <% if @event.commissioner?(current_user) %>
-        <%= link_to "Set up teams →", edit_teams_event_game_path(@event, @game), class: "mt-2 inline-block text-emerald-700 hover:underline text-sm" %>
+      <% if @game.can_manage?(current_user) %>
+        <%= link_to "Set up teams →", edit_teams_game_path(@game), class: "mt-2 inline-block text-emerald-700 hover:underline text-sm" %>
       <% end %>
     </div>
   <% else %>
@@ -26,5 +50,9 @@
     <% end %>
   <% end %>
 
-  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% if @event.present? %>
+    <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% else %>
+    <%= link_to "← Back to games", games_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% end %>
 </div>

@@ -54,8 +54,9 @@
             <% my_pools_active = %w[pools picks pool_tournaments].include?(controller_name) && !(controller_name == "pools" && action_name == "new") %>
             <% new_pool_active = controller_name == "pools" && action_name == "new" %>
             <% rules_active = controller_name == "landing" && action_name == "rules" %>
-            <% on_course_active = %w[events event_memberships rounds games hole_scores].include?(controller_name) %>
-            <% events_link_active = on_course_active %>
+            <% on_course_active = %w[events event_memberships rounds games hole_scores game_setups game_memberships].include?(controller_name) %>
+            <% games_link_active = controller_name.in?(%w[games game_setups game_memberships hole_scores]) && action_name != "new" %>
+            <% trips_link_active = controller_name == "events" %>
             <% tournaments_nav_active = controller_name == "tournaments" %>
             <nav class="space-y-1">
               <div class="<%= section_head %>">PGA Pools</div>
@@ -64,7 +65,8 @@
               <%= link_to "Rules", rules_path, class: nav_row.call(rules_active), data: { action: "click->sidebar#close" } %>
 
               <div class="<%= section_head %> mt-3">On-Course games</div>
-              <%= link_to "Events", events_path, class: nav_row.call(events_link_active), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Games", games_path, class: nav_row.call(games_link_active), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Trips", events_path, class: nav_row.call(trips_link_active), data: { action: "click->sidebar#close" } %>
 
               <% if current_user_admin? %>
                 <div class="<%= section_head %> mt-3">Admin</div>
@@ -76,6 +78,12 @@
                   <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This pool</div>
                   <%= link_to @pool.name, pool_path(@pool), class: nav_row.call(current_page?(pool_path(@pool))), data: { action: "click->sidebar#close" } %>
                   <%= link_to "My picks", pool_picks_path(@pool), class: nav_row.call(current_page?(pool_picks_path(@pool))), data: { action: "click->sidebar#close" } %>
+                </div>
+              <% end %>
+              <% if @game && @game.member?(current_user) %>
+                <div class="pt-2 mt-2 border-t border-gray-200">
+                  <div class="px-3 py-1 text-xs font-medium text-gray-500 uppercase">This game</div>
+                  <%= link_to @game.name, game_path(@game), class: nav_row.call(current_page?(game_path(@game))), data: { action: "click->sidebar#close" } %>
                 </div>
               <% end %>
               <% if @event && @event.member?(current_user) %>

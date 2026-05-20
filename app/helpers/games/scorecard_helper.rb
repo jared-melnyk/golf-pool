@@ -2,10 +2,10 @@
 
 module Games
   module ScorecardHelper
-    def scorecard_can_edit?(game, event)
-      return false if game.submitted
+    def scorecard_can_edit?(game, _event = nil)
+      return false if game.completed?
 
-      event.commissioner?(current_user) ||
+      game.can_manage?(current_user) ||
         game.game_teams.joins(:game_team_players).where(game_team_players: { user_id: current_user.id }).exists?
     end
 

@@ -9,7 +9,7 @@
     <% end %>
   </div>
 
-  <%= form_with url: update_teams_event_game_path(@event, @game), method: :patch, local: true, class: "space-y-6" do |f| %>
+  <%= form_with url: update_teams_game_path(@game), method: :patch, local: true, class: "space-y-6" do |f| %>
     <% if flash[:alert] %>
       <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] %></p>
     <% end %>
@@ -56,9 +56,13 @@
 
     <div>
       <%= f.submit "Save teams", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
-      <%= link_to "Cancel", event_game_path(@event, @game), class: "ml-3 text-sm text-gray-600 hover:text-gray-800 underline" %>
+      <%= link_to "Cancel", game_path(@game), class: "ml-3 text-sm text-gray-600 hover:text-gray-800 underline" %>
     </div>
   <% end %>
 
-  <%= link_to "← Back to event", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% if @game.event.present? %>
+    <%= link_to "← Back to event", event_path(@game.event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% else %>
+    <%= link_to "← Back to games", games_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% end %>
 </div>

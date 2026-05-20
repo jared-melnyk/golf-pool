@@ -34,6 +34,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_002551) do
     t.index ["token"], name: "index_events_on_token", unique: true
   end
 
+  create_table "game_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["game_id", "user_id"], name: "index_game_memberships_on_game_id_and_user_id", unique: true
+    t.index ["game_id"], name: "index_game_memberships_on_game_id"
+    t.index ["user_id"], name: "index_game_memberships_on_user_id"
+  end
+
   create_table "game_team_players", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "game_team_id", null: false
@@ -55,13 +66,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_002551) do
 
   create_table "games", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.bigint "event_id", null: false
-    t.string "game_type", default: "best_ball", null: false
-    t.bigint "round_id", null: false
-    t.boolean "submitted", default: false, null: false
+    t.bigint "creator_id", null: false
+    t.bigint "event_id"
+    t.string "game_type"
+    t.string "name", null: false
+    t.bigint "round_id"
+    t.string "status", default: "draft", null: false
+    t.string "token", null: false
     t.datetime "updated_at", null: false
+    t.index ["creator_id"], name: "index_games_on_creator_id"
     t.index ["event_id"], name: "index_games_on_event_id"
     t.index ["round_id"], name: "index_games_on_round_id"
+    t.index ["token"], name: "index_games_on_token", unique: true
   end
 
   create_table "golfers", force: :cascade do |t|
@@ -153,7 +169,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_002551) do
     t.decimal "course_rating", precision: 5, scale: 2, null: false
     t.jsonb "course_snapshot", default: {}, null: false
     t.datetime "created_at", null: false
-    t.bigint "event_id", null: false
+    t.bigint "event_id"
     t.integer "golf_course_api_course_id", null: false
     t.integer "hole_handicaps", default: [], null: false, array: true
     t.integer "hole_pars", default: [], null: false, array: true
@@ -375,11 +391,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_002551) do
 
   add_foreign_key "event_memberships", "events"
   add_foreign_key "event_memberships", "users"
+  add_foreign_key "game_memberships", "games"
+  add_foreign_key "game_memberships", "users"
   add_foreign_key "game_team_players", "game_teams"
   add_foreign_key "game_team_players", "users"
   add_foreign_key "game_teams", "games"
   add_foreign_key "games", "events"
   add_foreign_key "games", "rounds"
+  add_foreign_key "games", "users", column: "creator_id"
   add_foreign_key "hole_scores", "game_team_players"
   add_foreign_key "pick_golfers", "golfers"
   add_foreign_key "pick_golfers", "picks"

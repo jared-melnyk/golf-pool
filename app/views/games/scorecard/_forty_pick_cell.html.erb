@@ -1,7 +1,7 @@
 <%# locals: gtp, game_team, hole_number, player_hole, event, game, can_edit %>
 <td class="py-1 pr-3" id="<%= dom_id(gtp, "forty_pick_hole_#{hole_number}") %>">
   <% if can_edit %>
-    <%= form_with url: event_game_hole_score_path(event, game, gtp),
+    <%= form_with url: game_hole_score_path(game, gtp),
           method: :patch,
           class: "inline-flex items-center gap-1",
           data: { controller: "score-entry", turbo: true } do %>

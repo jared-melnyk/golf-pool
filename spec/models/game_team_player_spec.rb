@@ -11,7 +11,7 @@ RSpec.describe GameTeamPlayer, type: :model do
       hole_pars: Array.new(18, 4), hole_handicaps: (1..18).to_a
     )
   end
-  let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  let(:game) { create_test_game!(event: event, round: round, game_type: "best_ball") }
   let(:team) { GameTeam.create!(game: game, name: "Team A") }
 
   it "snapshots the user handicap index on creation" do

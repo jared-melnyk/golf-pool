@@ -7,6 +7,8 @@ class User < ApplicationRecord
 
   has_many :event_memberships, dependent: :destroy
   has_many :events, through: :event_memberships
+  has_many :game_memberships, dependent: :destroy
+  has_many :member_games, through: :game_memberships, source: :game
   has_many :game_team_players, dependent: :destroy
   has_many :hole_scores, through: :game_team_players
 

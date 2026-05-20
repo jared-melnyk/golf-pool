@@ -13,7 +13,7 @@ RSpec.describe FortyScoreScorecard do
       hole_handicaps: (1..18).to_a
     )
   end
-  let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+  let(:game) { create_test_game!(event: event, round: round, game_type: "forty_score") }
 
   let(:alice) { User.create!(name: "Alice", email: "alice@test.com", password: "pw", ghin_handicap_index: 0.0) }
   let(:bob)   { User.create!(name: "Bob",   email: "bob@test.com",   password: "pw", ghin_handicap_index: 0.0) }
@@ -104,7 +104,7 @@ RSpec.describe FortyScoreScorecard do
   end
 
   describe "threesome" do
-    let(:threesome_game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+    let(:threesome_game) { create_test_game!(event: event, round: round, game_type: "forty_score") }
     let(:threesome_team) { GameTeam.create!(game: threesome_game, name: "Threesome") }
     let(:t1) { User.create!(name: "T1", email: "t1@test.com", password: "pw", ghin_handicap_index: 0.0) }
     let(:t2) { User.create!(name: "T2", email: "t2@test.com", password: "pw", ghin_handicap_index: 0.0) }
