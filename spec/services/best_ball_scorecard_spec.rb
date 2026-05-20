@@ -108,4 +108,29 @@ RSpec.describe BestBallScorecard do
     expect(scorecard[:leaderboard].first).to have_key(:rank)
     expect(scorecard[:leaderboard].first).to have_key(:team_name)
   end
+
+  context "when some holes are unscored" do
+    before do
+      HoleScore.where(game_team_player: [ gtp_alice, gtp_bob ], hole_number: 18).delete_all
+    end
+
+    it "does not error when building the leaderboard" do
+      expect { scorecard }.not_to raise_error
+    end
+
+    it "ranks complete teams and leaves incomplete teams unranked" do
+      team_b = GameTeam.create!(game: game, name: "Team B")
+      gtp_charlie = GameTeamPlayer.create!(game_team: team_b, user: User.create!(name: "Charlie", email: "charlie@test.com", password: "pw", ghin_handicap_index: 10.0))
+      (1..18).each { |h| HoleScore.create!(game_team_player: gtp_charlie, hole_number: h, gross_score: 4) }
+
+      leaderboard = scorecard[:leaderboard]
+      incomplete = leaderboard.find { |row| row[:team_name] == "Team A" }
+      complete = leaderboard.find { |row| row[:team_name] == "Team B" }
+
+      expect(incomplete[:total_net_strokes]).to be_nil
+      expect(incomplete[:rank]).to be_nil
+      expect(complete[:total_net_strokes]).to be_a(Integer)
+      expect(complete[:rank]).to eq(1)
+    end
+  end
 end

@@ -82,23 +82,27 @@ class BestBallScorecard
 
     si = @round.hole_handicaps[hole_number - 1]
     base = playing_handicap / 18
+    return base if si.nil?
+
     remainder = playing_handicap % 18
     base + (si <= remainder ? 1 : 0)
   end
 
   def build_leaderboard(teams_data)
     teams_with_totals = teams_data.map { |t| { team_name: t[:name], total_net_strokes: t[:total_net_strokes] } }
-    sorted = teams_with_totals.sort_by { |t| t[:total_net_strokes] }
+    complete = teams_with_totals.select { |t| t[:total_net_strokes].present? }
+    incomplete = teams_with_totals.reject { |t| t[:total_net_strokes].present? }
+    sorted = complete.sort_by { |t| [ t[:total_net_strokes], t[:team_name] ] }
 
     # Ordinal ranking (1-2-2-4 style); display adds T prefix only for ties.
     ranked = []
     sorted.each_with_index do |team, idx|
-      if idx > 0 && sorted[idx - 1][:total_net_strokes] == team[:total_net_strokes]
+      if idx.positive? && sorted[idx - 1][:total_net_strokes] == team[:total_net_strokes]
         ranked << team.merge(rank: ranked[idx - 1][:rank])
       else
         ranked << team.merge(rank: idx + 1)
       end
     end
-    ranked
+    ranked + incomplete.map { |t| t.merge(rank: nil) }
   end
 end
