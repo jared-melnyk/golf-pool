@@ -1,32 +1,55 @@
+# frozen_string_literal: true
+
 class GamesController < ApplicationController
   include GameScorecardBuilder
+  include GameAuthorizable
 
-  before_action :set_event
-  before_action :require_event_member!
-  before_action :require_commissioner!, only: [ :new, :create, :edit_teams, :update_teams ]
-  before_action :set_game, only: [ :show, :edit_teams, :update_teams ]
+  before_action :set_event, only: [ :new, :create ], if: -> { params[:event_token].present? }
+  before_action :require_event_commissioner!, only: [ :new, :create ], if: -> { params[:event_token].present? }
+  before_action :set_game, only: [ :show, :edit_teams, :update_teams, :join, :complete, :reopen ]
+  before_action :require_game_access!, only: [ :show, :edit_teams, :update_teams, :complete, :reopen ]
+  before_action :require_game_manager!, only: [ :edit_teams, :update_teams, :complete, :reopen ]
+  before_action :require_game_active_for_teams!, only: [ :edit_teams, :update_teams ]
+
+  def index
+    visible_ids = Game.visible_to(current_user).select(:id)
+    @games = Game.where(id: visible_ids)
+                 .includes(:round, :event)
+                 .left_joins(:round)
+                 .order(Arel.sql("rounds.played_on DESC NULLS LAST"), created_at: :desc)
+  end
 
   def new
-    @game = @event.games.new
-    @rounds = @event.rounds.order(:played_on)
+    @game = Game.new
+    @event = Event.find_by!(token: params[:event_token]) if params[:event_token].present?
   end
 
   def create
-    @game = @event.games.new(game_params)
-    if @game.save
-      redirect_to edit_teams_event_game_path(@event, @game), notice: "Game created. Now set up teams."
+    if params[:event_token].present?
+      create_event_game!
     else
-      @rounds = @event.rounds.order(:played_on)
-      render :new, status: :unprocessable_entity
+      create_ad_hoc_game!
     end
   end
 
   def show
-    @scorecard = build_game_scorecard(@game)
+    @event = @game.event
+    if @game.active? || @game.completed?
+      @scorecard = build_game_scorecard(@game)
+    end
+  end
+
+  def join
+    if @game.member?(current_user)
+      redirect_to @game, notice: "You're already in this game."
+    else
+      @game.game_memberships.create!(user: current_user, role: "player")
+      redirect_to @game, notice: "You joined the game."
+    end
   end
 
   def edit_teams
-    @members = @event.users.order(:name)
+    @members = @game.roster_users
     @game_teams = @game.game_teams.includes(game_team_players: :user)
   end
 
@@ -38,19 +61,29 @@ class GamesController < ApplicationController
 
         team = @game.game_teams.create!(name: team_data[:name])
         Array(team_data[:user_ids]).compact_blank.each do |uid|
-          user = @event.users.find_by(id: uid)
+          user = @game.roster_users.find_by(id: uid)
           GameTeamPlayer.create!(game_team: team, user: user) if user
         end
       end
 
       enforce_forty_score_team_sizes! if @game.forty_score?
     end
-    redirect_to event_game_path(@event, @game), notice: "Teams saved."
+    redirect_to game_path(@game), notice: "Teams saved."
   rescue ActiveRecord::RecordInvalid => e
-    @members = @event.users.order(:name)
+    @members = @game.roster_users
     @game_teams = @game.game_teams.includes(game_team_players: :user)
     flash.now[:alert] = "Could not save teams: #{e.record&.errors&.full_messages&.to_sentence || e.message}"
     render :edit_teams, status: :unprocessable_entity
+  end
+
+  def complete
+    @game.update!(status: "completed")
+    redirect_to game_path(@game), notice: "Game completed. Scores are locked."
+  end
+
+  def reopen
+    @game.update!(status: "active")
+    redirect_to game_path(@game), notice: "Scores are editable again."
   end
 
   private
@@ -59,24 +92,41 @@ class GamesController < ApplicationController
     @event = Event.find_by!(token: params[:event_token])
   end
 
-  def set_game
-    @game = @event.games.find(params[:id])
-  end
-
-  def require_event_member!
-    return if @event.member?(current_user)
-
-    redirect_to event_path(@event), alert: "You must be a member of this event."
-  end
-
-  def require_commissioner!
+  def require_event_commissioner!
     return if @event.commissioner?(current_user)
 
-    redirect_to event_path(@event), alert: "Only commissioners can do that."
+    redirect_to event_path(@event), alert: "Only commissioners can create games."
+  end
+
+  def require_game_active_for_teams!
+    return if @game.active? || @game.completed?
+
+    redirect_to game_setup_path(@game), alert: "Finish game setup before assigning teams."
+  end
+
+  def create_ad_hoc_game!
+    @game = Game.new(name: game_params[:name], creator: current_user, status: "draft")
+    if @game.save
+      @game.game_memberships.create!(user: current_user, role: "host")
+      redirect_to game_setup_path(@game), notice: "Game created. Continue setup when ready."
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def create_event_game!
+    name = game_params[:name].presence || "Game at #{@event.name}"
+    @game = @event.games.new(name: name, creator: current_user, status: "draft")
+    if @game.save
+      @game.game_memberships.create!(user: current_user, role: "host")
+      redirect_to game_setup_path(@game), notice: "Game created. Continue setup when ready."
+    else
+      render :new, status: :unprocessable_entity
+    end
   end
 
   def game_params
-    params.require(:game).permit(:round_id, :game_type)
+    params.fetch(:game, {}).permit(:name, :round_id, :game_type)
   end
 
   def teams_params

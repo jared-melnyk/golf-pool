@@ -15,6 +15,17 @@ RSpec.describe "Games", type: :request do
     )
   end
 
+  def create_active_game!(game_type: "best_ball")
+    Game.create!(
+      name: "#{game_type.titleize} at GC",
+      creator: commissioner,
+      status: "active",
+      event: event,
+      round: round,
+      game_type: game_type
+    )
+  end
+
   before { post login_path, params: { email: commissioner.email, password: "pw" } }
 
   describe "GET /events/:event_token/games/new" do
@@ -25,27 +36,23 @@ RSpec.describe "Games", type: :request do
   end
 
   describe "POST /events/:event_token/games" do
-    it "creates a game and redirects to edit_teams" do
+    it "creates a draft game and redirects to setup" do
       expect {
-        post event_games_path(event), params: { game: { round_id: round.id, game_type: "best_ball" } }
+        post event_games_path(event), params: { game: { name: "Saturday best ball" } }
       }.to change(Game, :count).by(1)
-      expect(response).to redirect_to(edit_teams_event_game_path(event, Game.last))
-    end
 
-    it "creates a forty_score game" do
-      expect {
-        post event_games_path(event), params: { game: { round_id: round.id, game_type: "forty_score" } }
-      }.to change(Game, :count).by(1)
-      expect(Game.last.game_type).to eq("forty_score")
-      expect(response).to redirect_to(edit_teams_event_game_path(event, Game.last))
+      game = Game.last
+      expect(game.status).to eq("draft")
+      expect(game.event).to eq(event)
+      expect(response).to redirect_to(game_setup_path(game))
     end
   end
 
-  describe "GET /events/:event_token/games/:id" do
-    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  describe "GET /games/:token" do
+    let(:game) { create_active_game! }
 
     it "renders the scorecard page" do
-      get event_game_path(event, game)
+      get game_path(game)
       expect(response).to have_http_status(:ok)
     end
 
@@ -62,14 +69,14 @@ RSpec.describe "Games", type: :request do
       end
 
       it "renders scorecard with team name" do
-        get event_game_path(event, game)
+        get game_path(game)
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Team Alpha")
       end
     end
 
     context "40 Score with the same players on two teams" do
-      let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+      let(:game) { create_active_game!(game_type: "forty_score") }
       let(:player1) { User.create!(name: "Alice", email: "alice2@test.com", password: "pw", ghin_handicap_index: 10.0) }
       let(:player2) { User.create!(name: "Bob", email: "bob2@test.com", password: "pw", ghin_handicap_index: 12.0) }
       let(:player3) { User.create!(name: "Cara", email: "cara2@test.com", password: "pw", ghin_handicap_index: 14.0) }
@@ -85,7 +92,7 @@ RSpec.describe "Games", type: :request do
       end
 
       it "renders distinct gross score field ids per team for the same player name" do
-        get event_game_path(event, game)
+        get game_path(game)
 
         gtp_a = GameTeamPlayer.find_by!(game_team: team_a, user: player1)
         gtp_b = GameTeamPlayer.find_by!(game_team: team_b, user: player1)
@@ -99,25 +106,25 @@ RSpec.describe "Games", type: :request do
     end
   end
 
-  describe "GET /events/:event_token/games/:id/edit_teams" do
-    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  describe "GET /games/:token/edit_teams" do
+    let(:game) { create_active_game! }
 
-    it "renders edit_teams for commissioners" do
-      get edit_teams_event_game_path(event, game)
+    it "renders edit_teams for managers" do
+      get edit_teams_game_path(game)
       expect(response).to have_http_status(:ok)
     end
 
-    it "redirects non-commissioners back to event" do
+    it "redirects non-managers" do
       player = User.create!(name: "Player", email: "player@test.com", password: "pw")
       EventMembership.create!(event: event, user: player, role: "player")
       post login_path, params: { email: player.email, password: "pw" }
-      get edit_teams_event_game_path(event, game)
-      expect(response).to redirect_to(event_path(event))
+      get edit_teams_game_path(game)
+      expect(response).to redirect_to(game_path(game))
     end
   end
 
-  describe "PATCH /events/:event_token/games/:id/update_teams" do
-    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  describe "PATCH /games/:token/update_teams" do
+    let(:game) { create_active_game! }
     let(:player1) { User.create!(name: "P1", email: "p1@test.com", password: "pw") }
     let(:player2) { User.create!(name: "P2", email: "p2@test.com", password: "pw") }
 
@@ -127,26 +134,26 @@ RSpec.describe "Games", type: :request do
     end
 
     it "creates teams from params and redirects to game show" do
-      patch update_teams_event_game_path(event, game), params: {
+      patch update_teams_game_path(game), params: {
         teams: {
           "0" => { name: "Team A", user_ids: [ player1.id.to_s ] },
           "1" => { name: "Team B", user_ids: [ player2.id.to_s ] }
         }
       }
-      expect(response).to redirect_to(event_game_path(event, game))
+      expect(response).to redirect_to(game_path(game))
       expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
     end
 
     it "skips blank team names and redirects to game show" do
-      patch update_teams_event_game_path(event, game), params: {
+      patch update_teams_game_path(game), params: {
         teams: { "0" => { name: "" } }
       }
-      expect(response).to redirect_to(event_game_path(event, game))
+      expect(response).to redirect_to(game_path(game))
       expect(game.game_teams.reload).to be_empty
     end
 
     context "when game type is forty_score" do
-      let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+      let(:game) { create_active_game!(game_type: "forty_score") }
       let(:p1) { User.create!(name: "Fs1", email: "fs1@test.com", password: "pw") }
       let(:p2) { User.create!(name: "Fs2", email: "fs2@test.com", password: "pw") }
       let(:p3) { User.create!(name: "Fs3", email: "fs3@test.com", password: "pw") }
@@ -160,7 +167,7 @@ RSpec.describe "Games", type: :request do
       end
 
       it "accepts a foursome of four players" do
-        patch update_teams_event_game_path(event, game), params: {
+        patch update_teams_game_path(game), params: {
           teams: {
             "0" => {
               name: "Cart 1",
@@ -168,12 +175,12 @@ RSpec.describe "Games", type: :request do
             }
           }
         }
-        expect(response).to redirect_to(event_game_path(event, game))
+        expect(response).to redirect_to(game_path(game))
         expect(game.game_teams.reload.sole.game_team_players.size).to eq(4)
       end
 
       it "accepts a threesome of three players" do
-        patch update_teams_event_game_path(event, game), params: {
+        patch update_teams_game_path(game), params: {
           teams: {
             "0" => {
               name: "Threesome",
@@ -181,12 +188,12 @@ RSpec.describe "Games", type: :request do
             }
           }
         }
-        expect(response).to redirect_to(event_game_path(event, game))
+        expect(response).to redirect_to(game_path(game))
         expect(game.game_teams.reload.sole.game_team_players.size).to eq(3)
       end
 
       it "rejects a group with only two golfers" do
-        patch update_teams_event_game_path(event, game), params: {
+        patch update_teams_game_path(game), params: {
           teams: {
             "0" => {
               name: "Incomplete",
@@ -197,6 +204,29 @@ RSpec.describe "Games", type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
         expect(game.game_teams.reload).to be_empty
       end
+    end
+  end
+
+  describe "POST /games/:token/join" do
+    let(:host) { User.create!(name: "H", email: "h@test.com", password: "pw") }
+    let(:player) { User.create!(name: "P", email: "p@test.com", password: "pw") }
+    let(:game) do
+      g = Game.create!(
+        name: "Ad hoc",
+        creator: host,
+        status: "active",
+        round: round,
+        game_type: "best_ball"
+      )
+      GameMembership.create!(game: g, user: host, role: "host")
+      g
+    end
+
+    it "adds player membership to ad hoc game" do
+      post login_path, params: { email: player.email, password: "pw" }
+      post join_game_path(game)
+      expect(game.members).to include(player)
+      expect(response).to redirect_to(game_path(game))
     end
   end
 end

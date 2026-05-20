@@ -1,5 +1,9 @@
 # On-Course Games — Design Specification
 
+> **2026-05-18 update:** Game-first and ad hoc flows are specified in
+> [2026-05-18-ad-hoc-games-design.md](2026-05-18-ad-hoc-games-design.md).
+> Events are "trips" in UX; games are the primary On-Course entity.
+
 **Status:** Living document — consolidates decisions from [`2026-04-21-on-course-games-planning-handoff.md`](2026-04-21-on-course-games-planning-handoff.md) and follow-on design conversations (through 2026-05-07).  
 **Project:** `long_shot` (single Rails app, one deploy).
 

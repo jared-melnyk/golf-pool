@@ -14,7 +14,16 @@ RSpec.describe "HoleScores", type: :request do
       hole_pars: Array.new(18, 4), hole_handicaps: (1..18).to_a
     )
   end
-  let(:game) { Game.create!(event: event, round: round, game_type: "forty_score") }
+  let(:game) do
+    Game.create!(
+      name: "40 Score at C",
+      creator: commissioner,
+      status: "active",
+      event: event,
+      round: round,
+      game_type: "forty_score"
+    )
+  end
   let(:team) { GameTeam.create!(game: game, name: "Foursome") }
   let(:alice) { User.create!(name: "Pa", email: "pa@test.com", password: "pw") }
   let(:bob) { User.create!(name: "Pb", email: "pb@test.com", password: "pw") }
@@ -36,7 +45,7 @@ RSpec.describe "HoleScores", type: :request do
 
   describe "40 Score" do
     it "lets a teammate toggle another golfer's forty pick via turbo stream" do
-      patch event_game_hole_score_path(event, game, gtp_alice),
+      patch game_hole_score_path(game, gtp_alice),
             params: { hole_number: 1, forty_pick_only: "1", included_in_forty_score: "1" },
             headers: turbo_headers
 
@@ -48,7 +57,7 @@ RSpec.describe "HoleScores", type: :request do
 
     it "updates gross score via turbo stream without redirecting" do
       gtp_bob = GameTeamPlayer.find_by!(game_team: team, user: bob)
-      patch event_game_hole_score_path(event, game, gtp_bob),
+      patch game_hole_score_path(game, gtp_bob),
             params: { hole_number: 2, gross_score: "5" },
             headers: turbo_headers
 
@@ -60,11 +69,20 @@ RSpec.describe "HoleScores", type: :request do
   end
 
   describe "Best Ball" do
-    let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+    let(:game) do
+      Game.create!(
+        name: "Best Ball at C",
+        creator: commissioner,
+        status: "active",
+        event: event,
+        round: round,
+        game_type: "best_ball"
+      )
+    end
     let!(:gtp_bob) { GameTeamPlayer.find_by!(game_team: team, user: bob) }
 
     it "updates gross score via turbo stream" do
-      patch event_game_hole_score_path(event, game, gtp_bob),
+      patch game_hole_score_path(game, gtp_bob),
             params: { hole_number: 1, gross_score: "6" },
             headers: turbo_headers
 

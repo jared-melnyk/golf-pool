@@ -12,7 +12,7 @@ RSpec.describe BestBallScorecard do
       hole_handicaps: [ 1, 3, 5, 7, 9, 11, 13, 15, 17, 2, 4, 6, 8, 10, 12, 14, 16, 18 ]
     )
   end
-  let(:game) { Game.create!(event: event, round: round, game_type: "best_ball") }
+  let(:game) { create_test_game!(event: event, round: round, game_type: "best_ball") }
 
   let(:alice) { User.create!(name: "Alice", email: "alice@test.com", password: "pw", ghin_handicap_index: 18.0) }
   let(:bob)   { User.create!(name: "Bob",   email: "bob@test.com",   password: "pw", ghin_handicap_index: 0.0) }

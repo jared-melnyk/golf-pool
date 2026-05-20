@@ -95,7 +95,7 @@
 <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
   <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
     <h2 class="text-lg font-semibold text-gray-900">Games</h2>
-    <% if @event.commissioner?(current_user) && @rounds.any? %>
+    <% if @event.commissioner?(current_user) %>
       <%= link_to "Create game", new_event_game_path(@event),
             class: "rounded px-3 py-1.5 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 no-underline" %>
     <% end %>
@@ -106,13 +106,19 @@
     <ol class="list-decimal list-inside space-y-2">
       <% games.each do |game| %>
         <li class="text-gray-800">
-          <%= link_to game.round.name, event_game_path(@event, game),
+          <%= link_to game.name, game_path(game),
                 class: "font-medium text-emerald-700 hover:underline" %>
           <span class="text-sm text-gray-500">
-            · <%= game.game_type.gsub("_", " ").titleize %>
-            · <%= game.round.played_on.strftime("%b %-d, %Y") %>
-            <% if game.submitted? %>
-              <span class="ml-1 text-xs text-gray-400">(submitted)</span>
+            <% if game.game_type.present? %>
+              · <%= game.game_type.gsub("_", " ").titleize %>
+            <% end %>
+            <% if game.round.present? %>
+              · <%= game.round.played_on.strftime("%b %-d, %Y") %>
+            <% end %>
+            <% if game.completed? %>
+              <span class="ml-1 text-xs text-gray-400">(completed)</span>
+            <% elsif game.draft? %>
+              <span class="ml-1 text-xs text-gray-400">(draft)</span>
             <% end %>
           </span>
         </li>
@@ -121,7 +127,7 @@
   <% else %>
     <p class="text-gray-600 text-sm">
       No games yet.
-      <% if @event.commissioner?(current_user) && @rounds.any? %>
+      <% if @event.commissioner?(current_user) %>
         <%= link_to "Create the first game →", new_event_game_path(@event), class: "text-emerald-700 hover:underline" %>
       <% end %>
     </p>

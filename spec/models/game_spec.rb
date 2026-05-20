@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe Game, type: :model do
+  let(:creator) { User.create!(name: "Creator", email: "creator@test.com", password: "pw") }
   let(:event) { Event.create!(name: "Test Event", status: "active") }
   let(:round) do
     Round.create!(
@@ -19,33 +20,68 @@ RSpec.describe Game, type: :model do
     )
   end
 
+  def build_game(**attrs)
+    defaults = {
+      event: event,
+      round: round,
+      game_type: "best_ball",
+      name: "Best Ball · Test Course · #{Date.today.strftime('%-b %-d')}",
+      creator: creator,
+      status: "active"
+    }
+    Game.new(defaults.merge(attrs))
+  end
+
   it "is valid with event, round, and game_type" do
-    game = Game.new(event: event, round: round, game_type: "best_ball")
+    expect(build_game).to be_valid
+  end
+
+  it "allows nil game_type in draft" do
+    game = build_game(game_type: nil, round: nil, status: "draft")
     expect(game).to be_valid
   end
 
-  it "is invalid without game_type" do
-    game = Game.new(event: event, round: round, game_type: nil)
-    expect(game).not_to be_valid
-  end
-
   it "is invalid with unknown game_type" do
-    game = Game.new(event: event, round: round, game_type: "scramble")
+    game = build_game(game_type: "scramble")
     expect(game).not_to be_valid
   end
 
   it "is valid with forty_score game type" do
-    game = Game.new(event: event, round: round, game_type: "forty_score")
+    game = build_game(game_type: "forty_score")
     expect(game).to be_valid
   end
 
   it "uses 100% playing handicap allowance for forty_score" do
-    game = Game.new(event: event, round: round, game_type: "forty_score")
+    game = build_game(game_type: "forty_score")
     expect(game.playing_handicap_allowance_percent).to eq(100)
   end
 
-  it "defaults submitted to false" do
-    game = Game.new(event: event, round: round, game_type: "best_ball")
-    expect(game.submitted).to eq(false)
+  describe "status" do
+    it "defaults to draft" do
+      game = Game.new(name: "G", creator: creator)
+      expect(game.status).to eq("draft")
+    end
+
+    it "requires round and game_type to be active" do
+      game = Game.create!(name: "G", creator: creator, status: "draft")
+      game.status = "active"
+      expect(game).not_to be_valid
+      expect(game.errors[:base]).to include("Round is required to activate game")
+    end
+  end
+
+  describe "#completed?" do
+    it "is true when status is completed" do
+      game = build_game(status: "completed")
+      expect(game.completed?).to be true
+    end
+  end
+
+  describe "#suggested_name" do
+    it "builds name from round and game_type" do
+      game = build_game(game_type: "forty_score")
+      expect(game.suggested_name).to include("Forty Score")
+      expect(game.suggested_name).to include(round.course_name)
+    end
   end
 end

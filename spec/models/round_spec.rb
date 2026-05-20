@@ -5,6 +5,25 @@ require "rails_helper"
 RSpec.describe Round, type: :model do
   let(:event) { Event.create!(name: "Bandon Trip") }
 
+  it "is valid without an event" do
+    round = described_class.new(
+      event: nil,
+      name: "Round 1",
+      played_on: Date.current,
+      golf_course_api_course_id: 99,
+      course_name: "Pacific Dunes",
+      tee_name: "Blue",
+      tee_gender: "male",
+      course_rating: BigDecimal("72.4"),
+      slope_rating: 131,
+      par_total: 72,
+      hole_pars: Array.new(18, 4),
+      hole_handicaps: (1..18).to_a
+    )
+
+    expect(round).to be_valid
+  end
+
   it "is valid with required snapshot fields" do
     round = described_class.new(
       event: event,

@@ -1,5 +1,5 @@
 class Round < ApplicationRecord
-  belongs_to :event
+  belongs_to :event, optional: true
   has_many :games, dependent: :destroy
 
   validates :name, :played_on, :course_name, :tee_name, :tee_gender, presence: true
