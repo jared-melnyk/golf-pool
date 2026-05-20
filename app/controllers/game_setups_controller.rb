@@ -88,7 +88,7 @@ class GameSetupsController < ApplicationController
       return []
     end
 
-    golf_course_client.search_courses(search_query: query).fetch("courses", [])
+    GolfCourseApi::CourseSearch.new(client: golf_course_client).call(query)
   rescue GolfCourseApi::MissingApiKeyError => e
     @course_search_error = e.message
     []

@@ -20,7 +20,7 @@ class RoundsController < ApplicationController
       return
     end
 
-    @course_search_results = golf_course_client.search_courses(search_query: @search_query).fetch("courses", [])
+    @course_search_results = GolfCourseApi::CourseSearch.new(client: golf_course_client).call(@search_query)
 
     return if params[:course_id].blank?
 
