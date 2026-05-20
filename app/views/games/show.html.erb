@@ -7,24 +7,19 @@
       </p>
     <% elsif @game.draft? %>
       <p class="text-sm text-gray-600 mt-1">Setup in progress.</p>
-      <% if @game.can_manage?(current_user) %>
-        <p class="mt-2"><%= link_to "Continue setup →", game_setup_path(@game), class: "text-sm text-emerald-700 hover:underline" %></p>
-      <% end %>
     <% end %>
+
     <% if @game.can_manage?(current_user) %>
-      <p class="mt-2 flex flex-wrap gap-3 items-center">
-        <%= link_to "Edit teams", edit_teams_game_path(@game),
-              class: "text-sm text-emerald-700 hover:underline" %>
-        <% if @game.active? %>
-          <%= button_to "Complete game", complete_game_path(@game), method: :patch,
-                form: { class: "inline-block", data: { turbo_confirm: "Complete this game and lock scores?" } },
-                class: "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
-        <% elsif @game.completed? %>
-          <%= button_to "Edit scores", reopen_game_path(@game), method: :patch,
-                form: { class: "inline-block", data: { turbo_confirm: "Reopen scores for editing?" } },
-                class: "rounded px-3 py-1 text-sm font-medium bg-gray-800 text-white hover:bg-gray-900" %>
+      <div class="mt-4 flex flex-wrap gap-3 items-center">
+        <%= render "games/invite_players", game: @game %>
+        <% if @game.draft? %>
+          <%= link_to "Continue setup →", game_setup_path(@game),
+                class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+        <% else %>
+          <%= link_to "Edit teams", edit_teams_game_path(@game),
+                class: "rounded px-4 py-2 text-sm font-medium border border-gray-300 text-gray-800 hover:bg-gray-50" %>
         <% end %>
-      </p>
+      </div>
     <% end %>
   </div>
 
@@ -47,6 +42,10 @@
       <%= render "scorecard_forty_score", scorecard: @scorecard, game: @game, event: @event %>
     <% else %>
       <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
+    <% end %>
+
+    <% if @game.can_manage?(current_user) && (@game.active? || @game.completed?) %>
+      <%= render "games/scorecard_lock", game: @game %>
     <% end %>
   <% end %>
 

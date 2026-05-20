@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+module Games
+  module SetupHelper
+    def setup_previous_step(game, current_step)
+      case current_step
+      when "format"
+        { label: "Course & tee", path: game_setup_path(game, step: "course") }
+      when "invite"
+        { label: "Game format", path: game_setup_path(game, step: "format") }
+      end
+    end
+
+    def setup_step_number(current_step)
+      { "course" => 1, "format" => 2, "invite" => 3 }.fetch(current_step, 1)
+    end
+  end
+end

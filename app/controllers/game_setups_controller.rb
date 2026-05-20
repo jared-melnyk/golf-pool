@@ -36,10 +36,22 @@ class GameSetupsController < ApplicationController
     @course_search_results = []
     @selected_course = nil
     @tee_options = []
-    @round_played_on = params.dig(:round, :played_on).presence || Date.current
+    @selected_tee_selector = params.dig(:round, :tee_selector)
+    @round_played_on = round_played_on_from_params
 
-    return if @search_query.blank?
+    return load_course_search_from_query if @search_query.present?
 
+    load_saved_round_course_state if @game.round.present?
+  end
+
+  def round_played_on_from_params
+    raw = params.dig(:round, :played_on).presence
+    raw ? Date.parse(raw.to_s) : (@game.round&.played_on || Date.current)
+  rescue ArgumentError
+    @game.round&.played_on || Date.current
+  end
+
+  def load_course_search_from_query
     unless golf_course_api_key_configured?
       flash.now[:alert] = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
       return
@@ -49,13 +61,37 @@ class GameSetupsController < ApplicationController
 
     return if params[:course_id].blank?
 
-    @selected_course = normalize_course_payload(golf_course_client.course(id: params[:course_id].to_i))
-    @tee_options = tee_options_for(@selected_course)
+    select_course_by_id(params[:course_id].to_i)
   rescue GolfCourseApi::MissingApiKeyError => e
     flash.now[:alert] = e.message
   rescue StandardError => e
     flash.now[:alert] = "Could not load GolfCourseAPI data: #{e.message}"
   end
+
+  def load_saved_round_course_state
+    return unless golf_course_api_key_configured?
+
+    select_course_by_id(@game.round.golf_course_api_course_id)
+    @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course)
+  rescue GolfCourseApi::MissingApiKeyError => e
+    flash.now[:alert] = e.message
+  rescue StandardError => e
+    flash.now[:alert] = "Could not load saved course: #{e.message}"
+  end
+
+  def select_course_by_id(course_id)
+    @selected_course = normalize_course_payload(golf_course_client.course(id: course_id))
+    @tee_options = tee_options_for(@selected_course)
+    @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course) if @game.round.present?
+  end
+
+  def tee_selector_for_round(round, course_payload)
+    return nil if round.blank? || course_payload.blank?
+
+    index = male_tees_for(course_payload).find_index { |tee| tee["tee_name"] == round.tee_name }
+    index ? "male:#{index}" : nil
+  end
+
 
   def save_course!
     snapshot = build_snapshot(

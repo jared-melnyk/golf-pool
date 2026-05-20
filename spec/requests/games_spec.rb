@@ -73,6 +73,13 @@ RSpec.describe "Games", type: :request do
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Team Alpha")
       end
+
+      it "shows invite button and finalize scores for managers" do
+        get game_path(game)
+        expect(response.body).to include("Invite players")
+        expect(response.body).to include("Finalize scores")
+        expect(response.body).not_to include("Complete game")
+      end
     end
 
     context "40 Score with the same players on two teams" do
