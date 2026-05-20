@@ -14,5 +14,13 @@ module Games
     def setup_step_number(current_step)
       { "course" => 1, "format" => 2, "invite" => 3 }.fetch(current_step, 1)
     end
+
+    def course_search_location(course)
+      city = course.dig("location", "city")
+      state = course.dig("location", "state")
+      return nil if city.blank? && state.blank?
+
+      [ city, state ].compact.join(", ")
+    end
   end
 end
