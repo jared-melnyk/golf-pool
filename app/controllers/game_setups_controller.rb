@@ -11,7 +11,37 @@ class GameSetupsController < ApplicationController
 
   def show
     @step = params[:step].presence_in(STEPS) || next_step
-    load_course_search_state if @step == "course"
+    load_course_step_state if @step == "course"
+  end
+
+  def search_courses
+    @search_query = params[:search_query].to_s.strip
+    @course_search_error = nil
+    @course_search_results = fetch_course_search_results(@search_query)
+    render partial: "game_setups/course_search_results",
+           locals: {
+             course_search_results: @course_search_results,
+             course_search_error: @course_search_error
+           },
+           layout: false
+  end
+
+  def select_course
+    unless golf_course_api_key_configured?
+      return render_course_selection_error(GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE)
+    end
+
+    select_course_by_id(params[:course_id].to_i)
+    render partial: "game_setups/course_selection",
+           locals: {
+             selected_course: @selected_course,
+             tee_options: @tee_options,
+             selected_tee_selector: @selected_tee_selector,
+             error_message: nil
+           },
+           layout: false
+  rescue StandardError => e
+    render_course_selection_error(e.message)
   end
 
   def update
@@ -31,15 +61,14 @@ class GameSetupsController < ApplicationController
     "invite"
   end
 
-  def load_course_search_state
-    @search_query = params[:search_query].to_s.strip
+  def load_course_step_state
+    @search_query = ""
     @course_search_results = []
     @selected_course = nil
     @tee_options = []
     @selected_tee_selector = params.dig(:round, :tee_selector)
     @round_played_on = round_played_on_from_params
-
-    return load_course_search_from_query if @search_query.present?
+    @course_selection_error = nil
 
     load_saved_round_course_state if @game.round.present?
   end
@@ -51,21 +80,21 @@ class GameSetupsController < ApplicationController
     @game.round&.played_on || Date.current
   end
 
-  def load_course_search_from_query
+  def fetch_course_search_results(query)
+    return [] if query.blank?
+
     unless golf_course_api_key_configured?
-      flash.now[:alert] = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
-      return
+      @course_search_error = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
+      return []
     end
 
-    @course_search_results = golf_course_client.search_courses(search_query: @search_query).fetch("courses", [])
-
-    return if params[:course_id].blank?
-
-    select_course_by_id(params[:course_id].to_i)
+    golf_course_client.search_courses(search_query: query).fetch("courses", [])
   rescue GolfCourseApi::MissingApiKeyError => e
-    flash.now[:alert] = e.message
+    @course_search_error = e.message
+    []
   rescue StandardError => e
-    flash.now[:alert] = "Could not load GolfCourseAPI data: #{e.message}"
+    @course_search_error = "Could not search courses: #{e.message}"
+    []
   end
 
   def load_saved_round_course_state
@@ -73,16 +102,29 @@ class GameSetupsController < ApplicationController
 
     select_course_by_id(@game.round.golf_course_api_course_id)
     @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course)
+    @search_query = "#{@game.round.club_name} · #{@game.round.course_name}"
   rescue GolfCourseApi::MissingApiKeyError => e
-    flash.now[:alert] = e.message
+    @course_selection_error = e.message
   rescue StandardError => e
-    flash.now[:alert] = "Could not load saved course: #{e.message}"
+    @course_selection_error = "Could not load saved course: #{e.message}"
   end
 
   def select_course_by_id(course_id)
     @selected_course = normalize_course_payload(golf_course_client.course(id: course_id))
     @tee_options = tee_options_for(@selected_course)
     @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course) if @game.round.present?
+  end
+
+  def render_course_selection_error(message)
+    render partial: "game_setups/course_selection",
+           locals: {
+             error_message: message,
+             selected_course: nil,
+             tee_options: [],
+             selected_tee_selector: nil
+           },
+           layout: false,
+           status: :unprocessable_entity
   end
 
   def tee_selector_for_round(round, course_payload)

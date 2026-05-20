@@ -21,7 +21,10 @@ Rails.application.routes.draw do
 
   resources :games, param: :token do
     post :join, on: :member
-    resource :setup, only: [ :show, :update ], controller: "game_setups"
+    resource :setup, only: [ :show, :update ], controller: "game_setups" do
+      get :search_courses
+      get :select_course
+    end
     member do
       get :edit_teams
       patch :update_teams

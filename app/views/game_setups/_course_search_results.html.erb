@@ -1,0 +1,23 @@
+<% if local_assigns[:course_search_error].present? %>
+  <li class="px-3 py-2 text-sm text-red-700" role="option"><%= course_search_error %></li>
+<% elsif course_search_results.blank? %>
+  <li class="px-3 py-2 text-sm text-gray-500" role="option">No courses found</li>
+<% else %>
+  <% course_search_results.each do |course| %>
+    <% label = "#{course["club_name"]} · #{course["course_name"]}" %>
+    <li role="option">
+      <button type="button"
+              class="w-full text-left px-3 py-2 text-sm hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none"
+              data-action="course-search#pick"
+              data-course-id="<%= course["id"] %>"
+              data-course-label="<%= label %>">
+        <span class="font-medium text-gray-900"><%= course["club_name"] %></span>
+        <span class="text-gray-600"> · <%= course["course_name"] %></span>
+        <% location = course_search_location(course) %>
+        <% if location.present? %>
+          <span class="block text-xs text-gray-500 mt-0.5"><%= location %></span>
+        <% end %>
+      </button>
+    </li>
+  <% end %>
+<% end %>

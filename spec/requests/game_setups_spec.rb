@@ -68,4 +68,54 @@ RSpec.describe "Game setups", type: :request do
     expect(response.body).to include("Game format")
     expect(response.body).to include(game_setup_path(game, step: "format"))
   end
+
+  it "returns course search results as a dropdown partial without a full page reload" do
+    allow_any_instance_of(GameSetupsController).to receive(:golf_course_api_key_configured?).and_return(true)
+    allow_any_instance_of(GameSetupsController).to receive(:golf_course_client).and_return(
+      instance_double(
+        GolfCourseApi::Client,
+        search_courses: {
+          "courses" => [
+            {
+              "id" => 12,
+              "club_name" => "Pinehurst Resort",
+              "course_name" => "No. 2",
+              "location" => { "city" => "Pinehurst", "state" => "NC" }
+            }
+          ]
+        }
+      )
+    )
+
+    get search_courses_game_setup_path(game), params: { search_query: "pine" }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("Pinehurst Resort")
+    expect(response.body).to include('data-action="course-search#pick"')
+    expect(response.body).not_to include("<!DOCTYPE html>")
+  end
+
+  it "returns course selection partial when a course is chosen" do
+    course_payload = {
+      "id" => 12,
+      "club_name" => "Pinehurst Resort",
+      "course_name" => "No. 2",
+      "tees" => { "male" => [
+        { "tee_name" => "Blue", "course_rating" => 72.0, "slope_rating" => 128, "par_total" => 72,
+          "number_of_holes" => 18, "holes" => Array.new(18) { { "par" => 4, "handicap" => 1 } } }
+      ] }
+    }
+
+    allow_any_instance_of(GameSetupsController).to receive(:golf_course_api_key_configured?).and_return(true)
+    allow_any_instance_of(GameSetupsController).to receive(:golf_course_client).and_return(
+      instance_double(GolfCourseApi::Client, course: course_payload)
+    )
+
+    get select_course_game_setup_path(game), params: { course_id: 12 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include('name="round[golf_course_api_course_id]"')
+    expect(response.body).to include('value="12"')
+    expect(response.body).to include('name="round[tee_selector]"')
+  end
 end
