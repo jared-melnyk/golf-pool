@@ -12,6 +12,8 @@ module GolfCourseApi
       raise MissingApiKeyError if @api_key.blank?
     end
 
+    # Prefer GolfCourseApi::CourseSearch for UI typeahead — the API matches whole words,
+    # not arbitrary prefixes (e.g. "bil" won't match "Billy" without client-side filtering).
     def search_courses(search_query:)
       get("search", search_query: search_query)
     end
