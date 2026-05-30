@@ -11,6 +11,8 @@ class Tournament < ApplicationRecord
 
   validates :name, presence: true
 
+  after_update_commit :enqueue_odds_locks_for_pool_tournaments, if: :saved_change_to_starts_at?
+
   # Picks lock at midnight Central (CST/CDT) on the tournament start date. We always use this
   # instead of the API start time so we don't have to guess if the API time is accurate.
   CENTRAL = "Central Time (US & Canada)"
@@ -183,6 +185,12 @@ class Tournament < ApplicationRecord
   end
 
   private
+
+  def enqueue_odds_locks_for_pool_tournaments
+    return if starts_at.blank?
+
+    pool_tournaments.find_each(&:enqueue_odds_lock)
+  end
 
   def effective_field_size_for_cut
     field_count = tournament_fields.count

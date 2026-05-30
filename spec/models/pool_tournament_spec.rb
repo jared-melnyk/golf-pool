@@ -1,6 +1,7 @@
 require "rails_helper"
 
 RSpec.describe PoolTournament, type: :model do
+  include ActiveJob::TestHelper
   include ActiveSupport::Testing::TimeHelpers
 
   let(:pool) { Pool.create!(name: "Test Pool") }
@@ -33,6 +34,54 @@ RSpec.describe PoolTournament, type: :model do
       expect {
         PoolTournament.create!(pool: pool, tournament: tournament)
       }.to have_enqueued_job(SyncTournamentFieldJob).with(tournament.id)
+    end
+
+    it "schedules odds lock for the pre-start window when added early" do
+      ActiveJob::Base.queue_adapter = :test
+      starts_at = 2.days.from_now.change(usec: 0)
+      tournament = Tournament.create!(name: "Upcoming Event", starts_at: starts_at, external_id: "123")
+
+      expect {
+        PoolTournament.create!(pool: pool, tournament: tournament)
+      }.to have_enqueued_job(LockOddsJob)
+    end
+
+    it "enqueues odds lock immediately when added inside the lock window" do
+      ActiveJob::Base.queue_adapter = :test
+      starts_at = Time.zone.parse("2026-05-21 12:00:00")
+      tournament = Tournament.create!(name: "Byron Nelson", starts_at: starts_at, external_id: "27")
+
+      travel_to(Time.find_zone(Tournament::CENTRAL).parse("2026-05-20 23:50:00")) do
+        expect {
+          PoolTournament.create!(pool: pool, tournament: tournament)
+        }.to have_enqueued_job(LockOddsJob)
+      end
+    end
+
+    it "does not enqueue odds lock after picks lock" do
+      ActiveJob::Base.queue_adapter = :test
+      starts_at = Time.zone.parse("2026-05-21 12:00:00")
+      tournament = Tournament.create!(name: "Byron Nelson", starts_at: starts_at, external_id: "27")
+
+      travel_to(Time.utc(2026, 5, 21, 6, 0, 0)) do
+        expect {
+          PoolTournament.create!(pool: pool, tournament: tournament)
+        }.not_to have_enqueued_job(LockOddsJob)
+      end
+    end
+  end
+
+  describe "Tournament starts_at updates" do
+    it "re-enqueues odds lock when starts_at is set after pool tournament creation" do
+      ActiveJob::Base.queue_adapter = :test
+      tournament = Tournament.create!(name: "TBD", starts_at: nil, external_id: "27")
+      pool_tournament = PoolTournament.create!(pool: pool, tournament: tournament)
+      clear_enqueued_jobs
+
+      starts_at = 2.days.from_now.change(usec: 0)
+      expect {
+        tournament.update!(starts_at: starts_at)
+      }.to have_enqueued_job(LockOddsJob).with(pool_tournament.id)
     end
   end
 
