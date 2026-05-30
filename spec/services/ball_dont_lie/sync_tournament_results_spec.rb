@@ -4,8 +4,15 @@ require "rails_helper"
 
 RSpec.describe BallDontLie::SyncTournamentResults do
   let(:tournament) { Tournament.create!(name: "Masters", starts_at: 1.day.ago, ends_at: 1.day.from_now, external_id: "20") }
-  let(:client) { instance_double(BallDontLie::Client, fetch_all_tournament_results: api_results) }
+  let(:client) do
+    instance_double(
+      BallDontLie::Client,
+      fetch_all_tournament_results: api_results,
+      tournament_completed?: tournament_completed
+    )
+  end
   let(:api_results) { [] }
+  let(:tournament_completed) { true }
 
   before do
     allow(BallDontLie::Client).to receive(:new).and_return(client)
@@ -108,6 +115,64 @@ RSpec.describe BallDontLie::SyncTournamentResults do
         result = described_class.new(tournament: tournament, client: client).call
         expect(result).to eq(created: 1, updated: 0, total: 2)
         expect(tournament.tournament_results.count).to eq(1)
+      end
+    end
+
+    context "when API returns CUT position" do
+      let(:api_results) do
+        [
+          {
+            "player" => { "id" => 200, "display_name" => "Missed" },
+            "position" => "CUT",
+            "position_numeric" => nil,
+            "earnings" => 0
+          }
+        ]
+      end
+
+      it "stores position_display and leaves position nil" do
+        described_class.new(tournament: tournament, client: client).call
+        tr = tournament.tournament_results.joins(:golfer).find_by(golfers: { external_id: "200" })
+        expect(tr.position_display).to eq("CUT")
+        expect(tr.position).to be_nil
+      end
+    end
+
+    context "when API tournament is not completed" do
+      let(:tournament_completed) { false }
+      let(:api_results) do
+        [
+          {
+            "player" => { "id" => 185, "display_name" => "Leader" },
+            "position" => "1",
+            "position_numeric" => 1,
+            "earnings" => nil
+          }
+        ]
+      end
+
+      it "does not set champion" do
+        described_class.new(tournament: tournament, client: client).call
+        expect(tournament.reload.champion_golfer_id).to be_nil
+      end
+    end
+
+    context "when API tournament is completed" do
+      let(:tournament_completed) { true }
+      let(:api_results) do
+        [
+          {
+            "player" => { "id" => 185, "display_name" => "Scottie Scheffler" },
+            "position_numeric" => 1,
+            "earnings" => 2_500_000
+          }
+        ]
+      end
+
+      it "sets champion_golfer_id" do
+        described_class.new(tournament: tournament, client: client).call
+        scottie = Golfer.find_by(external_id: "185")
+        expect(tournament.reload.champion_golfer_id).to eq(scottie.id)
       end
     end
   end

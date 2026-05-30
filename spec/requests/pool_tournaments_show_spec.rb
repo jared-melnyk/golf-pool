@@ -31,7 +31,8 @@ RSpec.describe "PoolTournament scores", type: :request do
       client = instance_double(
         BallDontLie::Client,
         fetch_all_player_round_results: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -45,7 +46,8 @@ RSpec.describe "PoolTournament scores", type: :request do
       client = instance_double(
         BallDontLie::Client,
         fetch_all_player_round_results: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -67,7 +69,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -97,7 +100,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -123,7 +127,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -133,7 +138,7 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("MC")
     end
 
-    it "shows dash instead of MC when tournament is in progress and only provisional results exist" do
+    it "shows dash instead of MC when tournament is in progress without cut posted" do
       golfer = Golfer.create!(name: "Rory", external_id: "282")
       Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
         PickGolfer.create!(pick: p, golfer: golfer, slot: 1)
@@ -145,7 +150,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -154,6 +160,44 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).not_to include("MC")
       expect(response.body).to include("—")
+      expect(response.body).not_to include("projected")
+    end
+
+    it "shows MC, $0, and projected badges when cut is posted via position_display" do
+      tournament.update!(total_prize_pool: 10_000_000)
+      g_mc = Golfer.create!(name: "MC", external_id: "401")
+      g_top = Golfer.create!(name: "Top", external_id: "402")
+      g2 = Golfer.create!(name: "G2", external_id: "403")
+      g3 = Golfer.create!(name: "G3", external_id: "404")
+
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: g_mc, slot: 1)
+        PickGolfer.create!(pick: p, golfer: g_top, slot: 2)
+        PickGolfer.create!(pick: p, golfer: g2, slot: 3)
+        PickGolfer.create!(pick: p, golfer: g3, slot: 4)
+      end
+
+      [ g_mc, g_top, g2, g3 ].each do |g|
+        PoolTournamentOdds.create!(pool_tournament: pool_tournament, golfer: g, american_odds: 500, vendor: "dk", locked_at: Time.current)
+        TournamentRoundResult.create!(tournament: tournament, golfer: g, round_number: 1, score_to_par: 0, last_hole_completed: 18)
+        TournamentRoundResult.create!(tournament: tournament, golfer: g, round_number: 2, score_to_par: 0, last_hole_completed: 18)
+      end
+
+      cut_marker = Golfer.create!(name: "CutMarker", external_id: "405")
+      TournamentResult.create!(tournament: tournament, golfer: cut_marker, position_display: "CUT")
+      TournamentResult.create!(tournament: tournament, golfer: g_mc, position_display: "CUT")
+      TournamentResult.create!(tournament: tournament, golfer: g_top, position_display: "T2")
+      TournamentResult.create!(tournament: tournament, golfer: g2, position_display: "T18")
+      TournamentResult.create!(tournament: tournament, golfer: g3, position_display: "T42")
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("MC")
+      expect(response.body).to include("$0")
+      expect(response.body).to include("projected")
+      expect(response.body.scan("Counted (projected)").size).to eq(3)
+      expect(response.body).to include("Dropped (projected)")
     end
 
     it "shows Cut Made Bonus from live round data when no TournamentResult yet (round 3+ = made cut)" do
@@ -173,7 +217,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: raw_round_results,
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -208,7 +253,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -245,7 +291,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: [],
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -285,7 +332,8 @@ RSpec.describe "PoolTournament scores", type: :request do
         BallDontLie::Client,
         fetch_all_player_round_results: raw_round_results,
         fetch_all_player_scorecards: [],
-        fetch_all_tournament_results: []
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
       )
       allow(BallDontLie::Client).to receive(:new).and_return(client)
 
@@ -307,7 +355,7 @@ RSpec.describe "PoolTournament scores", type: :request do
       before do
         TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 1, score_to_par: -3, last_hole_completed: 18)
         TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 2, score_to_par: -1, last_hole_completed: 18)
-        tournament.update_column(:live_results_synced_at, 5.seconds.ago)
+        tournament.update_columns(live_results_synced_at: 5.seconds.ago, leaderboard_synced_at: 5.seconds.ago)
       end
 
       it "renders from DB without calling the API and without enqueuing a refresh" do

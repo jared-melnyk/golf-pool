@@ -9,6 +9,11 @@ class RefreshLiveResultsJob < ApplicationJob
 
     BallDontLie::SyncRoundResults.new(tournament: tournament).call
 
+    tournament.reload
+    if tournament.started? && !tournament.completed?
+      BallDontLie::SyncLiveLeaderboard.new(tournament: tournament).call
+    end
+
     sync_final_results_if_needed!(tournament)
   rescue => e
     Rails.logger.error("RefreshLiveResultsJob failed for tournament #{tournament_id}: #{e.class}: #{e.message}")

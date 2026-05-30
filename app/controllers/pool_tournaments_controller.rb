@@ -69,9 +69,12 @@ class PoolTournamentsController < ApplicationController
                    .where(tournament_id: @tournament.id, golfer_id: relevant_golfer_ids)
                    .includes(:golfer)
                    .to_a
+          sync_live_leaderboard_if_needed!
         rescue => e
           Rails.logger.error("[PoolTournament scores] Synchronous SyncRoundResults failed for tournament #{@tournament.id}: #{e.class}: #{e.message}")
         end
+      elsif @tournament.started? && !@tournament.completed?
+        sync_live_leaderboard_if_needed!
       end
 
       by_player_external_id = rows.group_by { |r| r.golfer.external_id&.to_i }.compact
@@ -105,45 +108,33 @@ class PoolTournamentsController < ApplicationController
     results_by_golfer = TournamentResult.where(tournament: @tournament, golfer_id: golfer_ids).index_by(&:golfer_id)
     odds_by_golfer = @pool_tournament.pool_tournament_odds.index_by(&:golfer_id)
 
-    @golfer_bonus_display = {}
-    golfer_ids.each do |gid|
-      golfer = golfers_by_id[gid]
-      result = results_by_golfer[gid]
-      odds_row = odds_by_golfer[gid]
-
-      if result && @tournament.completed?
-        if @tournament.bonus_cut_eligible_result?(result) && odds_row
-          @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
-        else
-          @golfer_bonus_display[gid] = :mc
-        end
-      elsif golfer && @round_results.present?
-        player_result = @round_results[golfer.external_id&.to_i] || {}
-        round_numbers = (player_result[:rounds] || {}).keys
-        made_cut = round_numbers.any? { |r| r >= 3 }
-        cut_known = @current_round.present? && @current_round >= 3
-        missed_cut = cut_known && round_numbers.any? && !made_cut
-
-        if made_cut && odds_row
-          @golfer_bonus_display[gid] = @tournament.capped_cut_made_bonus(odds_row.american_odds)
-        elsif missed_cut
-          @golfer_bonus_display[gid] = :mc
-        else
-          @golfer_bonus_display[gid] = nil
-        end
-      else
-        @golfer_bonus_display[gid] = nil
-      end
-    end
-
-    @golfer_prize_money = {}
-    golfer_ids.each do |gid|
-      result = results_by_golfer[gid]
-      @golfer_prize_money[gid] = @tournament.completed? && result ? (result.prize_money.to_d || 0) : nil
-    end
+    @scoring_display = PoolTournamentScoringDisplay.new(
+      tournament: @tournament,
+      results_by_golfer: results_by_golfer,
+      odds_by_golfer: odds_by_golfer,
+      round_results: @round_results,
+      current_round: @current_round
+    )
+    @golfer_bonus_display = golfer_ids.index_with { |gid| @scoring_display.bonus_for(golfers_by_id[gid]) }
+    @golfer_prize_money = golfer_ids.index_with { |gid| @scoring_display.prize_money_for(golfers_by_id[gid]) }
+    @show_counted_dropped_badges = @scoring_display.show_counted_dropped_badges?
+    @badges_projected = @scoring_display.badges_projected?
   end
 
   private
+
+  def sync_live_leaderboard_if_needed!
+    return unless @tournament.external_id.present?
+    return unless @tournament.started? && !@tournament.completed?
+
+    stale = @tournament.leaderboard_synced_at.nil? || @tournament.leaderboard_synced_at < 30.seconds.ago
+    return unless stale
+
+    BallDontLie::SyncLiveLeaderboard.new(tournament: @tournament).call
+    @tournament.reload
+  rescue => e
+    Rails.logger.error("[PoolTournament scores] SyncLiveLeaderboard failed for tournament #{@tournament.id}: #{e.class}: #{e.message}")
+  end
 
   def build_round_results_hash(round_rows_by_player_external_id)
     result = {}

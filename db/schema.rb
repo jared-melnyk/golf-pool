@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_30_182355) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -340,10 +340,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_120000) do
     t.datetime "created_at", null: false
     t.bigint "golfer_id", null: false
     t.integer "position"
+    t.string "position_display"
     t.decimal "prize_money", precision: 12, scale: 2
     t.bigint "tournament_id", null: false
     t.datetime "updated_at", null: false
     t.index ["golfer_id"], name: "index_tournament_results_on_golfer_id"
+    t.index ["position_display"], name: "index_tournament_results_on_position_display"
     t.index ["tournament_id", "golfer_id"], name: "index_tournament_results_on_tournament_id_and_golfer_id", unique: true
     t.index ["tournament_id"], name: "index_tournament_results_on_tournament_id"
   end
@@ -367,6 +369,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_21_120000) do
     t.datetime "ends_at"
     t.string "external_id"
     t.decimal "fallback_prize_pool", precision: 12, scale: 2
+    t.datetime "leaderboard_synced_at"
     t.datetime "live_results_synced_at"
     t.string "name"
     t.datetime "results_synced_at"

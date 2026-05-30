@@ -270,6 +270,29 @@ RSpec.describe Tournament, type: :model do
     end
   end
 
+  describe "#cut_posted?" do
+    let(:tournament) { Tournament.create!(name: "Live", starts_at: 1.day.ago, external_id: "28") }
+    let(:golfer) { Golfer.create!(name: "MC", external_id: "99") }
+
+    it "returns false when no CUT rows exist" do
+      expect(tournament.cut_posted?).to be false
+    end
+
+    it "returns true when at least one result has position_display CUT" do
+      TournamentResult.create!(tournament: tournament, golfer: golfer, position_display: "CUT")
+      expect(tournament.cut_posted?).to be true
+    end
+
+    it "returns false for completed no-cut events with only numeric positions" do
+      tournament.update!(champion_golfer: golfer)
+      5.times do |i|
+        g = Golfer.create!(name: "F#{i}", external_id: "f#{i}")
+        TournamentResult.create!(tournament: tournament, golfer: g, position: i + 1, position_display: (i + 1).to_s, prize_money: 1000)
+      end
+      expect(tournament.cut_posted?).to be false
+    end
+  end
+
   describe "#marginal_bonus_eligible_total_to_par" do
     it "returns the maximum total_to_par among bonus-eligible results that appear in round data" do
       tournament = Tournament.create!(name: "NC", starts_at: 5.days.ago)

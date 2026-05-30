@@ -38,6 +38,14 @@ class Tournament < ApplicationRecord
     champion_golfer_id.present?
   end
 
+  # True once the API leaderboard includes missed-cut rows (position_display CUT, etc.).
+  def cut_posted?
+    return false unless started?
+    return false if completed? && no_cut_event?
+
+    tournament_results.where(position_display: TournamentResult::MISSED_CUT_POSITIONS).exists?
+  end
+
   # True when the event may be over but we have not yet synced final results/champion.
   def likely_finished?
     return false unless started?
