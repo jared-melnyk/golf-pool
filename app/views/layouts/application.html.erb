@@ -58,6 +58,7 @@
             <% games_link_active = controller_name.in?(%w[games game_setups game_memberships hole_scores]) && action_name != "new" %>
             <% trips_link_active = controller_name == "events" %>
             <% tournaments_nav_active = controller_name == "tournaments" %>
+            <% admin_users_nav_active = controller_path == "admin/users" && action_name == "index" %>
             <nav class="space-y-1">
               <div class="<%= section_head %>">PGA Pools</div>
               <%= link_to "My pools", pools_path, class: nav_row.call(my_pools_active), data: { action: "click->sidebar#close" } %>
@@ -71,6 +72,7 @@
               <% if current_user_admin? %>
                 <div class="<%= section_head %> mt-3">Admin</div>
                 <%= link_to "Tournaments", tournaments_path, class: nav_row.call(tournaments_nav_active), data: { action: "click->sidebar#close" } %>
+                <%= link_to "Users", admin_users_path, class: nav_row.call(admin_users_nav_active), data: { action: "click->sidebar#close" } %>
               <% end %>
 
               <% if @pool && @pool.users.include?(current_user) %>
