@@ -20,10 +20,13 @@ class TournamentsController < ApplicationController
       @tournament.reload
     end
 
-    # Sync results until we have a champion with real earnings, or we have not completed yet.
-    # Re-sync when earnings were still blank/zero after an early API response (same as pool view).
-    if !@tournament.results_synced_since_completion? || @tournament.tournament_results_earnings_incomplete?
-      sync_results
+    if @tournament.completed?
+      if !@tournament.results_synced_since_completion? || @tournament.tournament_results_earnings_incomplete?
+        sync_results
+        @tournament.reload
+      end
+    elsif @tournament.started?
+      sync_live_leaderboard
       @tournament.reload
     end
   end
@@ -38,6 +41,16 @@ class TournamentsController < ApplicationController
   rescue => e
     Rails.logger.error("Failed to sync tournament field: #{e.class}: #{e.message}")
     flash.now[:alert] = "Field and results are not available yet. #{e.message} Try again later."
+  end
+
+  def sync_live_leaderboard
+    result = BallDontLie::SyncLiveLeaderboard.new(tournament: @tournament).call
+    if result[:total].to_i > 0
+      flash.now[:notice] = (flash.now[:notice].presence ? flash.now[:notice] + " " : "") + "Synced #{result[:total]} leaderboard positions."
+    end
+  rescue => e
+    Rails.logger.error("Failed to sync live leaderboard: #{e.class}: #{e.message}")
+    flash.now[:alert] = (flash.now[:alert].presence ? flash.now[:alert] + " " : "") + "Leaderboard could not be loaded: #{e.message}"
   end
 
   def sync_results

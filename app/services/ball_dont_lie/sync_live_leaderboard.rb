@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module BallDontLie
-  class SyncTournamentResults
+  class SyncLiveLeaderboard
     def initialize(tournament:, client: nil)
       @tournament = tournament.is_a?(Tournament) ? tournament : Tournament.find(tournament)
       @client = client || Client.new
@@ -13,33 +13,27 @@ module BallDontLie
 
       api_results = @client.fetch_all_tournament_results(tournament_ids: [ external_id.to_i ])
       created = updated = 0
+
       api_results.each do |r|
         player = r["player"]
         next if player.blank?
+
         golfer = Golfer.find_or_initialize_by(external_id: player["id"].to_s)
         golfer.name = player["display_name"].presence || [ player["first_name"], player["last_name"] ].compact.join(" ")
         golfer.save! if golfer.new_record? || golfer.changed?
 
-        result = TournamentResult.find_or_initialize_by(tournament: @tournament, golfer: golfer)
-        TournamentResult.assign_leaderboard_from_api(result, r)
-        result.prize_money = r["earnings"]
-        if result.new_record?
-          result.save!
+        row = TournamentResult.find_or_initialize_by(tournament: @tournament, golfer: golfer)
+        TournamentResult.assign_leaderboard_from_api(row, r)
+        if row.new_record?
+          row.save!
           created += 1
-        elsif result.changed?
-          result.save!
+        elsif row.changed?
+          row.save!
           updated += 1
         end
       end
-      @tournament.update_column(:results_synced_at, Time.current)
 
-      if @client.tournament_completed?(external_id)
-        winner_result = @tournament.tournament_results.find_by(position: 1)
-        if winner_result
-          @tournament.update_column(:champion_golfer_id, winner_result.golfer_id)
-        end
-      end
-
+      @tournament.update_column(:leaderboard_synced_at, Time.current)
       { created: created, updated: updated, total: api_results.size }
     end
   end

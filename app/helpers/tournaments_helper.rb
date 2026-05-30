@@ -6,9 +6,15 @@ module TournamentsHelper
   # - T + position when multiple results share the same position (tie)
   # - position otherwise
   def display_place(result, results)
+    if result.position_display.present? &&
+        TournamentResult::MISSED_CUT_POSITIONS.include?(result.position_display.upcase)
+      return result.position_display
+    end
+
     return "MC" if missed_cut?(result)
 
     position = result.position
+    return result.position_display if position.nil? && result.position_display.present?
     return "MC" if position.nil?
 
     count_at_position = results.count do |r|
@@ -18,6 +24,6 @@ module TournamentsHelper
   end
 
   def missed_cut?(result)
-    result.prize_money.nil? || result.prize_money.to_d.zero?
+    result.missed_cut?
   end
 end

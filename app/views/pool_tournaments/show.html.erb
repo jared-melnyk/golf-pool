@@ -37,14 +37,12 @@
   <% @picks_by_user.each do |user, picks| %>
     <% pick = picks.first %>
     <%
-      golfer_totals = pick.golfers.map do |g|
-        prize_val = @golfer_prize_money[g.id]
-        bonus_val = @golfer_bonus_display[g.id]
-        bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0.to_d
-        total_val = prize_val.to_d + bonus_num
-        [ g.id, total_val ]
+      if @show_counted_dropped_badges
+        golfer_totals = pick.golfers.map { |g| [ g.id, @scoring_display.projected_total_for(g) || 0.to_d ] }
+        counted_golfer_ids = golfer_totals.sort_by { |(_, total)| -total }.first(3).map(&:first)
+      else
+        counted_golfer_ids = []
       end
-      counted_golfer_ids = golfer_totals.sort_by { |(_, total)| -total }.first(3).map(&:first)
     %>
     <div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
       <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -74,9 +72,8 @@
               <% total_to_par = player_result[:total_to_par] %>
               <% prize = @golfer_prize_money[golfer.id] %>
               <% bonus_val = @golfer_bonus_display[golfer.id] %>
-              <% bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0 %>
-              <% total_earnings = (prize.present? || bonus_val.is_a?(Numeric)) ? (prize.to_d + bonus_num) : nil %>
-              <% dropped = counted_golfer_ids.exclude?(golfer.id) %>
+              <% total_earnings = @scoring_display.total_earnings_for(golfer) %>
+              <% dropped = @show_counted_dropped_badges && counted_golfer_ids.exclude?(golfer.id) %>
               <tr>
                 <td class="px-3 py-3 align-top">
                   <div class="flex flex-col gap-1">
@@ -85,13 +82,13 @@
                       <% odds = PoolTournamentOdds.find_by(pool_tournament: @pool_tournament, golfer: golfer)&.american_odds %>
                       <%= cut_made_bonus_label(odds, tournament: @tournament) %>
                     </span>
-                    <% if counted_golfer_ids.include?(golfer.id) %>
+                    <% if @show_counted_dropped_badges && counted_golfer_ids.include?(golfer.id) %>
                       <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 w-fit">
-                        Counted
+                        Counted<%= " (projected)" if @badges_projected %>
                       </span>
-                    <% else %>
+                    <% elsif @show_counted_dropped_badges %>
                       <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 w-fit">
-                        Dropped
+                        Dropped<%= " (projected)" if @badges_projected %>
                       </span>
                     <% end %>
                   </div>
@@ -148,16 +145,16 @@
               total_to_par_sum = pick.golfers.sum { |g| ((@round_results[g.external_id&.to_i] || {})[:total_to_par].to_i) }
               prize_sum = pick.golfers.sum { |g| @golfer_prize_money[g.id].to_d }
               bonus_sum = pick.golfers.sum { |g| b = @golfer_bonus_display[g.id]; b.is_a?(Numeric) ? b.to_d : 0 }
-              total_earnings_sum = pick.golfers
-                .select { |g| counted_golfer_ids.include?(g.id) }
-                .sum do |g|
-                  prize_val = @golfer_prize_money[g.id]
-                  bonus_val = @golfer_bonus_display[g.id]
-                  bonus_num = bonus_val.is_a?(Numeric) ? bonus_val.to_d : 0.to_d
-                  prize_val.to_d + bonus_num
-                end
+              total_earnings_sum = if @show_counted_dropped_badges
+                pick.golfers
+                  .select { |g| counted_golfer_ids.include?(g.id) }
+                  .sum { |g| @scoring_display.total_earnings_for(g).to_d }
+              else
+                0.to_d
+              end
               any_round_data = round_totals.any?(&:nonzero?) || total_to_par_sum.nonzero?
-              any_money_data = prize_sum.nonzero? || bonus_sum.nonzero? || @tournament.completed? || pick.golfers.any? { |g| @golfer_bonus_display[g.id].is_a?(Numeric) }
+              any_money_data = prize_sum.nonzero? || bonus_sum.nonzero? || @tournament.completed? ||
+                pick.golfers.any? { |g| !@scoring_display.total_earnings_for(g).nil? }
               format_score = ->(v) { v.zero? ? "E" : (v.positive? ? "+#{v}" : v.to_s) }
             %>
             <tr class="bg-gray-50 border-t-2 border-gray-200 font-semibold text-gray-900">
@@ -186,7 +183,12 @@
             </tr>
           </tbody>
         </table>
-        <p class="text-xs text-gray-500 mt-2">Excluded golfers do not count toward the Total row.</p>
+        <p class="text-xs text-gray-500 mt-2">
+          <% if @badges_projected %>
+            Projected Counted/Dropped uses Cut Made Bonus only until final prize money is posted.
+          <% end %>
+          Excluded golfers do not count toward the Total row.
+        </p>
       </div>
     </div>
   <% end %>
