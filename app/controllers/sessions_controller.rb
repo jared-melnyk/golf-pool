@@ -8,6 +8,7 @@ class SessionsController < ApplicationController
     user = User.find_by(email: params[:email]&.downcase)
     if user&.authenticate(params[:password])
       session[:user_id] = user.id
+      user.record_login!
       remember_user(user)
       redirect_to session.delete(:return_to).presence || root_path, notice: "Signed in."
     else

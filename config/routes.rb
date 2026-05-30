@@ -15,6 +15,10 @@ Rails.application.routes.draw do
   get "password_reset/:token", to: "password_resets#edit", as: :edit_password_reset
   patch "password_reset/:token", to: "password_resets#update", as: :password_reset
 
+  namespace :admin do
+    resources :users, only: [ :index ]
+  end
+
   resources :tournaments, only: [ :index, :show ]
 
   resource :profile, only: [ :edit, :update ]

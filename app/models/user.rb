@@ -58,4 +58,8 @@ class User < ApplicationRecord
   def clear_remember_token!
     update_column(:remember_token_digest, nil)
   end
+
+  def record_login!
+    update_column(:last_login_at, Time.current)
+  end
 end
