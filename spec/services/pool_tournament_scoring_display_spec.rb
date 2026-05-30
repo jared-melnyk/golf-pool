@@ -70,6 +70,42 @@ RSpec.describe PoolTournamentScoringDisplay do
     end
   end
 
+  describe "#sort_golfers_for_display" do
+    it "orders golfers by total earnings descending with MC last" do
+      mc = Golfer.create!(name: "MC", external_id: "401")
+      top = Golfer.create!(name: "Top", external_id: "402")
+      mid = Golfer.create!(name: "Mid", external_id: "403")
+      marker = Golfer.create!(name: "Marker", external_id: "404")
+      TournamentResult.create!(tournament: tournament, golfer: marker, position_display: "CUT")
+      TournamentResult.create!(tournament: tournament, golfer: mc, position_display: "CUT")
+      TournamentResult.create!(tournament: tournament, golfer: top, position_display: "T2")
+      TournamentResult.create!(tournament: tournament, golfer: mid, position_display: "T18")
+
+      [ mc, top, mid ].each do |g|
+        PoolTournamentOdds.create!(
+          pool_tournament: pool_tournament,
+          golfer: g,
+          american_odds: 500,
+          vendor: "dk",
+          locked_at: Time.current
+        )
+      end
+
+      results = tournament.tournament_results.index_by(&:golfer_id)
+      odds = PoolTournamentOdds.where(pool_tournament: pool_tournament).index_by(&:golfer_id)
+      display = described_class.new(
+        tournament: tournament,
+        results_by_golfer: results,
+        odds_by_golfer: odds,
+        round_results: {},
+        current_round: 2
+      )
+
+      ordered = display.sort_golfers_for_display([ mc, top, mid ])
+      expect(ordered.map(&:name)).to eq([ "Top", "Mid", "MC" ])
+    end
+  end
+
   describe "#total_earnings_for" do
     it "returns 0 for MC after cut" do
       results = { golfer.id => TournamentResult.create!(tournament: tournament, golfer: golfer, position_display: "CUT") }

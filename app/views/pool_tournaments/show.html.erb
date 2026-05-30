@@ -43,6 +43,7 @@
       else
         counted_golfer_ids = []
       end
+      sorted_golfers = @scoring_display.sort_golfers_for_display(pick.golfers)
     %>
     <div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
       <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -66,7 +67,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <% pick.golfers.each do |golfer| %>
+            <% sorted_golfers.each do |golfer| %>
               <% player_result = @round_results[golfer.external_id&.to_i] || {} %>
               <% rounds_hash = player_result[:rounds] || {} %>
               <% total_to_par = player_result[:total_to_par] %>

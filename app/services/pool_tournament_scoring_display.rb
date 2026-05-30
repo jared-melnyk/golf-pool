@@ -54,6 +54,20 @@ class PoolTournamentScoringDisplay
     bonus_val.to_d
   end
 
+  # Highest projected/final total earnings first; MC ($0) last; unknown (—) in between.
+  def sort_golfers_for_display(golfers)
+    golfers.sort_by.with_index do |golfer, idx|
+      total = total_earnings_for(golfer)
+      if total.nil?
+        [ 2, 0, idx ]
+      elsif total.zero?
+        [ 3, 0, idx ]
+      else
+        [ 1, -total.to_d, idx ]
+      end
+    end
+  end
+
   def total_earnings_for(golfer)
     prize = prize_money_for(golfer)
     bonus_val = bonus_for(golfer)
