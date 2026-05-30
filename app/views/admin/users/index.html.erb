@@ -11,7 +11,7 @@
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">GHIN handicap index</th>
-            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Last login</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Last visit</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 bg-white">
@@ -30,7 +30,7 @@
                 <% if user.last_login_at.present? %>
                   <%= user.last_login_at.strftime("%b %-d, %Y %l:%M %p") %>
                 <% else %>
-                  <span class="text-gray-400">Never</span>
+                  <span class="text-gray-400">No visits yet</span>
                 <% end %>
               </td>
             </tr>

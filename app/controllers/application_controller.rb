@@ -8,6 +8,7 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :require_login
+  before_action :record_session_start
 
   helper_method :current_user
   helper_method :current_user_admin?
@@ -33,5 +34,13 @@ class ApplicationController < ActionController::Base
     return if current_user
     session[:return_to] = request.original_url
     redirect_to login_path, alert: "Please sign in."
+  end
+
+  def record_session_start
+    return unless current_user
+    return if session[:session_start_recorded]
+
+    current_user.record_session_start!
+    session[:session_start_recorded] = true
   end
 end
