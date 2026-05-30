@@ -1,0 +1,58 @@
+<div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-900">Games</h1>
+  </div>
+
+  <% if @games.any? %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Type</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Creator</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Trip</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Round</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Created</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 bg-white">
+          <% @games.each do |game| %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900">
+                <%= link_to game.name, game_path(game), class: "text-emerald-700 hover:underline" %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= game.status.titleize %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700">
+                <% if game.game_type.present? %>
+                  <%= game.game_type.gsub("_", " ").titleize %>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= game.creator.name %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700">
+                <% if game.event.present? %>
+                  <%= link_to game.event.name, event_path(game.event), class: "text-emerald-700 hover:underline" %>
+                <% else %>
+                  <span class="text-gray-400">Ad hoc</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700">
+                <% if game.round.present? %>
+                  <%= game.round.course_name %> · <%= game.round.played_on.strftime("%b %-d, %Y") %>
+                <% else %>
+                  <span class="text-gray-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= game.created_at.strftime("%b %-d, %Y") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="p-4 text-gray-600">No games yet.</p>
+  <% end %>
+</div>

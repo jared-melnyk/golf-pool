@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   patch "password_reset/:token", to: "password_resets#update", as: :password_reset
 
   namespace :admin do
+    resources :games, only: [ :index ]
     resources :users, only: [ :index ]
   end
 
