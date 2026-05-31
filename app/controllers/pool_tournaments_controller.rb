@@ -79,7 +79,7 @@ class PoolTournamentsController < ApplicationController
 
       by_player_external_id = rows.group_by { |r| r.golfer.external_id&.to_i }.compact
       @round_results = build_round_results_hash(by_player_external_id)
-      @current_round = rows.map(&:round_number).max if rows.any?
+      @current_round = current_round_for_display(rows)
 
       if @tournament.started? && !@tournament.completed?
         stale = @tournament.live_results_synced_at.nil? || @tournament.live_results_synced_at < 30.seconds.ago
@@ -134,6 +134,16 @@ class PoolTournamentsController < ApplicationController
     @tournament.reload
   rescue => e
     Rails.logger.error("[PoolTournament scores] SyncLiveLeaderboard failed for tournament #{@tournament.id}: #{e.class}: #{e.message}")
+  end
+
+  def current_round_for_display(rows)
+    return nil if rows.empty?
+
+    if @tournament.started? && !@tournament.completed? && @tournament.live_round_number.present?
+      return @tournament.live_round_number
+    end
+
+    rows.map(&:round_number).max
   end
 
   def build_round_results_hash(round_rows_by_player_external_id)

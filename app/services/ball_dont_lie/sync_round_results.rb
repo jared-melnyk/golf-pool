@@ -17,25 +17,32 @@ module BallDontLie
 
       raw = @client.fetch_all_player_round_results(tournament_ids: tournament_ids, player_ids: pids)
       formatter = PlayerRoundResultsFormatter.new(raw)
+      live_round = live_round_number(raw, formatter)
 
-      if @tournament.started? && !@tournament.completed?
-        current_round = formatter.current_round_number
-        if current_round.present?
-          cards = @client.fetch_all_player_scorecards(
-            tournament_ids: tournament_ids,
-            player_ids: pids,
-            round_number: current_round
-          )
-          formatter.merge_scorecard_live!(cards) if cards.present?
-        end
+      if @tournament.started? && !@tournament.completed? && live_round.present?
+        cards = @client.fetch_all_player_scorecards(
+          tournament_ids: tournament_ids,
+          player_ids: pids,
+          round_number: live_round
+        )
+        formatter.merge_scorecard_live!(cards) if cards.present?
       end
 
       stats = upsert_rows(formatter.by_player_id)
-      @tournament.update_column(:live_results_synced_at, Time.current)
+      sync_attrs = { live_results_synced_at: Time.current }
+      sync_attrs[:live_round_number] = live_round if @tournament.started? && !@tournament.completed?
+      @tournament.update_columns(sync_attrs)
       stats
     end
 
     private
+
+    def live_round_number(raw, formatter)
+      LiveRoundNumber.from_api(
+        tournament_payload: LiveRoundNumber.tournament_payload_from(raw),
+        fallback: formatter.current_round_number
+      )
+    end
 
     def derive_player_ids
       ids = Pick

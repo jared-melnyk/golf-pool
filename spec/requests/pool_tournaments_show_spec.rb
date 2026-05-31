@@ -378,6 +378,16 @@ RSpec.describe "PoolTournament scores", type: :request do
         }.to have_enqueued_job(RefreshLiveResultsJob).with(tournament.id)
       end
 
+      it "marks the API live round as Live even when only earlier rounds are persisted" do
+        tournament.update_column(:live_round_number, 4)
+
+        get pool_pool_tournament_path(pool, pool_tournament)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("R4 (Live)")
+        expect(response.body).not_to include("R2 (Live)")
+      end
+
       it "does not enqueue RefreshLiveResultsJob for a completed tournament" do
         winner = Golfer.create!(name: "Winner", external_id: "9991")
         tournament.update!(champion_golfer: winner)
