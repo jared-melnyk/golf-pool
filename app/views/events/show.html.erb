@@ -110,7 +110,7 @@
                 class: "font-medium text-emerald-700 hover:underline" %>
           <span class="text-sm text-gray-500">
             <% if game.game_type.present? %>
-              · <%= game.game_type.gsub("_", " ").titleize %>
+              · <%= game_type_label(game.game_type) %>
             <% end %>
             <% if game.round.present? %>
               · <%= game.round.played_on.strftime("%b %-d, %Y") %>

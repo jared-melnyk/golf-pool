@@ -21,7 +21,7 @@
               <% end %>
               <% if game.round.present? && game.game_type.present? %>
                 <p class="text-sm text-gray-600 mt-1">
-                  <%= game.game_type.gsub("_", " ").titleize %> · <%= game.round.course_name %> · <%= game.round.played_on.strftime("%b %-d, %Y") %>
+                  <%= game_type_label(game.game_type) %> · <%= game.round.course_name %> · <%= game.round.played_on.strftime("%b %-d, %Y") %>
                 </p>
               <% end %>
             </div>

@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold text-gray-900"><%= @game.name %></h1>
     <% if @game.round.present? && @game.game_type.present? %>
       <p class="text-sm text-gray-500 mt-1">
-        <%= @game.game_type.gsub("_", " ").titleize %> · <%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %>
+        <%= game_type_label(@game.game_type) %> · <%= @game.round.course_name %> · <%= @game.round.played_on.strftime("%b %-d, %Y") %>
       </p>
     <% elsif @game.draft? %>
       <p class="text-sm text-gray-600 mt-1">Setup in progress.</p>
@@ -40,6 +40,8 @@
     <div id="scorecard_flash"></div>
     <% if @game.forty_score? %>
       <%= render "scorecard_forty_score", scorecard: @scorecard, game: @game, event: @event %>
+    <% elsif @game.cha_cha_cha? %>
+      <%= render "scorecard_cha_cha_cha", scorecard: @scorecard, game: @game, event: @event %>
     <% else %>
       <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
     <% end %>

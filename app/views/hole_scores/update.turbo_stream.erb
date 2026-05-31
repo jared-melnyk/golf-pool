@@ -15,7 +15,24 @@
 <% end %>
 <% end %>
 
-<% unless @game.forty_score? %>
+<% if @game.cha_cha_cha? %>
+  <%= turbo_stream.replace dom_id(@game_team, "cha_cha_hole_#{@hole_number}") do %>
+    <%= render "games/scorecard/cha_cha_hole_cell",
+          game_team: @game_team,
+          hole_number: @hole_number,
+          team_net_strokes: team_hole&.dig(:team_net_strokes) %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game_team, "total_net") do %>
+    <%= render "games/scorecard/team_total",
+          game_team: @game_team,
+          total_net_strokes: @team_data[:total_net_strokes] %>
+  <% end %>
+
+  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+    <%= render "games/scorecard/leaderboard_cha_cha_cha", game: @game, scorecard: @scorecard %>
+  <% end %>
+<% elsif !@game.forty_score? %>
   <%= turbo_stream.replace dom_id(@game_team, "best_ball_hole_#{@hole_number}") do %>
     <%= render "games/scorecard/best_ball_cell",
           game_team: @game_team,

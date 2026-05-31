@@ -10,6 +10,8 @@ module GameScorecardBuilder
 
     if game.forty_score?
       FortyScoreScorecard.new(preloaded).call
+    elsif game.cha_cha_cha?
+      ChaChaChaScorecard.new(preloaded).call
     else
       BestBallScorecard.new(preloaded).call
     end
