@@ -2,10 +2,12 @@
   <div>
     <h1 class="text-2xl font-bold text-gray-900">Set up teams</h1>
     <p class="text-sm text-gray-600 mt-1">
-      <%= @game.round.name %> · <%= @game.game_type.gsub("_", " ").titleize %>
+      <%= @game.round.name %> · <%= game_type_label(@game.game_type) %>
     </p>
     <% if @game.forty_score? %>
       <p class="text-sm text-amber-800 mt-2">40 Score groups need 3 or 4 players each.</p>
+    <% elsif @game.cha_cha_cha? %>
+      <p class="text-sm text-amber-800 mt-2">Cha-Cha-Cha (1-2-3) groups need 3 or 4 players each.</p>
     <% end %>
   </div>
 
@@ -32,7 +34,7 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Players (select <%= @game.forty_score? ? "3–4" : "1–4" %>)
+            Players (select <%= (@game.forty_score? || @game.cha_cha_cha?) ? "3–4" : "1–4" %>)
           </label>
           <% current_ids = team&.game_team_players&.map(&:user_id) || [] %>
           <% @members.each do |user| %>

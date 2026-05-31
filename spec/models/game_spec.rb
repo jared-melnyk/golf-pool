@@ -51,9 +51,19 @@ RSpec.describe Game, type: :model do
     expect(game).to be_valid
   end
 
+  it "is valid with cha_cha_cha game type" do
+    game = build_game(game_type: "cha_cha_cha")
+    expect(game).to be_valid
+  end
+
   it "uses 100% playing handicap allowance for forty_score" do
     game = build_game(game_type: "forty_score")
     expect(game.playing_handicap_allowance_percent).to eq(100)
+  end
+
+  it "uses 85% playing handicap allowance for cha_cha_cha" do
+    game = build_game(game_type: "cha_cha_cha")
+    expect(game.playing_handicap_allowance_percent).to eq(85)
   end
 
   describe "status" do

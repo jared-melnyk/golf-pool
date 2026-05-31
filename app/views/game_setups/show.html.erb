@@ -76,7 +76,7 @@
         <% Game::GAME_TYPES.each do |type| %>
           <label class="flex items-center gap-2">
             <%= radio_button_tag "game[game_type]", type, @game.game_type == type, required: true %>
-            <%= type.gsub("_", " ").titleize %>
+            <%= game_type_label(type) %>
           </label>
         <% end %>
         <%= submit_tag "Save & continue", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>

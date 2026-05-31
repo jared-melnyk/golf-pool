@@ -212,6 +212,36 @@ RSpec.describe "Games", type: :request do
         expect(game.game_teams.reload).to be_empty
       end
     end
+
+    context "when game type is cha_cha_cha" do
+      let(:game) { create_active_game!(game_type: "cha_cha_cha") }
+      let(:p1) { User.create!(name: "Cc1", email: "cc1@test.com", password: "pw") }
+      let(:p2) { User.create!(name: "Cc2", email: "cc2@test.com", password: "pw") }
+      let(:p3) { User.create!(name: "Cc3", email: "cc3@test.com", password: "pw") }
+      let(:p4) { User.create!(name: "Cc4", email: "cc4@test.com", password: "pw") }
+
+      before do
+        [ p1, p2, p3, p4 ].each do |pl|
+          EventMembership.create!(event: event, user: pl, role: "player")
+        end
+      end
+
+      it "accepts a threesome" do
+        patch update_teams_game_path(game), params: {
+          teams: { "0" => { name: "Trio", user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s) } }
+        }
+        expect(response).to redirect_to(game_path(game))
+        expect(game.game_teams.reload.sole.game_team_players.size).to eq(3)
+      end
+
+      it "rejects a twosome" do
+        patch update_teams_game_path(game), params: {
+          teams: { "0" => { name: "Pair", user_ids: [ p1.id, p2.id ].map(&:to_s) } }
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(game.game_teams.reload).to be_empty
+      end
+    end
   end
 
   describe "POST /games/:token/join" do

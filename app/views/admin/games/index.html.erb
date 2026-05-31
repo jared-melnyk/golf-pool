@@ -26,7 +26,7 @@
               <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= game.status.titleize %></td>
               <td class="px-4 py-3 whitespace-nowrap text-gray-700">
                 <% if game.game_type.present? %>
-                  <%= game.game_type.gsub("_", " ").titleize %>
+                  <%= game_type_label(game.game_type) %>
                 <% else %>
                   <span class="text-gray-400">—</span>
                 <% end %>

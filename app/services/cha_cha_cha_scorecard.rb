@@ -1,0 +1,117 @@
+# frozen_string_literal: true
+
+# Computes a Cha-Cha-Cha (1-2-3) scorecard for a given Game.
+# Per hole, sums the lowest N net scores where N cycles 1, 2, 3 every three holes.
+# Returns a structured hash:
+#   {
+#     teams: [
+#       {
+#         id: ..., name: ..., total_net_strokes: ...,
+#         players: [ { name:, course_handicap:, playing_handicap:, hole_scores: [...] } ],
+#         hole_scores: [ { hole_number:, scores_to_count:, team_net_strokes: } ]
+#       }
+#     ],
+#     leaderboard: [ { rank:, team_name:, total_net_strokes: } ]
+#   }
+class ChaChaChaScorecard
+  def initialize(game)
+    @game = game
+    @round = game.round
+    @allowance = game.playing_handicap_allowance_percent
+  end
+
+  def call
+    teams_data = @game.game_teams.includes(game_team_players: [ :user, :hole_scores ]).map do |team|
+      build_team(team)
+    end
+
+    { teams: teams_data, leaderboard: build_leaderboard(teams_data) }
+  end
+
+  private
+
+  def build_team(team)
+    players_data = team.game_team_players.map { |gtp| build_player(gtp) }
+
+    hole_scores = (1..18).map do |h|
+      n = ChaChaCha.scores_to_count(h)
+      team_net = team_net_for_hole(players_data, h, n)
+      { hole_number: h, scores_to_count: n, team_net_strokes: team_net }
+    end
+
+    nets = hole_scores.map { |s| s[:team_net_strokes] }
+    total = nets.any?(&:nil?) ? nil : nets.sum
+
+    { id: team.id, name: team.name, players: players_data, hole_scores: hole_scores, total_net_strokes: total }
+  end
+
+  def team_net_for_hole(players_data, hole_number, scores_to_count)
+    nets = players_data.filter_map do |p|
+      p[:hole_scores].find { |s| s[:hole_number] == hole_number }&.dig(:net_score)
+    end
+
+    return nil if nets.size < scores_to_count
+
+    nets.sort.take(scores_to_count).sum
+  end
+
+  def build_player(gtp)
+    hi = gtp.snapshot_handicap_index.to_f
+    ch = course_handicap(hi)
+    ph = playing_handicap(ch)
+    scores_by_hole = gtp.hole_scores.index_by(&:hole_number)
+
+    hole_scores = (1..18).map do |h|
+      strokes = strokes_on_hole(ph, h)
+      gross = scores_by_hole[h]&.gross_score
+      net = gross ? gross - strokes : nil
+      { hole_number: h, gross_score: gross, net_score: net, strokes_received: strokes }
+    end
+
+    {
+      name: gtp.user.name,
+      course_handicap: ch,
+      playing_handicap: ph,
+      hole_scores: hole_scores
+    }
+  end
+
+  def course_handicap(hi)
+    slope = @round.slope_rating.to_f
+    rating = @round.course_rating.to_f
+    par = @round.par_total.to_f
+    (hi * (slope / 113.0) + (rating - par)).round
+  end
+
+  def playing_handicap(ch)
+    (ch * @allowance / 100.0).round
+  end
+
+  def strokes_on_hole(playing_handicap, hole_number)
+    return 0 if playing_handicap <= 0
+
+    si = @round.hole_handicaps[hole_number - 1]
+    base = playing_handicap / 18
+    return base if si.nil?
+
+    remainder = playing_handicap % 18
+    base + (si <= remainder ? 1 : 0)
+  end
+
+  def build_leaderboard(teams_data)
+    teams_with_totals = teams_data.map { |t| { team_name: t[:name], total_net_strokes: t[:total_net_strokes] } }
+    complete = teams_with_totals.select { |t| t[:total_net_strokes].present? }
+    incomplete = teams_with_totals.reject { |t| t[:total_net_strokes].present? }
+    sorted = complete.sort_by { |t| [ t[:total_net_strokes], t[:team_name] ] }
+
+    ranked = []
+    sorted.each_with_index do |team, idx|
+      if idx.positive? && sorted[idx - 1][:total_net_strokes] == team[:total_net_strokes]
+        ranked << team.merge(rank: ranked[idx - 1][:rank])
+      else
+        ranked << team.merge(rank: idx + 1)
+      end
+    end
+    ranked + incomplete.map { |t| t.merge(rank: nil) }
+  end
+end
