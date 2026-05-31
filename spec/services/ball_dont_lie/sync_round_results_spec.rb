@@ -65,10 +65,21 @@ RSpec.describe BallDontLie::SyncRoundResults do
 
     context "when the tournament is live and a round is in progress" do
       # Rory has an R2 row so current_round_number is 2; Scottie only has R1 from the API so R2
-      # is filled from scorecards.
+      # is filled from scorecards. Tournament metadata marks R2 as live.
       let(:round_results_payload) do
         [
-          { "player" => { "id" => 185 }, "round_number" => 1, "par_relative_score" => -2 },
+          {
+            "player" => { "id" => 185 },
+            "round_number" => 1,
+            "par_relative_score" => -2,
+            "tournament" => {
+              "id" => 20,
+              "rounds" => [
+                { "round_number" => 1, "status" => "OFFICIAL" },
+                { "round_number" => 2, "status" => "IN_PROGRESS" }
+              ]
+            }
+          },
           { "player" => { "id" => 282 }, "round_number" => 2, "par_relative_score" => 0 }
         ]
       end
@@ -91,6 +102,56 @@ RSpec.describe BallDontLie::SyncRoundResults do
         expect(live_row).to be_present
         expect(live_row.score_to_par).to be_a(Integer)
         expect(live_row.last_hole_completed).to eq(9)
+      end
+
+      it "persists live_round_number from tournament metadata" do
+        scottie
+        rory
+        allow(client).to receive(:fetch_all_player_scorecards).and_return(scorecards_payload)
+
+        described_class.new(tournament: tournament, player_ids: [ 185, 282 ], client: client).call
+
+        expect(tournament.reload.live_round_number).to eq(2)
+      end
+    end
+
+    context "when a new round starts before player_round_results includes it" do
+      let(:round_results_payload) do
+        [
+          {
+            "player" => { "id" => 185 },
+            "round_number" => 3,
+            "par_relative_score" => -1,
+            "tournament" => {
+              "id" => 20,
+              "rounds" => [
+                { "round_number" => 1, "status" => "OFFICIAL" },
+                { "round_number" => 2, "status" => "OFFICIAL" },
+                { "round_number" => 3, "status" => "OFFICIAL" },
+                { "round_number" => 4, "status" => "IN_PROGRESS" }
+              ]
+            }
+          }
+        ]
+      end
+      let(:scorecards_payload) do
+        (1..6).map do |hole|
+          { "player" => { "id" => 185 }, "round_number" => 4, "hole_number" => hole, "score" => 4, "par" => 4 }
+        end
+      end
+
+      it "fetches scorecards for the API live round, not the last completed round" do
+        scottie
+        expect(client).to receive(:fetch_all_player_scorecards)
+          .with(hash_including(tournament_ids: [ 20 ], player_ids: [ 185 ], round_number: 4))
+          .and_return(scorecards_payload)
+
+        described_class.new(tournament: tournament, player_ids: [ 185 ], client: client).call
+
+        live_row = tournament.tournament_round_results.find_by(golfer: scottie, round_number: 4)
+        expect(live_row).to be_present
+        expect(live_row.last_hole_completed).to eq(6)
+        expect(tournament.reload.live_round_number).to eq(4)
       end
     end
 

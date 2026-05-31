@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_30_185730) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -371,6 +371,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_30_185730) do
     t.decimal "fallback_prize_pool", precision: 12, scale: 2
     t.datetime "leaderboard_synced_at"
     t.datetime "live_results_synced_at"
+    t.integer "live_round_number"
     t.string "name"
     t.datetime "results_synced_at"
     t.datetime "starts_at"
