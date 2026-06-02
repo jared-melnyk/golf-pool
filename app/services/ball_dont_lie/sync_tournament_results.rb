@@ -40,6 +40,8 @@ module BallDontLie
         end
       end
 
+      PayoutCurveBuilder.refresh_dependent_tournaments!(@tournament)
+
       { created: created, updated: updated, total: api_results.size }
     end
   end
