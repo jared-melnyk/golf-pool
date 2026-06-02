@@ -108,17 +108,23 @@ class PoolTournamentsController < ApplicationController
     results_by_golfer = TournamentResult.where(tournament: @tournament, golfer_id: golfer_ids).index_by(&:golfer_id)
     odds_by_golfer = @pool_tournament.pool_tournament_odds.index_by(&:golfer_id)
 
+    PayoutCurveResolver.new(@tournament).resolve_and_persist! unless @tournament.completed?
+    @tournament.reload
+    payout_curve = PayoutCurveResolver.new(@tournament).curve
+
     @scoring_display = PoolTournamentScoringDisplay.new(
       tournament: @tournament,
       results_by_golfer: results_by_golfer,
       odds_by_golfer: odds_by_golfer,
       round_results: @round_results,
-      current_round: @current_round
+      current_round: @current_round,
+      payout_curve: payout_curve
     )
     @golfer_bonus_display = golfer_ids.index_with { |gid| @scoring_display.bonus_for(golfers_by_id[gid]) }
     @golfer_prize_money = golfer_ids.index_with { |gid| @scoring_display.prize_money_for(golfers_by_id[gid]) }
     @show_counted_dropped_badges = @scoring_display.show_counted_dropped_badges?
     @badges_projected = @scoring_display.badges_projected?
+    @projection_enabled = @scoring_display.projection_enabled?
   end
 
   private

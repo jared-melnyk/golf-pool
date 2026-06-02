@@ -163,8 +163,8 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).not_to include("projected")
     end
 
-    it "shows MC, $0, and projected badges when cut is posted via position_display" do
-      tournament.update!(total_prize_pool: 10_000_000)
+    it "shows MC and cut bonus after cut without projected counted/dropped when curve is hidden" do
+      tournament.update!(name: "Tour Championship", total_prize_pool: 10_000_000, payout_curve_source: "hidden")
       g_mc = Golfer.create!(name: "MC", external_id: "401")
       g_top = Golfer.create!(name: "Top", external_id: "402")
       g2 = Golfer.create!(name: "G2", external_id: "403")
@@ -194,10 +194,64 @@ RSpec.describe "PoolTournament scores", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("MC")
-      expect(response.body).to include("$0")
-      expect(response.body).to include("projected")
-      expect(response.body.scan("Counted (projected)").size).to eq(3)
-      expect(response.body).to include("Dropped (projected)")
+      expect(response.body).to include("$10,000")
+      expect(response.body).not_to include("projected")
+      expect(response.body).not_to include(">Counted</span>")
+      expect(response.body).not_to include(">Dropped</span>")
+      expect(response.body).to include("Total earnings and Counted/Dropped are shown after final prize money is posted")
+    end
+
+    it "shows projected prize, totals, and counted/dropped after cut when curve is available" do
+      tournament.update!(
+        name: "Live Projection Spec Open",
+        total_prize_pool: 10_000_000,
+        payout_curve_source: "static",
+        payout_curve: PgaPayoutProfiles.curve_payload_for("standard_cut")
+      )
+
+      high_prize = Golfer.create!(name: "Hideki Matsuyama", external_id: "601")
+      high_bonus = Golfer.create!(name: "Sahith Theegala", external_id: "602")
+      g3 = Golfer.create!(name: "G3", external_id: "603")
+      g4 = Golfer.create!(name: "G4", external_id: "604")
+
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: high_prize, slot: 1)
+        PickGolfer.create!(pick: p, golfer: high_bonus, slot: 2)
+        PickGolfer.create!(pick: p, golfer: g3, slot: 3)
+        PickGolfer.create!(pick: p, golfer: g4, slot: 4)
+      end
+
+      [ [ high_prize, 1_000 ], [ high_bonus, 5_000 ], [ g3, 500 ], [ g4, 500 ] ].each do |golfer, odds|
+        PoolTournamentOdds.create!(
+          pool_tournament: pool_tournament, golfer: golfer, american_odds: odds,
+          vendor: "dk", locked_at: Time.current
+        )
+        TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 1, score_to_par: 0, last_hole_completed: 18)
+        TournamentRoundResult.create!(tournament: tournament, golfer: golfer, round_number: 2, score_to_par: 0, last_hole_completed: 18)
+      end
+
+      cut_marker = Golfer.create!(name: "CutMarker", external_id: "605")
+      TournamentResult.create!(tournament: tournament, golfer: cut_marker, position_display: "CUT")
+      TournamentResult.create!(tournament: tournament, golfer: high_prize, position: 5, position_display: "T5")
+      TournamentResult.create!(tournament: tournament, golfer: high_bonus, position: 12, position_display: "T12")
+      TournamentResult.create!(tournament: tournament, golfer: g3, position: 30, position_display: "T30")
+      TournamentResult.create!(tournament: tournament, golfer: g4, position: 50, position_display: "T50")
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("(projected)")
+      expect(response.body).to include("Grey amounts are projected")
+      body = response.body
+      matsuyama_row = body[/Hideki Matsuyama.*?<\/tr>/m]
+      theegala_row = body[/Sahith Theegala.*?<\/tr>/m]
+      g4_row = body[/>\s*G4\s*<.*?<\/tr>/m]
+      expect(matsuyama_row).to include("Counted (projected)")
+      expect(matsuyama_row).not_to include("Dropped")
+      expect(theegala_row).to include("Counted (projected)")
+      expect(g4_row).to include("Dropped (projected)")
+      expect(matsuyama_row).to include("text-gray-400")
+      expect(matsuyama_row).to include("$")
     end
 
     it "shows Cut Made Bonus from live round data when no TournamentResult yet (round 3+ = made cut)" do
@@ -264,6 +318,60 @@ RSpec.describe "PoolTournament scores", type: :request do
       expect(response.body).to include("synthetic cut line")
       expect(response.body).to include("$10,000")
       expect(response.body).to include("MC")
+    end
+
+    it "counts golfers by prize plus bonus when the tournament is completed" do
+      pool_tournament
+      winner = Golfer.create!(name: "Winner", external_id: "9991")
+      tournament.update!(champion_golfer: winner)
+      high_prize = Golfer.create!(name: "Hideki Matsuyama", external_id: "601")
+      high_bonus = Golfer.create!(name: "Sahith Theegala", external_id: "602")
+      g3 = Golfer.create!(name: "G3", external_id: "603")
+      g4 = Golfer.create!(name: "G4", external_id: "604")
+
+      Pick.create!(user: member, pool_tournament: pool_tournament).tap do |p|
+        PickGolfer.create!(pick: p, golfer: high_prize, slot: 1)
+        PickGolfer.create!(pick: p, golfer: high_bonus, slot: 2)
+        PickGolfer.create!(pick: p, golfer: g3, slot: 3)
+        PickGolfer.create!(pick: p, golfer: g4, slot: 4)
+      end
+
+      TournamentResult.create!(tournament: tournament, golfer: high_prize, position: 5, prize_money: 800_000)
+      TournamentResult.create!(tournament: tournament, golfer: high_bonus, position: 12, prize_money: 300_000)
+      TournamentResult.create!(tournament: tournament, golfer: g3, position: 20, prize_money: 150_000)
+      TournamentResult.create!(tournament: tournament, golfer: g4, position: 40, prize_money: 50_000)
+
+      [ [ high_prize, 1_000 ], [ high_bonus, 5_000 ], [ g3, 2_000 ], [ g4, 500 ] ].each do |golfer, odds|
+        PoolTournamentOdds.create!(
+          pool_tournament: pool_tournament,
+          golfer: golfer,
+          american_odds: odds,
+          vendor: "dk",
+          locked_at: Time.current
+        )
+      end
+
+      client = instance_double(
+        BallDontLie::Client,
+        fetch_all_player_round_results: [],
+        fetch_all_player_scorecards: [],
+        fetch_all_tournament_results: [],
+        tournament_completed?: true
+      )
+      allow(BallDontLie::Client).to receive(:new).and_return(client)
+
+      get pool_pool_tournament_path(pool, pool_tournament)
+
+      expect(response).to have_http_status(:ok)
+      body = response.body
+      matsuyama_row = body[/Hideki Matsuyama.*?<\/tr>/m]
+      theegala_row = body[/Sahith Theegala.*?<\/tr>/m]
+      g4_row = body[/>\s*G4\s*<.*?<\/tr>/m]
+      expect(matsuyama_row).to include("Counted")
+      expect(matsuyama_row).not_to include("Dropped")
+      expect(theegala_row).to include("Counted")
+      expect(g4_row).to include("Dropped")
+      expect(body).to include("$1,370,000")
     end
 
     it "marks top 3 golfer scores as counted and one as dropped" do

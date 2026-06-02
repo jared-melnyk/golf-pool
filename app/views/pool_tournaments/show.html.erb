@@ -38,7 +38,7 @@
     <% pick = picks.first %>
     <%
       if @show_counted_dropped_badges
-        golfer_totals = pick.golfers.map { |g| [ g.id, @scoring_display.projected_total_for(g) || 0.to_d ] }
+        golfer_totals = pick.golfers.map { |g| [ g.id, @scoring_display.ranking_total_for_counted_dropped(g) || 0.to_d ] }
         counted_golfer_ids = golfer_totals.sort_by { |(_, total)| -total }.first(3).map(&:first)
       else
         counted_golfer_ids = []
@@ -61,9 +61,13 @@
                 </th>
               <% end %>
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Total</th>
-              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Prize Money</th>
+              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+                Prize Money<% if @badges_projected %> <span class="font-normal text-gray-400">(projected)</span><% end %>
+              </th>
               <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Cut Made Bonus</th>
-              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">Total Earnings</th>
+              <th class="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+                Total Earnings<% if @badges_projected %> <span class="font-normal text-gray-400">(projected)</span><% end %>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -111,7 +115,7 @@
                     <span class="ml-1 text-xs text-gray-500">(<%= player_result[:position] %>)</span>
                   <% end %>
                 </td>
-                <td class="px-3 py-3 text-right align-middle whitespace-nowrap text-gray-700">
+                <td class="px-3 py-3 text-right align-middle whitespace-nowrap <%= @badges_projected ? "text-gray-400" : "text-gray-700" %>">
                   <% if prize.nil? %>
                     —
                   <% else %>
@@ -127,7 +131,7 @@
                     —
                   <% end %>
                 </td>
-                <td class="px-3 py-3 text-right align-middle whitespace-nowrap text-gray-700 font-medium">
+                <td class="px-3 py-3 text-right align-middle whitespace-nowrap font-medium <%= @badges_projected ? "text-gray-400" : "text-gray-700" %>">
                   <% if total_earnings.nil? %>
                     —
                   <% else %>
@@ -144,7 +148,13 @@
             <%
               round_totals = rounds.map { |r| pick.golfers.sum { |g| ((@round_results[g.external_id&.to_i] || {})[:rounds] || {})[r]&.dig(:score_to_par).to_i } }
               total_to_par_sum = pick.golfers.sum { |g| ((@round_results[g.external_id&.to_i] || {})[:total_to_par].to_i) }
-              prize_sum = pick.golfers.sum { |g| @golfer_prize_money[g.id].to_d }
+              prize_sum = if @show_counted_dropped_badges
+                pick.golfers
+                  .select { |g| counted_golfer_ids.include?(g.id) }
+                  .sum { |g| @golfer_prize_money[g.id].to_d }
+              else
+                pick.golfers.sum { |g| @golfer_prize_money[g.id].to_d }
+              end
               bonus_sum = pick.golfers.sum { |g| b = @golfer_bonus_display[g.id]; b.is_a?(Numeric) ? b.to_d : 0 }
               total_earnings_sum = if @show_counted_dropped_badges
                 pick.golfers
@@ -154,7 +164,8 @@
                 0.to_d
               end
               any_round_data = round_totals.any?(&:nonzero?) || total_to_par_sum.nonzero?
-              any_money_data = prize_sum.nonzero? || bonus_sum.nonzero? || @tournament.completed? ||
+              any_prize_sum = @tournament.completed? || (@badges_projected && prize_sum.positive?)
+              any_total_earnings = (@tournament.completed? || @badges_projected) &&
                 pick.golfers.any? { |g| !@scoring_display.total_earnings_for(g).nil? }
               format_score = ->(v) { v.zero? ? "E" : (v.positive? ? "+#{v}" : v.to_s) }
             %>
@@ -168,8 +179,8 @@
               <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
                 <%= any_round_data ? format_total_to_par(total_to_par_sum) : "—" %>
               </td>
-              <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
-                <% if @tournament.completed? %>
+              <td class="px-3 py-3 text-right align-middle whitespace-nowrap <%= @badges_projected ? "text-gray-400" : "" %>">
+                <% if any_prize_sum %>
                   $<%= number_with_delimiter(prize_sum.to_i) %>
                 <% else %>
                   —
@@ -178,17 +189,22 @@
               <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
                 $<%= number_with_delimiter(bonus_sum.to_i) %>
               </td>
-              <td class="px-3 py-3 text-right align-middle whitespace-nowrap">
-                <%= any_money_data ? "$#{number_with_delimiter(total_earnings_sum.to_i)}" : "—" %>
+              <td class="px-3 py-3 text-right align-middle whitespace-nowrap <%= @badges_projected ? "text-gray-400" : "" %>">
+                <%= any_total_earnings ? "$#{number_with_delimiter(total_earnings_sum.to_i)}" : "—" %>
               </td>
             </tr>
           </tbody>
         </table>
         <p class="text-xs text-gray-500 mt-2">
           <% if @badges_projected %>
-            Projected Counted/Dropped uses Cut Made Bonus only until final prize money is posted.
+            Grey amounts are projected from live position and last year's payout pattern (or a standard Tour table).
+            Final prize money and Counted/Dropped are official after the tournament ends.
+          <% elsif !@tournament.completed? %>
+            Total earnings and Counted/Dropped are shown after final prize money is posted.
+            Cut Made Bonus reflects make-cut status only while play is in progress.
+          <% else %>
+            Excluded golfers do not count toward the Total row.
           <% end %>
-          Excluded golfers do not count toward the Total row.
         </p>
       </div>
     </div>
