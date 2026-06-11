@@ -92,14 +92,6 @@ class GameSetupsController < ApplicationController
     @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course) if @game.round.present?
   end
 
-  def tee_selector_for_round(round, course_payload)
-    return nil if round.blank? || course_payload.blank?
-
-    index = male_tees_for(course_payload).find_index { |tee| tee["tee_name"] == round.tee_name }
-    index ? "male:#{index}" : nil
-  end
-
-
   def save_course!
     if use_existing_event_round?
       save_existing_event_round!

@@ -68,4 +68,29 @@ module RoundSnapshotBuildable
     course_name = course_payload["course_name"].presence || course_payload["club_name"].presence || "Round"
     "Round at #{course_name}"
   end
+
+  def tee_selector_for_round(round, course_payload)
+    return nil if round.blank? || course_payload.blank?
+
+    index = male_tees_for(course_payload).find_index { |tee| tee["tee_name"] == round.tee_name }
+    index ? "male:#{index}" : nil
+  end
+
+  def assign_snapshot_to_round!(round, snapshot, round_params)
+    round.assign_attributes(
+      name: round_params.fetch(:name),
+      played_on: round_params.fetch(:played_on),
+      golf_course_api_course_id: snapshot.fetch(:golf_course_api_course_id),
+      course_name: snapshot.fetch(:course_name),
+      club_name: snapshot[:club_name],
+      tee_name: snapshot.fetch(:tee_name),
+      tee_gender: snapshot.fetch(:tee_gender),
+      course_rating: snapshot.fetch(:course_rating),
+      slope_rating: snapshot.fetch(:slope_rating),
+      par_total: snapshot.fetch(:par_total),
+      hole_pars: snapshot.fetch(:hole_pars),
+      hole_handicaps: snapshot.fetch(:hole_handicaps),
+      course_snapshot: snapshot.fetch(:course_snapshot)
+    )
+  end
 end

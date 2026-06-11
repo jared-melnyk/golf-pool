@@ -22,7 +22,7 @@ class EventsController < ApplicationController
     if @event.member?(current_user)
       @membership = @event.event_memberships.find_by!(user: current_user)
       @memberships = @event.event_memberships.includes(:user).order("users.name")
-      @rounds = @event.rounds.order(played_on: :asc, created_at: :asc)
+      @rounds = @event.rounds.includes(:games).order(played_on: :asc, created_at: :asc)
     else
       render :show_join
     end
@@ -43,7 +43,7 @@ class EventsController < ApplicationController
     else
       @membership = @event.event_memberships.find_by!(user: current_user)
       @memberships = @event.event_memberships.includes(:user).order("users.name")
-      @rounds = @event.rounds.order(played_on: :asc, created_at: :asc)
+      @rounds = @event.rounds.includes(:games).order(played_on: :asc, created_at: :asc)
       render :show, status: :unprocessable_entity
     end
   end

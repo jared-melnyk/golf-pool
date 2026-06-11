@@ -180,7 +180,154 @@ RSpec.describe "Rounds", type: :request do
 
       expect(response).to redirect_to(event_path(event))
       follow_redirect!
-      expect(response.body).to include("Cannot create rounds when an event is completed.")
+      expect(response.body).to include("Cannot manage rounds when an event is completed.")
+    end
+  end
+
+  describe "GET /events/:event_token/rounds/:id/edit" do
+    let(:round) do
+      Round.create!(
+        event: event,
+        name: "Saturday",
+        played_on: Date.new(2026, 6, 14),
+        golf_course_api_course_id: 99,
+        course_name: "Course No. 1",
+        club_name: "Murray Golf Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 72.1,
+        slope_rating: 131,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: {
+          "id" => 99,
+          "club_name" => "Murray Golf Club",
+          "course_name" => "Course No. 1",
+          "tees" => { "male" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ] }
+        }
+      )
+    end
+
+    it "shows the edit form with existing round data" do
+      allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+      get edit_event_round_path(event, round)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Edit round")
+      expect(response.body).to include('value="Saturday"')
+      expect(response.body).to include('value="99"')
+    end
+  end
+
+  describe "PATCH /events/:event_token/rounds/:id" do
+    let(:client) { instance_double(GolfCourseApi::Client) }
+    let(:round) do
+      Round.create!(
+        event: event,
+        name: "Old name",
+        played_on: Date.new(2026, 6, 14),
+        golf_course_api_course_id: 99,
+        course_name: "Course No. 1",
+        club_name: "Murray Golf Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 72.1,
+        slope_rating: 131,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 99 }
+      )
+    end
+
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
+      allow(GolfCourseApi::Client).to receive(:new).and_return(client)
+      allow(client).to receive(:course).with(id: 99).and_return(
+        {
+          "id" => 99,
+          "club_name" => "Murray Golf Club",
+          "course_name" => "Course No. 1",
+          "tees" => {
+            "male" => [
+              {
+                "tee_name" => "Blue",
+                "number_of_holes" => 18,
+                "course_rating" => 72.1,
+                "slope_rating" => 131,
+                "par_total" => 72,
+                "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } }
+              }
+            ]
+          }
+        }
+      )
+    end
+
+    it "allows a commissioner to update a round" do
+      allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+      patch event_round_path(event, round), params: {
+        round: {
+          name: "Updated round",
+          played_on: "2026-06-15",
+          golf_course_api_course_id: "99",
+          tee_selector: "male:0"
+        }
+      }
+
+      expect(response).to redirect_to(event_path(event))
+      expect(round.reload.name).to eq("Updated round")
+      expect(round.played_on).to eq(Date.new(2026, 6, 15))
+    end
+  end
+
+  describe "DELETE /events/:event_token/rounds/:id" do
+    let!(:round) do
+      Round.create!(
+        event: event,
+        name: "Saturday",
+        played_on: Date.new(2026, 6, 14),
+        golf_course_api_course_id: 99,
+        course_name: "Course No. 1",
+        club_name: "Murray Golf Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 72.1,
+        slope_rating: 131,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 99 }
+      )
+    end
+
+    it "allows a commissioner to delete an unused round" do
+      allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+      expect do
+        delete event_round_path(event, round)
+      end.to change(Round, :count).by(-1)
+
+      expect(response).to redirect_to(event_path(event))
+    end
+
+    it "blocks deletion when games use the round" do
+      user = commissioner
+      game = Game.create!(name: "Best Ball", creator: user, status: "draft", event: event, round: round)
+      GameMembership.create!(game: game, user: user, role: "host")
+      allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+      expect do
+        delete event_round_path(event, round)
+      end.not_to change(Round, :count)
+
+      expect(response).to redirect_to(event_path(event))
+      follow_redirect!
+      expect(response.body).to include("Cannot delete this round")
     end
   end
 end
