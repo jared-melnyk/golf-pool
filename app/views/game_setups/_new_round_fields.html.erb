@@ -1,0 +1,46 @@
+<% round_source_target = local_assigns[:round_source_target] %>
+<% input_data = round_source_target.present? ? { round_source_target: round_source_target, required_when_enabled: "true" } : {} %>
+
+<div>
+  <%= label_tag "round[played_on]", "Date played", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= date_field_tag "round[played_on]", round_played_on,
+        required: round_source_target.blank?,
+        class: "rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500",
+        data: input_data %>
+  <p class="text-xs text-gray-500 mt-1">When is this round?</p>
+</div>
+
+<div class="relative">
+  <%= label_tag :course_search_query, "Course or club name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= text_field_tag :course_search_query, search_query,
+        id: "course_search_query",
+        autocomplete: "off",
+        role: "combobox",
+        "aria-expanded": "false",
+        "aria-controls": "course_search_results",
+        "aria-autocomplete": "list",
+        placeholder: "Search courses…",
+        class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500",
+        data: {
+          course_search_target: "input",
+          action: "input->course-search#onInput focus->course-search#onFocus"
+        } %>
+
+  <div data-course-search-target="dropdown"
+       class="hidden absolute z-20 mt-1 w-full rounded-md border border-gray-200 bg-white shadow-lg max-h-64 overflow-y-auto">
+    <ul id="course_search_results"
+        data-course-search-target="results"
+        role="listbox"
+        class="py-1 divide-y divide-gray-100"></ul>
+  </div>
+  <p class="text-xs text-gray-500 mt-1">Type at least 2 characters to search.</p>
+</div>
+
+<div data-course-search-target="selection" class="space-y-4 border-t border-gray-100 pt-4">
+  <%= render "shared/course_searches/selection",
+        selected_course: selected_course,
+        tee_options: tee_options,
+        selected_tee_selector: selected_tee_selector,
+        error_message: course_selection_error,
+        round_source_target: round_source_target %>
+</div>

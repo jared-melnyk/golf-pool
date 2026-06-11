@@ -1,4 +1,6 @@
-<%# Locals: selected_course, tee_options, selected_tee_selector, error_message (optional) %>
+<%# Locals: selected_course, tee_options, selected_tee_selector, error_message (optional), round_source_target (optional) %>
+<% round_source_target = local_assigns[:round_source_target] %>
+<% input_data = round_source_target.present? ? { round_source_target: round_source_target, required_when_enabled: "true" } : {} %>
 <% if local_assigns[:error_message].present? %>
   <p class="text-sm text-red-700"><%= error_message %></p>
 <% end %>
@@ -13,7 +15,8 @@
     <% end %>
   </p>
   <%= hidden_field_tag "round[golf_course_api_course_id]", selected_course&.dig("id"),
-        id: "round_golf_course_api_course_id" %>
+        id: "round_golf_course_api_course_id",
+        data: input_data %>
 </div>
 
 <div>
@@ -21,9 +24,10 @@
   <%= select_tag "round[tee_selector]",
         options_for_select(tee_options.map { |o| [ o[:label], o[:value] ] }, selected_tee_selector),
         include_blank: selected_course.present? ? "Select a tee" : "Select a course first",
-        required: true,
+        required: round_source_target.blank?,
         disabled: selected_course.blank?,
-        class: "w-full rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+        class: "w-full rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500",
+        data: input_data %>
   <% if selected_course.present? && tee_options.empty? %>
     <p class="mt-1 text-sm text-amber-700">No supported 18-hole male tees were found for this course.</p>
   <% end %>

@@ -22,5 +22,15 @@ module Games
 
       [ city, state ].compact.join(", ")
     end
+
+    def event_round_label(round)
+      [
+        round.name,
+        round.played_on.strftime("%b %-d, %Y"),
+        round.club_name,
+        round.course_name,
+        "#{round.tee_gender.titleize} #{round.tee_name}"
+      ].compact.join(" · ")
+    end
   end
 end
