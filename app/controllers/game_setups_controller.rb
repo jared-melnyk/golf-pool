@@ -54,6 +54,7 @@ class GameSetupsController < ApplicationController
   end
 
   def load_course_step_state
+    @event_rounds = @game.event&.rounds&.order(:played_on, :name) || Round.none
     @search_query = ""
     @course_search_results = []
     @selected_course = nil
@@ -61,8 +62,10 @@ class GameSetupsController < ApplicationController
     @selected_tee_selector = params.dig(:round, :tee_selector)
     @round_played_on = round_played_on_from_params
     @course_selection_error = nil
+    @round_source = default_round_source
+    @selected_existing_round_id = selected_existing_round_id_for_form
 
-    load_saved_round_course_state if @game.round.present?
+    load_saved_round_course_state if @game.round.present? && @round_source == "new"
   end
 
   def round_played_on_from_params
@@ -98,6 +101,22 @@ class GameSetupsController < ApplicationController
 
 
   def save_course!
+    if use_existing_event_round?
+      save_existing_event_round!
+    else
+      save_new_round!
+    end
+  end
+
+  def save_existing_event_round!
+    round = @game.event.rounds.find(params.require(:existing_round_id))
+    @game.update!(round: round, name: @game.suggested_name.presence || @game.name)
+    redirect_to game_setup_path(@game, step: "format")
+  rescue ActiveRecord::RecordNotFound
+    redirect_to game_setup_path(@game, step: "course"), alert: "Select a round from this event."
+  end
+
+  def save_new_round!
     snapshot = build_snapshot(
       course_id: round_params.fetch(:golf_course_api_course_id).to_i,
       tee_selector: round_params.fetch(:tee_selector)
@@ -123,6 +142,27 @@ class GameSetupsController < ApplicationController
     redirect_to game_setup_path(@game, step: "format")
   rescue StandardError => e
     redirect_to game_setup_path(@game, step: "course"), alert: e.message
+  end
+
+  def use_existing_event_round?
+    @game.event.present? && params[:round_source] == "existing"
+  end
+
+  def default_round_source
+    return "new" if @game.event.blank?
+
+    source = params[:round_source].presence_in(%w[existing new])
+    return source if source.present?
+    return "existing" if @game.round.present? && @event_rounds.exists?(id: @game.round_id)
+
+    @event_rounds.any? ? "existing" : "new"
+  end
+
+  def selected_existing_round_id_for_form
+    return params[:existing_round_id] if params[:existing_round_id].present?
+    return @game.round_id if @game.round.present? && @event_rounds.exists?(id: @game.round_id)
+
+    nil
   end
 
   def save_format!

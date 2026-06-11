@@ -69,6 +69,87 @@ RSpec.describe "Game setups", type: :request do
     expect(response.body).to include(game_setup_path(game, step: "format"))
   end
 
+  describe "event games with existing rounds" do
+    let(:event) { Event.create!(name: "Bandon 2026") }
+    let(:event_round) do
+      Round.create!(
+        event: event,
+        name: "Saturday morning",
+        played_on: Date.new(2026, 6, 14),
+        golf_course_api_course_id: 1,
+        course_name: "Wolf River Golf Park",
+        club_name: "Wolf River Golf Park",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 71.1,
+        slope_rating: 124,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 1 }
+      )
+    end
+    let(:event_game) { Game.create!(name: "Saturday game", creator: user, status: "draft", event: event) }
+
+    before do
+      EventMembership.create!(event: event, user: user, role: "commissioner")
+      GameMembership.create!(game: event_game, user: user, role: "host")
+      event_round
+    end
+
+    it "shows existing round choices on the course step" do
+      get game_setup_path(event_game, step: "course")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Use an existing event round")
+      expect(response.body).to include("Saturday morning")
+      expect(response.body).to include("Wolf River Golf Park")
+    end
+
+    it "links an existing event round without creating a new round" do
+      expect do
+        patch game_setup_path(event_game), params: {
+          step: "course",
+          round_source: "existing",
+          existing_round_id: event_round.id
+        }
+      end.not_to change(Round, :count)
+
+      expect(response).to redirect_to(game_setup_path(event_game, step: "format"))
+      expect(event_game.reload.round).to eq(event_round)
+    end
+
+    it "rejects an existing round id from another event" do
+      other_event = Event.create!(name: "Other trip")
+      other_round = Round.create!(
+        event: other_event,
+        name: "Other round",
+        played_on: Date.current,
+        golf_course_api_course_id: 2,
+        course_name: "Other Course",
+        club_name: "Other Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 72.0,
+        slope_rating: 128,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 2 }
+      )
+
+      patch game_setup_path(event_game), params: {
+        step: "course",
+        round_source: "existing",
+        existing_round_id: other_round.id
+      }
+
+      expect(response).to redirect_to(game_setup_path(event_game, step: "course"))
+      expect(flash[:alert]).to eq("Select a round from this event.")
+      expect(event_game.reload.round).to be_nil
+    end
+  end
+
   it "returns course search results as a dropdown partial without a full page reload" do
     allow_any_instance_of(GameSetupsController).to receive(:golf_course_api_key_configured?).and_return(true)
     allow_any_instance_of(GameSetupsController).to receive(:golf_course_client).and_return(
