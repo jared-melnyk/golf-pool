@@ -3,6 +3,7 @@
 class GameSetupsController < ApplicationController
   include GameAuthorizable
   include RoundSnapshotBuildable
+  include CourseSearchActions
 
   before_action :set_game
   before_action :require_game_manager!
@@ -14,25 +15,16 @@ class GameSetupsController < ApplicationController
     load_course_step_state if @step == "course"
   end
 
-  def search_courses
-    @search_query = params[:search_query].to_s.strip
-    @course_search_error = nil
-    @course_search_results = fetch_course_search_results(@search_query)
-    render partial: "game_setups/course_search_results",
-           locals: {
-             course_search_results: @course_search_results,
-             course_search_error: @course_search_error
-           },
-           layout: false
-  end
-
   def select_course
     unless golf_course_api_key_configured?
-      return render_course_selection_error(GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE)
+      return render_course_selection_error(
+        partial: "shared/course_searches/selection",
+        message: GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
+      )
     end
 
     select_course_by_id(params[:course_id].to_i)
-    render partial: "game_setups/course_selection",
+    render partial: "shared/course_searches/selection",
            locals: {
              selected_course: @selected_course,
              tee_options: @tee_options,
@@ -41,7 +33,7 @@ class GameSetupsController < ApplicationController
            },
            layout: false
   rescue StandardError => e
-    render_course_selection_error(e.message)
+    render_course_selection_error(partial: "shared/course_searches/selection", message: e.message)
   end
 
   def update
@@ -80,23 +72,6 @@ class GameSetupsController < ApplicationController
     @game.round&.played_on || Date.current
   end
 
-  def fetch_course_search_results(query)
-    return [] if query.blank?
-
-    unless golf_course_api_key_configured?
-      @course_search_error = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
-      return []
-    end
-
-    GolfCourseApi::CourseSearch.new(client: golf_course_client).call(query)
-  rescue GolfCourseApi::MissingApiKeyError => e
-    @course_search_error = e.message
-    []
-  rescue StandardError => e
-    @course_search_error = "Could not search courses: #{e.message}"
-    []
-  end
-
   def load_saved_round_course_state
     return unless golf_course_api_key_configured?
 
@@ -110,21 +85,8 @@ class GameSetupsController < ApplicationController
   end
 
   def select_course_by_id(course_id)
-    @selected_course = normalize_course_payload(golf_course_client.course(id: course_id))
-    @tee_options = tee_options_for(@selected_course)
+    load_selected_course(course_id)
     @selected_tee_selector ||= tee_selector_for_round(@game.round, @selected_course) if @game.round.present?
-  end
-
-  def render_course_selection_error(message)
-    render partial: "game_setups/course_selection",
-           locals: {
-             error_message: message,
-             selected_course: nil,
-             tee_options: [],
-             selected_tee_selector: nil
-           },
-           layout: false,
-           status: :unprocessable_entity
   end
 
   def tee_selector_for_round(round, course_payload)

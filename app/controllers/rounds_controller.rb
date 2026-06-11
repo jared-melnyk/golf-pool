@@ -1,36 +1,43 @@
 class RoundsController < ApplicationController
   include RoundSnapshotBuildable
+  include CourseSearchActions
 
   before_action :set_event
   before_action :require_event_member!
-  before_action :require_commissioner!, only: [ :new, :create ]
-  before_action :require_event_not_completed!, only: [ :new, :create ]
+  before_action :require_commissioner!, only: [ :new, :create, :search_courses, :select_course ]
+  before_action :require_event_not_completed!, only: [ :new, :create, :search_courses, :select_course ]
 
   def new
     @round = @event.rounds.new(played_on: Date.current)
-    @search_query = params[:search_query].to_s.strip
-    @course_search_results = []
+    @search_query = ""
     @selected_course = nil
     @tee_options = []
+    @selected_tee_selector = nil
+    @default_round_name = nil
+    @course_selection_error = nil
+  end
 
-    return if @search_query.blank?
-
+  def select_course
     unless golf_course_api_key_configured?
-      flash.now[:alert] = GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
-      return
+      return render_course_selection_error(
+        partial: "rounds/course_selection",
+        message: GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
+      )
     end
 
-    @course_search_results = GolfCourseApi::CourseSearch.new(client: golf_course_client).call(@search_query)
-
-    return if params[:course_id].blank?
-
-    @selected_course = normalize_course_payload(golf_course_client.course(id: params[:course_id].to_i))
-    @tee_options = tee_options_for(@selected_course)
-    @round.name = default_round_name_for(@selected_course) if @round.name.blank?
-  rescue GolfCourseApi::MissingApiKeyError => e
-    flash.now[:alert] = e.message
+    load_selected_course(params[:course_id].to_i)
+    @default_round_name = default_round_name_for(@selected_course)
+    render partial: "rounds/course_selection",
+           locals: {
+             selected_course: @selected_course,
+             tee_options: @tee_options,
+             selected_tee_selector: @selected_tee_selector,
+             default_round_name: @default_round_name,
+             error_message: nil
+           },
+           layout: false
   rescue StandardError => e
-    flash.now[:alert] = "Could not load GolfCourseAPI data: #{e.message}"
+    render_course_selection_error(partial: "rounds/course_selection", message: e.message)
   end
 
   def create
@@ -58,26 +65,17 @@ class RoundsController < ApplicationController
     if @round.save
       redirect_to event_path(@event), notice: "Round created."
     else
-      @search_query = ""
-      @course_search_results = []
-      @selected_course = nil
-      @tee_options = []
+      load_new_form_state_after_error
       render :new, status: :unprocessable_entity
     end
   rescue GolfCourseApi::MissingApiKeyError => e
     @round = @event.rounds.new(round_params.except(:tee_selector))
-    @search_query = ""
-    @course_search_results = []
-    @selected_course = nil
-    @tee_options = []
+    load_new_form_state_after_error
     flash.now[:alert] = e.message
     render :new, status: :unprocessable_entity
   rescue StandardError => e
     @round = @event.rounds.new(round_params.except(:tee_selector))
-    @search_query = ""
-    @course_search_results = []
-    @selected_course = nil
-    @tee_options = []
+    load_new_form_state_after_error
     flash.now[:alert] = "Could not create round: #{e.message}"
     render :new, status: :unprocessable_entity
   end
@@ -108,5 +106,14 @@ class RoundsController < ApplicationController
     return unless @event.status == "completed"
 
     redirect_to event_path(@event), alert: "Cannot create rounds when an event is completed."
+  end
+
+  def load_new_form_state_after_error
+    @search_query = ""
+    @selected_course = nil
+    @tee_options = []
+    @selected_tee_selector = round_params[:tee_selector]
+    @default_round_name = round_params[:name]
+    @course_selection_error = nil
   end
 end
