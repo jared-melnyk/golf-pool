@@ -12,17 +12,15 @@ RSpec.describe "Rounds", type: :request do
   end
 
   describe "GET /events/:event_token/rounds/new" do
-    it "shows setup instructions when GOLF_COURSE_API_KEY is not set" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return(nil)
-
+    it "shows the typeahead course search UI" do
       allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
 
-      get new_event_round_path(event), params: { search_query: "pinehurst" }
+      get new_event_round_path(event)
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("GOLF_COURSE_API_KEY")
-      expect(response.body).to include(".env.example")
+      expect(response.body).to include('data-controller="course-search"')
+      expect(response.body).to include("Type at least 2 characters to search.")
+      expect(response.body).to include('name="round[name]"')
     end
 
     context "when GOLF_COURSE_API_KEY is configured" do
@@ -48,15 +46,30 @@ RSpec.describe "Rounds", type: :request do
         )
       end
 
-      it "shows only male tee options in v1" do
+      it "returns course search results as a dropdown partial" do
         allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
 
-        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+        get search_courses_event_rounds_path(event), params: { search_query: "murray" }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
         expect(response).to have_http_status(:ok)
+        expect(response.body).to include("Murray Golf Club")
+        expect(response.body).to include('data-action="course-search#pick"')
+        expect(response.body).not_to include("<!DOCTYPE html>")
+      end
+
+      it "returns course selection with tee options and default round name" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+        get select_course_event_rounds_path(event), params: { course_id: 99 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('name="round[golf_course_api_course_id]"')
+        expect(response.body).to include('value="99"')
+        expect(response.body).to include('name="round[tee_selector]"')
         expect(response.body).to include("Male")
         expect(response.body).not_to include("Female")
         expect(response.body).to include("6,348 yds")
+        expect(response.body).to include('value="Round at Course No. 1"')
       end
 
       it "shows tee options when course payload is wrapped under course key" do
@@ -74,29 +87,10 @@ RSpec.describe "Rounds", type: :request do
           }
         )
 
-        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
+        get select_course_event_rounds_path(event), params: { course_id: 99 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Blue")
-      end
-
-      it "prefills a default round name after selecting a course" do
-        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
-        allow(Date).to receive(:current).and_return(Date.new(2026, 6, 10))
-
-        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).to include('value="Round at Course No. 1"')
-      end
-
-      it "hides search result links after a course is selected" do
-        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
-
-        get new_event_round_path(event), params: { search_query: "murray", course_id: 99 }
-
-        expect(response).to have_http_status(:ok)
-        expect(response.body).not_to include("course_id=99&amp;search_query=murray")
       end
     end
   end

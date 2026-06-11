@@ -17,11 +17,14 @@
 </div>
 
 <div>
-  <%= label_tag "round[tee_selector]", "Tee", class: "block text-sm font-medium text-gray-700 mb-1" %>
+  <%= label_tag "round[tee_selector]", "Tee (18-hole only)", class: "block text-sm font-medium text-gray-700 mb-1" %>
   <%= select_tag "round[tee_selector]",
         options_for_select(tee_options.map { |o| [ o[:label], o[:value] ] }, selected_tee_selector),
         include_blank: selected_course.present? ? "Select a tee" : "Select a course first",
         required: true,
         disabled: selected_course.blank?,
-        class: "w-full rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500" %>
+        class: "w-full rounded border border-gray-300 px-3 py-2 disabled:bg-gray-100 disabled:text-gray-500 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
+  <% if selected_course.present? && tee_options.empty? %>
+    <p class="mt-1 text-sm text-amber-700">No supported 18-hole male tees were found for this course.</p>
+  <% end %>
 </div>

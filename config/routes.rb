@@ -43,7 +43,12 @@ Rails.application.routes.draw do
   resources :events, param: :token do
     post :join, on: :member
     resources :event_memberships, only: [ :destroy, :update ]
-    resources :rounds, only: [ :new, :create ]
+    resources :rounds, only: [ :new, :create ] do
+      collection do
+        get :search_courses
+        get :select_course
+      end
+    end
     resources :games, only: [ :new, :create ]
   end
 
