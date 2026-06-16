@@ -32,6 +32,23 @@
   <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
     <%= render "games/scorecard/leaderboard_cha_cha_cha", game: @game, scorecard: @scorecard %>
   <% end %>
+<% elsif @game.vegas? %>
+  <% team_a = @scorecard[:teams][0] %>
+  <% team_b = @scorecard[:teams][1] %>
+
+  <%= turbo_stream.replace dom_id(@game, :vegas_wash) do %>
+    <%= render "games/scorecard/vegas_wash_summary", game: @game, scorecard: @scorecard %>
+  <% end %>
+
+  <% @scorecard[:holes].select { |h| h[:hole_number] >= @hole_number }.each do |hole| %>
+    <%= turbo_stream.replace dom_id(@game, "vegas_hole_#{hole[:hole_number]}") do %>
+      <%= render "games/scorecard/vegas_hole_row",
+            game: @game,
+            hole: hole,
+            team_a: team_a,
+            team_b: team_b %>
+    <% end %>
+  <% end %>
 <% elsif !@game.forty_score? %>
   <%= turbo_stream.replace dom_id(@game_team, "best_ball_hole_#{@hole_number}") do %>
     <%= render "games/scorecard/best_ball_cell",

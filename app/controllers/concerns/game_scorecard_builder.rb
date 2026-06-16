@@ -12,6 +12,8 @@ module GameScorecardBuilder
       FortyScoreScorecard.new(preloaded).call
     elsif game.cha_cha_cha?
       ChaChaChaScorecard.new(preloaded).call
+    elsif game.vegas?
+      VegasScorecard.new(preloaded).call
     else
       BestBallScorecard.new(preloaded).call
     end

@@ -21,7 +21,7 @@ gem "jbuilder"
 gem "bcrypt", "~> 3.1.22"
 
 # Transitive dependency of mail (Rails); pin so bundler resolves a patched release.
-gem "net-imap", ">= 0.6.4"
+gem "net-imap", ">= 0.6.4.1"
 
 # Load .env in development and test (API keys, etc.)
 gem "dotenv-rails", groups: [ :development, :test ]
