@@ -1,0 +1,9 @@
+<%# locals: game, scorecard %>
+<div id="<%= dom_id(game, :vegas_wash) %>" class="border border-emerald-200 rounded-lg p-4 bg-emerald-50 mb-4">
+  <p class="text-lg font-semibold text-emerald-900"><%= scorecard[:wash][:label] %></p>
+  <% if scorecard[:wash][:margin].present? && !scorecard[:wash][:margin].zero? %>
+    <p class="text-xs text-emerald-700 mt-1">
+      Reference: <%= scorecard[:teams].find { |t| t[:id] == scorecard[:reference_team_id] }&.dig(:name) %>
+    </p>
+  <% end %>
+</div>

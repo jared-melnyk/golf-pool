@@ -8,6 +8,8 @@
       <p class="text-sm text-amber-800 mt-2">40 Score groups need 3 or 4 players each.</p>
     <% elsif @game.cha_cha_cha? %>
       <p class="text-sm text-amber-800 mt-2">Cha-Cha-Cha (1-2-3) groups need 3 or 4 players each.</p>
+    <% elsif @game.vegas? %>
+      <p class="text-sm text-amber-800 mt-2">Vegas requires exactly 2 teams of 2 players each.</p>
     <% end %>
   </div>
 
@@ -34,7 +36,13 @@
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">
-            Players (select <%= (@game.forty_score? || @game.cha_cha_cha?) ? "3–4" : "1–4" %>)
+            Players (select <%= if @game.forty_score? || @game.cha_cha_cha?
+              "3–4"
+            elsif @game.vegas?
+              "2"
+            else
+              "1–4"
+            end %>)
           </label>
           <% current_ids = team&.game_team_players&.map(&:user_id) || [] %>
           <% @members.each do |user| %>

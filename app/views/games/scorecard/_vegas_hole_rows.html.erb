@@ -1,0 +1,8 @@
+<%# locals: game, scorecard, team_a, team_b %>
+<% scorecard[:holes].each do |hole| %>
+  <%= render "games/scorecard/vegas_hole_row",
+        game: game,
+        hole: hole,
+        team_a: team_a,
+        team_b: team_b %>
+<% end %>

@@ -1,5 +1,5 @@
 class Game < ApplicationRecord
-  GAME_TYPES = %w[best_ball forty_score cha_cha_cha].freeze
+  GAME_TYPES = %w[best_ball forty_score cha_cha_cha vegas].freeze
   STATUSES = %w[draft active completed].freeze
 
   belongs_to :event, optional: true
@@ -97,10 +97,14 @@ class Game < ApplicationRecord
     game_type == "cha_cha_cha"
   end
 
+  def vegas?
+    game_type == "vegas"
+  end
+
   def playing_handicap_allowance_percent
     case game_type
     when "best_ball", "cha_cha_cha" then 85
-    when "forty_score" then 100
+    when "forty_score", "vegas" then 100
     else 100
     end
   end

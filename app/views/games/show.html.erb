@@ -42,6 +42,8 @@
       <%= render "scorecard_forty_score", scorecard: @scorecard, game: @game, event: @event %>
     <% elsif @game.cha_cha_cha? %>
       <%= render "scorecard_cha_cha_cha", scorecard: @scorecard, game: @game, event: @event %>
+    <% elsif @game.vegas? %>
+      <%= render "scorecard_vegas", scorecard: @scorecard, game: @game, event: @event %>
     <% else %>
       <%= render "scorecard", scorecard: @scorecard, game: @game, event: @event %>
     <% end %>

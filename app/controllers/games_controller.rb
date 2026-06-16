@@ -68,6 +68,7 @@ class GamesController < ApplicationController
 
       enforce_forty_score_team_sizes! if @game.forty_score?
       enforce_cha_cha_cha_team_sizes! if @game.cha_cha_cha?
+      enforce_vegas_team_sizes! if @game.vegas?
     end
     redirect_to game_path(@game), notice: "Teams saved."
   rescue ActiveRecord::RecordInvalid => e
@@ -162,6 +163,14 @@ class GamesController < ApplicationController
         "Cha-Cha-Cha (1-2-3) requires 3 or 4 players per group (#{team.name} has #{n})."
       )
       raise ActiveRecord::RecordInvalid.new(team)
+    end
+  end
+
+  def enforce_vegas_team_sizes!
+    teams = @game.game_teams.reload.to_a
+    unless Vegas.valid_game_roster?(teams.map { |t| t.game_team_players.to_a })
+      @game.errors.add(:base, "Vegas requires exactly 2 teams of 2 players each.")
+      raise ActiveRecord::RecordInvalid.new(@game)
     end
   end
 end

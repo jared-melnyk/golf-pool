@@ -1,0 +1,35 @@
+<%# locals: game, hole, team_a, team_b %>
+<tr class="border-b border-gray-100 hover:bg-gray-50" id="<%= dom_id(game, "vegas_hole_#{hole[:hole_number]}") %>">
+  <td class="py-1 pr-3 font-medium text-gray-700"><%= hole[:hole_number] %></td>
+  <td class="py-1 pr-3 text-gray-500"><%= hole[:par] %></td>
+  <td class="py-1 pr-3">
+    <% if hole[:complete] %>
+      <span class="<%= "text-amber-700" if hole[:flipped_team_ids].include?(team_a[:id]) %>">
+        <%= hole[:team_numbers][team_a[:id]] %>
+        <% if hole[:flipped_team_ids].include?(team_a[:id]) %>
+          <span class="text-xs" title="Digits flipped">↕</span>
+        <% end %>
+      </span>
+    <% else %>
+      —
+    <% end %>
+  </td>
+  <td class="py-1 pr-3">
+    <% if hole[:complete] %>
+      <span class="<%= "text-amber-700" if hole[:flipped_team_ids].include?(team_b[:id]) %>">
+        <%= hole[:team_numbers][team_b[:id]] %>
+        <% if hole[:flipped_team_ids].include?(team_b[:id]) %>
+          <span class="text-xs" title="Digits flipped">↕</span>
+        <% end %>
+      </span>
+    <% else %>
+      —
+    <% end %>
+  </td>
+  <td class="py-1 pr-3">
+    <%= hole[:complete] ? (hole[:hole_points].zero? ? "0" : format("%+d", hole[:hole_points])) : "—" %>
+  </td>
+  <td class="py-1 font-semibold text-emerald-700">
+    <%= hole[:complete] ? hole[:running_wash] : "—" %>
+  </td>
+</tr>

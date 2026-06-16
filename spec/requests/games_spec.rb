@@ -242,6 +242,53 @@ RSpec.describe "Games", type: :request do
         expect(game.game_teams.reload).to be_empty
       end
     end
+
+    context "when game type is vegas" do
+      let(:game) { create_active_game!(game_type: "vegas") }
+      let(:p1) { User.create!(name: "V1", email: "v1@test.com", password: "pw") }
+      let(:p2) { User.create!(name: "V2", email: "v2@test.com", password: "pw") }
+      let(:p3) { User.create!(name: "V3", email: "v3@test.com", password: "pw") }
+      let(:p4) { User.create!(name: "V4", email: "v4@test.com", password: "pw") }
+
+      before do
+        [ p1, p2, p3, p4 ].each do |pl|
+          EventMembership.create!(event: event, user: pl, role: "player")
+        end
+      end
+
+      it "accepts two teams of two" do
+        patch update_teams_game_path(game), params: {
+          teams: {
+            "0" => { name: "Team A", user_ids: [ p1.id, p2.id ].map(&:to_s) },
+            "1" => { name: "Team B", user_ids: [ p3.id, p4.id ].map(&:to_s) }
+          }
+        }
+        expect(response).to redirect_to(game_path(game))
+        expect(game.game_teams.reload.count).to eq(2)
+        expect(game.game_teams.map { |t| t.game_team_players.size }).to eq([ 2, 2 ])
+      end
+
+      it "rejects a single team of four" do
+        patch update_teams_game_path(game), params: {
+          teams: {
+            "0" => { name: "Foursome", user_ids: [ p1.id, p2.id, p3.id, p4.id ].map(&:to_s) }
+          }
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(game.game_teams.reload).to be_empty
+      end
+
+      it "rejects teams with three players" do
+        patch update_teams_game_path(game), params: {
+          teams: {
+            "0" => { name: "Team A", user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s) },
+            "1" => { name: "Team B", user_ids: [ p4.id ].map(&:to_s) }
+          }
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(game.game_teams.reload).to be_empty
+      end
+    end
   end
 
   describe "POST /games/:token/join" do
