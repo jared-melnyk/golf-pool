@@ -1,0 +1,22 @@
+id: ccc_threesome
+format: cha_cha_cha
+description: Three players use all available nets on a count-3 hole
+teams:
+  - name: Threesome
+    players:
+      - name: Alice
+        handicap_index: 18.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      - name: Carol
+        handicap_index: 10.0
+        gross_scores: [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+expected:
+  teams:
+    Threesome:
+      hole_scores:
+        3:
+          scores_to_count: 3
+          team_net_strokes: 13

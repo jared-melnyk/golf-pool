@@ -1,0 +1,44 @@
+id: vegas_match_total
+format: vegas
+description: Running wash across three holes matches design examples
+teams:
+  - name: Team A
+    players:
+      - name: Alice
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+          2: 5
+          3: 4
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores:
+          1: 5
+          2: 5
+          3: 4
+  - name: Team B
+    players:
+      - name: Carol
+        handicap_index: 0.0
+        gross_scores:
+          1: 5
+          2: 4
+          3: 4
+      - name: Dave
+        handicap_index: 0.0
+        gross_scores:
+          1: 7
+          2: 7
+          3: 4
+expected:
+  holes:
+    1:
+      running_wash: 12
+    2:
+      running_wash: 4
+    3:
+      running_wash: 4
+  wash:
+    margin: 4
+    leader_name: Team A
+    label: Team A leads by 4

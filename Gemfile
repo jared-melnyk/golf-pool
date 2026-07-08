@@ -23,6 +23,15 @@ gem "bcrypt", "~> 3.1.22"
 # Transitive dependency of mail (Rails); pin so bundler resolves a patched release.
 gem "net-imap", ">= 0.6.4.1"
 
+# Transitive dependency of Rails/loofah; pin so bundler resolves a patched release.
+gem "nokogiri", ">= 1.19.4"
+
+# Transitive dependencies; pin so bundler resolves patched releases.
+gem "concurrent-ruby", ">= 1.3.7"
+gem "crass", ">= 1.0.7"
+gem "json", ">= 2.19.9"
+gem "msgpack", ">= 1.8.2"
+
 # Load .env in development and test (API keys, etc.)
 gem "dotenv-rails", groups: [ :development, :test ]
 

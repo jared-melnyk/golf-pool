@@ -1,0 +1,34 @@
+id: vegas_handicap
+format: vegas
+description: Net cap applies before digit pairing (gross 8 and 10 cap to 9)
+round:
+  hole_pars: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+  hole_handicaps: [1, 3, 5, 7, 9, 11, 13, 15, 17, 2, 4, 6, 8, 10, 12, 14, 16, 18]
+teams:
+  - name: Team A
+    players:
+      - name: Alice
+        handicap_index: 0.0
+        gross_scores:
+          1: 8
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores:
+          1: 10
+  - name: Team B
+    players:
+      - name: Carol
+        handicap_index: 0.0
+        gross_scores:
+          1: 5
+      - name: Dave
+        handicap_index: 0.0
+        gross_scores:
+          1: 6
+expected:
+  holes:
+    1:
+      team_numbers:
+        Team A: 89
+        Team B: 56
+      hole_points: -33

@@ -1,0 +1,22 @@
+id: ccc_complete_total
+format: cha_cha_cha
+description: Team total equals sum of hole team_net_strokes
+teams:
+  - name: Team A
+    players:
+      - name: P1
+        handicap_index: 0.0
+        gross_scores: [4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5]
+      - name: P2
+        handicap_index: 0.0
+        gross_scores: [5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4]
+      - name: P3
+        handicap_index: 0.0
+        gross_scores: [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+      - name: P4
+        handicap_index: 0.0
+        gross_scores: [7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
+expected:
+  teams:
+    Team A:
+      total_net_strokes: 168
