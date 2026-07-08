@@ -1,0 +1,25 @@
+id: fs_threesome_competition
+format: forty_score
+description: 30 picks scaled to 40-pick competition equivalent
+teams:
+  - name: Threesome
+    players:
+      - name: T1
+        handicap_index: 0.0
+        gross_scores: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      - name: T2
+        handicap_index: 0.0
+        gross_scores: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+      - name: T3
+        handicap_index: 0.0
+        gross_scores: [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+expected:
+  teams:
+    Threesome:
+      selected_count: 30
+      target_pick_count: 30
+      actual_vs_par: -30
+      competition_vs_par: -40

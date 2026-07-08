@@ -1,0 +1,21 @@
+id: bb_ph_over_18
+format: best_ball
+description: PH 19 receives extra strokes on the six hardest holes
+teams:
+  - name: Team A
+    players:
+      - name: Strokes
+        handicap_index: 22.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+expected:
+  teams:
+    Team A:
+      players:
+        Strokes:
+          course_handicap: 22
+          playing_handicap: 19
+      hole_scores:
+        1:
+          best_ball_net: 3
+        7:
+          best_ball_net: 4

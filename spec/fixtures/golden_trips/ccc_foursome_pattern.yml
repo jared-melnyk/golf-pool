@@ -1,0 +1,34 @@
+id: ccc_foursome_pattern
+format: cha_cha_cha
+description: Holes 1/2/3 use 1/2/3 best nets
+teams:
+  - name: Team A
+    players:
+      - name: Alice
+        handicap_index: 18.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      - name: Carol
+        handicap_index: 10.0
+        gross_scores: [6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+      - name: Dave
+        handicap_index: 5.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+expected:
+  teams:
+    Team A:
+      hole_scores:
+        1:
+          scores_to_count: 1
+          team_net_strokes: 4
+        2:
+          scores_to_count: 2
+          team_net_strokes: 8
+        3:
+          scores_to_count: 3
+          team_net_strokes: 13
+        4:
+          scores_to_count: 1
+          team_net_strokes: 4

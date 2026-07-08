@@ -1,0 +1,39 @@
+id: bb_tie_ordinal
+format: best_ball
+description: Two teams tied at T1; third team ranks 3
+teams:
+  - name: Team A
+    players:
+      - name: A1
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      - name: A2
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+  - name: Team B
+    players:
+      - name: B1
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+      - name: B2
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+  - name: Team C
+    players:
+      - name: C1
+        handicap_index: 0.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+      - name: C2
+        handicap_index: 0.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+expected:
+  leaderboard:
+    - team_name: Team A
+      rank: 1
+      total_net_strokes: 72
+    - team_name: Team B
+      rank: 1
+      total_net_strokes: 72
+    - team_name: Team C
+      rank: 3
+      total_net_strokes: 90

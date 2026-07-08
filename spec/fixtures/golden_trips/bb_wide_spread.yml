@@ -1,0 +1,28 @@
+id: bb_wide_spread
+format: best_ball
+description: Scratch + 28 index on same team; high handicap strokes improve best ball
+teams:
+  - name: Team A
+    players:
+      - name: Scratch
+        handicap_index: 0.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+      - name: High
+        handicap_index: 28.0
+        gross_scores: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+expected:
+  teams:
+    Team A:
+      players:
+        Scratch:
+          course_handicap: 0
+          playing_handicap: 0
+        High:
+          course_handicap: 28
+          playing_handicap: 24
+      hole_scores:
+        1:
+          best_ball_net: 3
+        9:
+          best_ball_net: 4
+      total_net_strokes: 66

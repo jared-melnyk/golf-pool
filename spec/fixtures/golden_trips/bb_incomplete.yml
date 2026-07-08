@@ -1,0 +1,46 @@
+id: bb_incomplete
+format: best_ball
+description: Missing back 9 yields nil total and nil rank
+teams:
+  - name: Team A
+    players:
+      - name: A1
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+          2: 4
+          3: 4
+          4: 4
+          5: 4
+          6: 4
+          7: 4
+          8: 4
+          9: 4
+      - name: A2
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+          2: 4
+          3: 4
+          4: 4
+          5: 4
+          6: 4
+          7: 4
+          8: 4
+          9: 4
+  - name: Team B
+    players:
+      - name: B1
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+expected:
+  teams:
+    Team A:
+      total_net_strokes: null
+  leaderboard:
+    - team_name: Team A
+      rank: null
+      total_net_strokes: null
+    - team_name: Team B
+      rank: 1
+      total_net_strokes: 72

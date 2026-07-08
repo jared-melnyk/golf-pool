@@ -1,0 +1,29 @@
+id: fs_foursome_complete
+format: forty_score
+description: 40 picks with known actual vs par
+teams:
+  - name: Foursome A
+    players:
+      - name: Alice
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+      - name: Carol
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: [1, 2, 3, 4]
+      - name: Doug
+        handicap_index: 0.0
+        gross_scores: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+        forty_picks: []
+expected:
+  teams:
+    Foursome A:
+      selected_count: 40
+      target_pick_count: 40
+      actual_vs_par: 0
+      competition_vs_par: 0

@@ -1,0 +1,35 @@
+id: vegas_tie
+format: vegas
+description: Identical team numbers award zero hole points
+teams:
+  - name: Team A
+    players:
+      - name: Alice
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+  - name: Team B
+    players:
+      - name: Carol
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+      - name: Dave
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+expected:
+  holes:
+    1:
+      team_numbers:
+        Team A: 44
+        Team B: 44
+      hole_points: 0
+      running_wash: 0
+  wash:
+    margin: 0
+    label: All square

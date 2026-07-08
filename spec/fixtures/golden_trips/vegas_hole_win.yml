@@ -1,0 +1,36 @@
+id: vegas_hole_win
+format: vegas
+description: Known gross scores produce expected team numbers and hole points
+teams:
+  - name: Team A
+    players:
+      - name: Alice
+        handicap_index: 0.0
+        gross_scores:
+          1: 4
+      - name: Bob
+        handicap_index: 0.0
+        gross_scores:
+          1: 5
+  - name: Team B
+    players:
+      - name: Carol
+        handicap_index: 0.0
+        gross_scores:
+          1: 5
+      - name: Dave
+        handicap_index: 0.0
+        gross_scores:
+          1: 7
+expected:
+  holes:
+    1:
+      team_numbers:
+        Team A: 45
+        Team B: 57
+      hole_points: 12
+      running_wash: 12
+  wash:
+    margin: 12
+    leader_name: Team A
+    label: Team A leads by 12
