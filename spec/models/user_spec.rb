@@ -5,6 +5,21 @@ require "rails_helper"
 RSpec.describe User, type: :model do
   let(:user) { User.create!(name: "Test", email: "test@example.com", password: "password") }
 
+  describe "email normalization" do
+    it "stores email as lowercase on create" do
+      user = User.create!(name: "Joe", email: "Joe.Mc@Example.COM", password: "password")
+      expect(user.email).to eq("joe.mc@example.com")
+    end
+
+    it "rejects duplicate emails regardless of case" do
+      User.create!(name: "First", email: "dup@example.com", password: "password")
+      duplicate = User.new(name: "Second", email: "DUP@example.com", password: "password")
+
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:email]).to include("has already been taken")
+    end
+  end
+
   describe "#generate_password_reset_token" do
     it "sets password_reset_token_digest and password_reset_sent_at and returns a raw token string" do
       raw_token = user.generate_password_reset_token

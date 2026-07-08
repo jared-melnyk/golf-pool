@@ -17,7 +17,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :games, only: [ :index ]
-    resources :users, only: [ :index ]
+    resources :users, only: [ :index, :new, :create, :edit, :update ]
   end
 
   resources :tournaments, only: [ :index, :show ]

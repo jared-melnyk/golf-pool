@@ -1,6 +1,7 @@
 <div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
-  <div class="p-4 border-b border-gray-200">
+  <div class="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
     <h1 class="text-2xl font-bold text-gray-900">Users</h1>
+    <%= link_to "New user", new_admin_user_path, class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
   </div>
 
   <% if @users.any? %>
@@ -12,6 +13,7 @@
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Email</th>
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">GHIN handicap index</th>
             <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Last visit</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100 bg-white">
@@ -32,6 +34,9 @@
                 <% else %>
                   <span class="text-gray-400">No visits yet</span>
                 <% end %>
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <%= link_to "Edit", edit_admin_user_path(user), class: "text-emerald-700 hover:underline text-sm font-medium" %>
               </td>
             </tr>
           <% end %>
