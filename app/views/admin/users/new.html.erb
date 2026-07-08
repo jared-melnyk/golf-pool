@@ -1,0 +1,9 @@
+<div class="max-w-lg mx-auto border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">New user</h1>
+
+  <%= render "form",
+        form_url: admin_users_path,
+        form_method: :post,
+        password_required: true,
+        submit_label: "Create user" %>
+</div>

@@ -12,11 +12,21 @@ class User < ApplicationRecord
   has_many :game_team_players, dependent: :destroy
   has_many :hole_scores, through: :game_team_players
 
-  validates :email, presence: true, uniqueness: true
+  before_validation :normalize_email
+
+  validates :email, presence: true, uniqueness: { case_sensitive: false }
   validates :name, presence: true
   validates :ghin_handicap_index,
             numericality: { greater_than_or_equal_to: -54, less_than_or_equal_to: 54 },
             allow_nil: true
+
+  private
+
+  def normalize_email
+    self.email = email.to_s.strip.downcase.presence
+  end
+
+  public
 
   def generate_password_reset_token
     raw_token = SecureRandom.urlsafe_base64(32)
