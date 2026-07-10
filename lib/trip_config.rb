@@ -8,14 +8,14 @@ module TripConfig
   TARGET_YARDAGE = 6100
 
   PLAYERS = [
-    { key: :nitti, name: "Nitti", index: 4.8 },
+    { key: :nitti, name: "Nitti", index: 8.6 },
     { key: :kevin, name: "Kevin Callaghan", index: 5.7 },
     { key: :joe, name: "Joe Mc", index: 12.0 },
     { key: :nick, name: "Nick Barajas", index: 13.6 },
     { key: :kyle, name: "Kyle Krivacek", index: 14.0 },
-    { key: :ryan_flynn, name: "Ryan Flynn", index: 16.0 },
+    { key: :ryan_flynn, name: "Ryan Flynn", index: 15.0 },
     { key: :jared, name: "Jared", index: 18.3 },
-    { key: :chris, name: "Chris", index: 18.7 },
+    { key: :chris, name: "Chris", index: 17.4 },
     { key: :greg, name: "Greg Lindemann", index: 19.0 },
     { key: :walker, name: "Walker Anglin", index: 25.0 },
     { key: :will, name: "Will Schmadeke", index: 36.0 },

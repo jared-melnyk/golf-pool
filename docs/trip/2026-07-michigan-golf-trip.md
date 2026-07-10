@@ -18,14 +18,14 @@
 
 | Player | GHIN Index |
 |--------|------------|
-| Nitti | 4.8 |
+| Nitti | 8.6 |
 | Kevin Callaghan | 5.7 |
 | Joe Mc | 12.0 |
 | Nick Barajas | 13.6 |
 | Kyle Krivacek | 14.0 |
-| Ryan Flynn | 16.0 |
+| Ryan Flynn | 15.0 |
 | Jared | 18.3 |
-| Chris | 18.7 |
+| Chris | 17.4 |
 | Greg Lindemann | 19.0 |
 | Walker Anglin | 25.0 |
 | Will Schmadeke | 36.0 |

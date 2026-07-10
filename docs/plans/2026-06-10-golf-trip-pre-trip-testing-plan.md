@@ -1,10 +1,11 @@
 # Golf Trip Pre-Trip Plan — Vegas + Testing
 
 **Status:** Ready to execute — **Vegas first**, then pre-trip testing.  
+**Updated:** 2026-07-08 — Phases 0, A, C complete; manual validation packets ready; Phases B & D remain.  
 **Project:** `long_shot` (On-Course games)  
 **Date:** 2026-06-10  
 
-**Related:** [Vegas design](2026-06-10-vegas-design.md), [On-Course Games design](2026-05-06-on-course-games-design.md), [40 Score threesome plan](2026-05-17-forty-score-threesome-support-plan.md), [Cha-Cha-Cha plan](2026-05-30-cha-cha-cha-plan.md), [Best Ball end-to-end](2026-05-11-phase3-best-ball-end-to-end.md)
+**Related:** [Vegas design](2026-06-10-vegas-design.md), [On-Course Games design](2026-05-06-on-course-games-design.md), [40 Score threesome plan](2026-05-17-forty-score-threesome-support-plan.md), [Cha-Cha-Cha plan](2026-05-30-cha-cha-cha-plan.md), [Best Ball end-to-end](2026-05-11-phase3-best-ball-end-to-end.md), **[Manual validation packets](../validation/README.md)**
 
 ---
 
@@ -64,16 +65,16 @@ Leaderboards are **per game**, not rolled up at the event level. Review finished
 
 ---
 
-## 4. Current baseline (as of 2026-06-10)
+## 4. Current baseline (as of 2026-07-08)
 
-- **424 RSpec examples, 0 failures** (`bundle exec rspec`).
-- Shipped game types: `best_ball`, `forty_score`, `cha_cha_cha`.
-- Strong unit coverage for existing scorecard services.
-- Request specs for game setup, hole score entry (Turbo), games show, events.
+- **Golden scenarios:** 14 YAML fixtures + `fs_over_pick_limit` inline spec — all green (`bundle exec rspec spec/golden_trips/scenarios_spec.rb`).
+- **Shipped game types:** `best_ball`, `forty_score`, `cha_cha_cha`, **`vegas`**.
+- **Trip simulator:** `bundle exec rake trip:simulate` → Michigan trip seed + `tmp/trip_sim_manifest.md`.
+- **Manual validation docs:** `docs/validation/` — packets for buddy hand-check (export via `bundle exec rake golden:export_validation`).
 - **Gaps:**
-  - **No Vegas format** — blocks trip if we plan to play it
-  - No `db/seeds` demo / trip data
-  - No full 18-hole multi-user journey specs
+  - No full 18-hole multi-user journey request specs (`spec/requests/trip_journeys/`)
+  - No `trip_round4_eight_players` golden fixture (8-player Vegas round shape)
+  - Phase D manual dry-run checklist not yet completed
   - No browser/system tests (Capybara / Playwright)
 
 ---
@@ -111,20 +112,20 @@ Reference existing patterns:
 ### 5.2 Implementation checklist
 
 - [x] Design doc approved — [2026-06-10-vegas-design.md](2026-06-10-vegas-design.md)
-- [ ] Add `vegas` to `Game::GAME_TYPES` and `playing_handicap_allowance_percent` (if applicable)
-- [ ] `app/services/vegas_scorecard.rb` (+ `lib/vegas.rb` for pure rule helpers if useful)
-- [ ] `spec/services/vegas_scorecard_spec.rb`
-- [ ] `spec/lib/vegas_spec.rb` (if rule helpers extracted)
-- [ ] Game setup wizard: format step includes Vegas
-- [ ] Scorecard partials: `app/views/games/scorecard/_vegas*.html.erb`, leaderboard partial
-- [ ] `GamesController` / scorecard helper wiring (mirror cha-cha-cha / forty_score branches)
-- [ ] Team size validation in game setup (controller or model)
-- [ ] Request spec: create Vegas game, enter scores, render scorecard
-- [ ] Update [On-Course Games design](2026-05-06-on-course-games-design.md) § game types list
+- [x] Add `vegas` to `Game::GAME_TYPES` and `playing_handicap_allowance_percent` (if applicable)
+- [x] `app/services/vegas_scorecard.rb` (+ `lib/vegas.rb` for pure rule helpers if useful)
+- [x] `spec/services/vegas_scorecard_spec.rb`
+- [x] `spec/lib/vegas_spec.rb` (if rule helpers extracted)
+- [x] Game setup wizard: format step includes Vegas
+- [x] Scorecard partials: `app/views/games/scorecard/_vegas*.html.erb`, leaderboard partial
+- [x] `GamesController` / scorecard helper wiring (mirror cha-cha-cha / forty_score branches)
+- [x] Team size validation in game setup (controller or model)
+- [x] Request spec: create Vegas game, enter scores, render scorecard
+- [x] Update [On-Course Games design](2026-05-06-on-course-games-design.md) § game types list
 
 ### 5.3 Vegas verification (before Phase A)
 
-- [ ] `bundle exec rspec spec/services/vegas_scorecard_spec.rb` green
+- [x] `bundle exec rspec spec/services/vegas_scorecard_spec.rb` green
 - [ ] Manual smoke: create Vegas game in dev, enter front 9, leaderboard updates
 - [ ] Commissioner can complete / reopen game (existing status flow)
 
@@ -281,16 +282,16 @@ cat tmp/trip_sim_manifest.md
 
 ### Phase 0 — Vegas (≈2–4 days, depends on rule complexity)
 
-- [ ] Write and approve Vegas design doc
-- [ ] Implement `VegasScorecard` + views + setup wizard
-- [ ] Unit and request specs green
+- [x] Write and approve Vegas design doc
+- [x] Implement `VegasScorecard` + views + setup wizard
+- [x] Unit and request specs green
 - [ ] Manual smoke test in dev
 
 ### Phase A — Golden fixtures (≈1 day)
 
-- [ ] `spec/fixtures/golden_trips/` + `spec/support/golden_trip_helpers.rb`
-- [ ] Scenarios for all **four** formats (including Vegas)
-- [ ] Hand-verify one scenario per format against spreadsheet
+- [x] `spec/fixtures/golden_trips/` + `spec/support/golden_trip_helpers.rb`
+- [x] Scenarios for all **four** formats (including Vegas)
+- [x] Hand-verify one scenario per format against spreadsheet → **exported to `docs/validation/packets/`**
 
 ### Phase B — Journey specs (≈1 day)
 
@@ -299,8 +300,16 @@ cat tmp/trip_sim_manifest.md
 
 ### Phase C — Trip simulator (≈1–2 days)
 
-- [ ] `lib/tasks/trip_simulation.rake` with 4-round manifest
+- [x] `lib/tasks/trip_simulation.rake` with 4-round manifest
 - [ ] Click-through all game URLs locally
+
+### Phase A½ — Manual buddy validation (new, ~2–4 hours per person)
+
+- [x] Validation guide + rules reference — `docs/validation/README.md`
+- [x] Per-format packets with inputs + oracle outputs — `docs/validation/packets/`
+- [ ] Buddy completes minimum set (01, 03, 05, 07)
+- [ ] Jared completes same set independently
+- [ ] Reconcile mismatches
 
 ### Phase D — Manual dry-run (≈2 hours, trip week)
 
@@ -373,7 +382,9 @@ cat tmp/trip_sim_manifest.md
 
 ## 12. Resume pointer
 
-**Next action when picking up:** Implement Phase 0 per [2026-06-10-vegas-design.md](2026-06-10-vegas-design.md) §9 (start with `lib/vegas.rb`). Do not start golden fixtures or `trip:simulate` until Vegas ships.
+**Next action:** Buddy manual validation — send `docs/validation/README.md` + packets; each person works minimum set (01, 03, 05, 07). Optional: `bundle exec rake trip:simulate` for UI walkthrough.
+
+**After buddy validation:** Phase B journey specs, then Phase D staging dry-run before trip week.
 
 **Reference implementations:**
 
