@@ -1,0 +1,49 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900"><%= @event.name %></h1>
+    <p class="text-sm text-gray-600 mt-1">Status: <%= @event.status.titleize %></p>
+  </div>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">Members</h2>
+    <% if @memberships.any? %>
+      <ol class="list-decimal list-inside space-y-2">
+        <% @memberships.each do |em| %>
+          <li class="text-gray-800">
+            <%= em.user.name %>
+            <span class="text-sm text-gray-500">— <%= em.role.titleize %></span>
+          </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <p class="text-sm text-gray-600">No members yet.</p>
+    <% end %>
+  </section>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+    <h2 class="text-lg font-semibold text-gray-900 mb-3">Add member</h2>
+    <% if @addable_users.any? %>
+      <%= form_with url: admin_event_event_memberships_path(@event), method: :post, local: true, class: "flex flex-wrap items-end gap-3" do %>
+        <div>
+          <label for="user_id" class="block text-sm font-medium text-gray-700 mb-1">User</label>
+          <select name="user_id" id="user_id" required
+                  class="rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500">
+            <option value="">Select a user…</option>
+            <% @addable_users.each do |user| %>
+              <option value="<%= user.id %>"><%= user.name %> (<%= user.email %>)</option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <button type="submit" class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
+            Add
+          </button>
+        </div>
+      <% end %>
+    <% else %>
+      <p class="text-sm text-gray-600">All users are already on this trip</p>
+    <% end %>
+  </section>
+
+  <%= link_to "← All events", admin_events_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>

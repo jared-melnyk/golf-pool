@@ -21,6 +21,9 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :games, only: [ :index ]
     resources :users, only: [ :index, :new, :create, :edit, :update ]
+    resources :events, param: :token, only: [ :index, :show ] do
+      resources :event_memberships, only: [ :create ]
+    end
   end
 
   resources :tournaments, only: [ :index, :show ]

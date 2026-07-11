@@ -60,6 +60,7 @@
             <% tournaments_nav_active = controller_name == "tournaments" %>
             <% admin_games_nav_active = controller_path == "admin/games" && action_name == "index" %>
             <% admin_users_nav_active = controller_path == "admin/users" && action_name == "index" %>
+            <% admin_events_nav_active = controller_path.start_with?("admin/events") || controller_path == "admin/event_memberships" %>
             <nav class="space-y-1">
               <div class="<%= section_head %>">PGA Pools</div>
               <%= link_to "My pools", pools_path, class: nav_row.call(my_pools_active), data: { action: "click->sidebar#close" } %>
@@ -74,6 +75,7 @@
                 <div class="<%= section_head %> mt-3">Admin</div>
                 <%= link_to "Tournaments", tournaments_path, class: nav_row.call(tournaments_nav_active), data: { action: "click->sidebar#close" } %>
                 <%= link_to "Games", admin_games_path, class: nav_row.call(admin_games_nav_active), data: { action: "click->sidebar#close" } %>
+                <%= link_to "Events", admin_events_path, class: nav_row.call(admin_events_nav_active), data: { action: "click->sidebar#close" } %>
                 <%= link_to "Users", admin_users_path, class: nav_row.call(admin_users_nav_active), data: { action: "click->sidebar#close" } %>
               <% end %>
 
