@@ -1,0 +1,45 @@
+id: trip_bb_wolf_river
+format: best_ball
+description: "Trip Round 2 — Best Ball at Wolf River (Group A), realistic varied scorecards"
+round:
+  course_rating: 69.4
+  slope_rating: 120
+  par_total: 72
+  hole_pars: [5, 4, 4, 4, 5, 4, 3, 4, 3, 3, 5, 4, 3, 4, 4, 5, 4, 4]
+  hole_handicaps: [13, 17, 5, 1, 3, 7, 11, 15, 9, 16, 6, 12, 18, 2, 10, 4, 14, 8]
+teams:
+  - name: Group A
+    players:
+      - name: Nitti
+        handicap_index: 8.6
+        gross_scores: [5, 4, 5, 4, 5, 4, 3, 5, 3, 3, 6, 4, 3, 4, 5, 4, 4, 5]
+      - name: Kyle
+        handicap_index: 14.0
+        gross_scores: [6, 5, 5, 6, 6, 5, 4, 4, 3, 4, 6, 5, 4, 5, 5, 6, 4, 5]
+      - name: Jared
+        handicap_index: 18.3
+        gross_scores: [6, 5, 6, 5, 7, 5, 4, 5, 4, 4, 6, 5, 3, 6, 5, 6, 5, 5]
+      - name: Will
+        handicap_index: 36.0
+        gross_scores: [8, 6, 7, 6, 8, 6, 5, 6, 5, 5, 8, 6, 5, 6, 6, 7, 6, 6]
+expected:
+  teams:
+    Group A:
+      total_net_strokes: 66
+      players:
+        Nitti:
+          course_handicap: 7
+          playing_handicap: 6
+        Kyle:
+          course_handicap: 12
+          playing_handicap: 10
+        Jared:
+          course_handicap: 17
+          playing_handicap: 14
+        Will:
+          course_handicap: 36
+          playing_handicap: 31
+  leaderboard:
+    - team_name: Group A
+      rank: 1
+      total_net_strokes: 66

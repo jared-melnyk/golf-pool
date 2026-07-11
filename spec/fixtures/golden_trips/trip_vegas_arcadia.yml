@@ -1,0 +1,67 @@
+id: trip_vegas_arcadia
+format: vegas
+description: "Trip Round 1 — Vegas at Arcadia Bluffs South (Match 1), realistic varied scorecards"
+round:
+  course_rating: 70.6
+  slope_rating: 125
+  par_total: 72
+  hole_pars: [4, 4, 5, 4, 3, 5, 4, 3, 4, 4, 5, 3, 4, 5, 4, 3, 4, 4]
+  hole_handicaps: [9, 15, 7, 1, 3, 13, 11, 17, 5, 10, 12, 14, 2, 16, 18, 4, 8, 6]
+teams:
+  - name: Team A
+    players:
+      - name: Kevin Callaghan
+        handicap_index: 5.7
+        gross_scores: [5, 4, 6, 4, 3, 6, 4, 3, 5, 4, 5, 3, 5, 6, 4, 3, 5, 4]
+      - name: Ryan Lannon
+        handicap_index: 36.0
+        gross_scores: [6, 6, 8, 6, 5, 8, 6, 5, 6, 6, 8, 5, 6, 8, 6, 5, 6, 6]
+  - name: Team B
+    players:
+      - name: Jared
+        handicap_index: 18.3
+        gross_scores: [5, 5, 7, 5, 4, 7, 5, 4, 6, 5, 6, 4, 6, 7, 5, 4, 6, 5]
+      - name: Chris
+        handicap_index: 17.4
+        gross_scores: [6, 5, 6, 5, 4, 6, 6, 4, 5, 5, 7, 5, 5, 7, 6, 5, 5, 6]
+expected:
+  teams:
+    Team A:
+      players:
+        Kevin Callaghan:
+          course_handicap: 5
+          playing_handicap: 5
+        Ryan Lannon:
+          course_handicap: 38
+          playing_handicap: 36
+    Team B:
+      players:
+        Jared:
+          course_handicap: 19
+          playing_handicap: 19
+        Chris:
+          course_handicap: 18
+          playing_handicap: 18
+  holes:
+    1:
+      team_numbers:
+        Team A: 45
+        Team B: 45
+      hole_points: 0
+      running_wash: 0
+    2:
+      team_numbers:
+        Team A: 44
+        Team B: 44
+      hole_points: 0
+      running_wash: 0
+    3:
+      team_numbers:
+        Team A: 66
+        Team B: 56
+      hole_points: -10
+      running_wash: -10
+  wash:
+    margin: 16
+    leader_name: Team A
+    label: Team A leads by 16

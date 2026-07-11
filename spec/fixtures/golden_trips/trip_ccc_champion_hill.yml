@@ -1,0 +1,45 @@
+id: trip_ccc_champion_hill
+format: cha_cha_cha
+description: "Trip Round 3 — Cha-Cha-Cha at Champion Hill (Group A), realistic varied scorecards"
+round:
+  course_rating: 68.5
+  slope_rating: 120
+  par_total: 72
+  hole_pars: [4, 4, 4, 4, 5, 3, 5, 3, 4, 4, 3, 4, 3, 4, 4, 4, 5, 5]
+  hole_handicaps: [11, 5, 9, 1, 17, 7, 15, 3, 13, 4, 16, 10, 14, 18, 6, 2, 12, 8]
+teams:
+  - name: Group A
+    players:
+      - name: Kevin Callaghan
+        handicap_index: 5.7
+        gross_scores: [5, 4, 4, 5, 5, 3, 6, 3, 4, 4, 4, 4, 3, 5, 4, 4, 5, 6]
+      - name: Nick Barajas
+        handicap_index: 13.6
+        gross_scores: [5, 5, 4, 6, 6, 4, 6, 4, 5, 5, 4, 5, 4, 5, 4, 5, 5, 6]
+      - name: Greg Lindemann
+        handicap_index: 19.0
+        gross_scores: [5, 6, 5, 6, 7, 4, 6, 5, 5, 5, 4, 6, 4, 5, 6, 5, 6, 6]
+      - name: Will Schmadeke
+        handicap_index: 36.0
+        gross_scores: [7, 6, 6, 7, 8, 5, 8, 5, 6, 6, 5, 6, 5, 6, 6, 6, 7, 7]
+expected:
+  teams:
+    Group A:
+      total_net_strokes: 148
+      players:
+        Kevin Callaghan:
+          course_handicap: 3
+          playing_handicap: 3
+        Nick Barajas:
+          course_handicap: 11
+          playing_handicap: 9
+        Greg Lindemann:
+          course_handicap: 17
+          playing_handicap: 14
+        Will Schmadeke:
+          course_handicap: 35
+          playing_handicap: 30
+  leaderboard:
+    - team_name: Group A
+      rank: 1
+      total_net_strokes: 148

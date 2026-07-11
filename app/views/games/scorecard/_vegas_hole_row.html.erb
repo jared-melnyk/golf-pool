@@ -1,8 +1,8 @@
 <%# locals: game, hole, team_a, team_b %>
 <tr class="border-b border-gray-100 hover:bg-gray-50" id="<%= dom_id(game, "vegas_hole_#{hole[:hole_number]}") %>">
-  <td class="py-1 pr-3 font-medium text-gray-700"><%= hole[:hole_number] %></td>
-  <td class="py-1 pr-3 text-gray-500"><%= hole[:par] %></td>
-  <td class="py-1 pr-3">
+  <td class="py-1.5 px-2 text-center font-medium text-gray-700 tabular-nums border-r border-gray-200"><%= hole[:hole_number] %></td>
+  <td class="py-1.5 px-2 text-center text-gray-500 tabular-nums border-r border-gray-200"><%= hole[:par] %></td>
+  <td class="py-1.5 px-2 text-center tabular-nums border-r border-gray-200">
     <% if hole[:complete] %>
       <span class="<%= "text-amber-700" if hole[:flipped_team_ids].include?(team_a[:id]) %>">
         <%= hole[:team_numbers][team_a[:id]] %>
@@ -14,7 +14,7 @@
       —
     <% end %>
   </td>
-  <td class="py-1 pr-3">
+  <td class="py-1.5 px-2 text-center tabular-nums border-r border-gray-200">
     <% if hole[:complete] %>
       <span class="<%= "text-amber-700" if hole[:flipped_team_ids].include?(team_b[:id]) %>">
         <%= hole[:team_numbers][team_b[:id]] %>
@@ -26,10 +26,10 @@
       —
     <% end %>
   </td>
-  <td class="py-1 pr-3">
+  <td class="py-1.5 px-2 text-center tabular-nums border-r border-gray-200">
     <%= hole[:complete] ? (hole[:hole_points].zero? ? "0" : format("%+d", hole[:hole_points])) : "—" %>
   </td>
-  <td class="py-1 font-semibold text-emerald-700">
+  <td class="py-1.5 px-2 text-center font-semibold text-emerald-700 tabular-nums border-l-2 border-emerald-200">
     <%= hole[:complete] ? hole[:running_wash] : "—" %>
   </td>
 </tr>

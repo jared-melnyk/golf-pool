@@ -109,6 +109,26 @@ RSpec.describe BestBallScorecard do
     expect(scorecard[:leaderboard].first).to have_key(:team_name)
   end
 
+  context "when course handicap would exceed 36 playing handicap" do
+    let(:high) { User.create!(name: "High", email: "high@test.com", password: "pw", ghin_handicap_index: 36.0) }
+    let(:team_h) { GameTeam.create!(game: game, name: "High Team") }
+    let(:gtp_high) { GameTeamPlayer.create!(game_team: team_h, user: high) }
+
+    before do
+      round.update!(slope_rating: 130, course_rating: 74.0)
+      (1..18).each { |h| HoleScore.create!(game_team_player: gtp_high, hole_number: h, gross_score: 7) }
+    end
+
+    it "caps playing handicap at 36 and never awards more than 2 strokes on a hole" do
+      player = BestBallScorecard.new(game).call[:teams].find { |t| t[:name] == "High Team" }[:players].first
+      # CH = round(36 * 130/113 + (74-72)) = round(41.4 + 2) = 43; 85% → 37 uncapped → 36
+      expect(player[:course_handicap]).to be > 36
+      expect(player[:playing_handicap]).to eq(36)
+      expect(player[:hole_scores].map { |h| h[:strokes_received] }.max).to eq(2)
+      expect(player[:hole_scores].sum { |h| h[:strokes_received] }).to eq(36)
+    end
+  end
+
   context "when some holes are unscored" do
     before do
       HoleScore.where(game_team_player: [ gtp_alice, gtp_bob ], hole_number: 18).delete_all

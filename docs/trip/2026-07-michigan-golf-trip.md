@@ -18,14 +18,14 @@
 
 | Player | GHIN Index |
 |--------|------------|
-| Nitti | 4.8 |
+| Nitti | 8.6 |
 | Kevin Callaghan | 5.7 |
 | Joe Mc | 12.0 |
 | Nick Barajas | 13.6 |
 | Kyle Krivacek | 14.0 |
-| Ryan Flynn | 16.0 |
+| Ryan Flynn | 15.0 |
 | Jared | 18.3 |
-| Chris | 18.7 |
+| Chris | 17.4 |
 | Greg Lindemann | 19.0 |
 | Walker Anglin | 25.0 |
 | Will Schmadeke | 36.0 |
@@ -40,7 +40,7 @@
 | 40 Score | 100% |
 | Vegas | 100% (net capped at 9 per player before digit pairing) |
 
-No trip-wide index cap is planned unless the group agrees after day one.
+**Playing handicap ceiling:** PH is capped at **36** (max 2 strokes on any hole). High indexes (e.g. Will, Lannon) may still show a higher course handicap, but strokes use the capped PH.
 
 ---
 
@@ -187,12 +187,20 @@ No trip-wide index cap is planned unless the group agrees after day one.
 
 ## App dry-run (commissioner)
 
+**Prerequisites:** local Postgres running, then:
+
 ```bash
+# Terminal 1 — seed trip data
 bundle exec rake trip:simulate
-cat tmp/trip_sim_manifest.md
+
+# Terminal 2 — start the app (required; manifest URLs won't load without this)
+bin/rails server
 ```
 
-Seeds the trip roster, courses, groupings, and demo scores in local dev. Login: `trip-commissioner@dryrun.test` / `trip2026`.
+1. Open game URLs from `tmp/trip_sim_manifest.md` — each local link auto-signs you in as commissioner
+2. Manual login if needed: http://localhost:3000/login — `trip-commissioner@dryrun.test` / `trip2026`
+
+Re-running `trip:simulate` deletes the old event and creates new URLs — always use the latest manifest.
 
 ---
 

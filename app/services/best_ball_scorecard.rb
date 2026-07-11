@@ -11,6 +11,8 @@
 #     leaderboard: [ { rank:, team_name:, total_net_strokes: } ]
 #   }
 class BestBallScorecard
+  include HandicapScoring
+
   def initialize(game)
     @game = game
     @round = game.round
@@ -60,32 +62,6 @@ class BestBallScorecard
       playing_handicap: ph,
       hole_scores: hole_scores
     }
-  end
-
-  # WHS formula: HI × (slope ÷ 113) + (course_rating − par)
-  def course_handicap(hi)
-    slope = @round.slope_rating.to_f
-    rating = @round.course_rating.to_f
-    par = @round.par_total.to_f
-    (hi * (slope / 113.0) + (rating - par)).round
-  end
-
-  def playing_handicap(ch)
-    (ch * @allowance / 100.0).round
-  end
-
-  # Returns number of strokes a player with playing_handicap receives on a given hole.
-  # stroke_indices array is 0-indexed (hole 1 = index 0); values are 1–18 (1 = hardest).
-  # A player with PH strokes gets a stroke on the PH hardest holes.
-  def strokes_on_hole(playing_handicap, hole_number)
-    return 0 if playing_handicap <= 0
-
-    si = @round.hole_handicaps[hole_number - 1]
-    base = playing_handicap / 18
-    return base if si.nil?
-
-    remainder = playing_handicap % 18
-    base + (si <= remainder ? 1 : 0)
   end
 
   def build_leaderboard(teams_data)

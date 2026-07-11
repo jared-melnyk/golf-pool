@@ -10,6 +10,9 @@ Rails.application.routes.draw do
   post "login", to: "sessions#create"
   delete "logout", to: "sessions#destroy", as: :logout
 
+  # Trip simulator one-click login (local / TRIP_SIM_LOGIN=1 only; controller 404s otherwise)
+  get "dev/trip_sim_login", to: "dev_sessions#create", as: :dev_trip_sim_login
+
   get "forgot_password", to: "password_resets#new", as: :forgot_password
   post "forgot_password", to: "password_resets#create"
   get "password_reset/:token", to: "password_resets#edit", as: :edit_password_reset
