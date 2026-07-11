@@ -1,7 +1,6 @@
 <%# Renders the Vegas (2v2 wash) scorecard with inline score entry.
     Locals: scorecard (hash from VegasScorecard), game (Game), event (Event) %>
 
-<% can_edit = scorecard_can_edit?(game, event) %>
 <% teams = scorecard[:teams] %>
 <% team_a = teams[0] %>
 <% team_b = teams[1] %>
@@ -54,7 +53,7 @@
                         gross_score: player_hole[:gross_score],
                         event: event,
                         game: game,
-                        can_edit: can_edit && gtp.present? %>
+                        can_edit: scorecard_can_edit_gross?(game, gtp) %>
                   <%= render "games/scorecard/stroke_dots", strokes: player_hole[:strokes_received] %>
                 </span>
               </td>

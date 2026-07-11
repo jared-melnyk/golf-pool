@@ -93,6 +93,10 @@ class Game < ApplicationRecord
     game_type == "forty_score"
   end
 
+  def best_ball?
+    game_type == "best_ball"
+  end
+
   def cha_cha_cha?
     game_type == "cha_cha_cha"
   end

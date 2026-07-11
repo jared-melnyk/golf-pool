@@ -1,0 +1,75 @@
+<%# locals: scorecard, game, event %>
+<% focus_team = scorecard_focus_team(scorecard, game) %>
+<% default_hole = scorecard_default_hole(scorecard, focus_team) %>
+<% round = game.round %>
+
+<div id="<%= dom_id(game, :mobile_arena) %>"
+     class="space-y-3"
+     data-controller="hole-stepper"
+     data-hole-stepper-hole-value="<%= default_hole %>"
+     data-hole-stepper-storage-key-value="game-<%= game.token %>-hole"
+     data-hole-stepper-pars-value="<%= round.hole_pars.to_json %>"
+     data-hole-stepper-stroke-indexes-value="<%= round.hole_handicaps.to_json %>">
+
+  <%= render "games/mobile/standings", game: game, scorecard: scorecard %>
+
+  <div class="border border-gray-200 rounded-xl bg-white shadow-sm p-3">
+    <div class="flex items-center justify-between gap-2 mb-1">
+      <button type="button"
+              class="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-gray-300 text-gray-800 active:bg-gray-50"
+              data-action="hole-stepper#previous"
+              aria-label="Previous hole">‹</button>
+      <div class="text-center min-w-0">
+        <p class="text-base font-semibold text-gray-900" data-hole-stepper-target="label">Hole <%= default_hole %> of 18</p>
+        <p class="text-xs text-gray-500">
+          <span data-hole-stepper-target="par">Par <%= round.hole_pars[default_hole - 1] %></span>
+          ·
+          <span data-hole-stepper-target="si">SI <%= round.hole_handicaps[default_hole - 1] %></span>
+        </p>
+      </div>
+      <button type="button"
+              class="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-gray-300 text-gray-800 active:bg-gray-50"
+              data-action="hole-stepper#next"
+              aria-label="Next hole">›</button>
+    </div>
+
+    <div class="flex flex-wrap gap-1 justify-center mb-3">
+      <% (1..18).each do |h| %>
+        <button type="button"
+                class="w-8 h-8 rounded-md text-xs font-medium bg-gray-100 text-gray-700 active:bg-emerald-100"
+                data-action="hole-stepper#jump"
+                data-hole-stepper-chip
+                data-hole="<%= h %>"><%= h %></button>
+      <% end %>
+    </div>
+
+    <% (1..18).each do |h| %>
+      <div data-hole-stepper-target="panel" data-hole="<%= h %>" class="<%= h == default_hole ? "" : "hidden" %>">
+        <% if game.vegas? %>
+          <%= render "games/mobile/vegas_hole",
+                game: game, event: event, scorecard: scorecard, hole_number: h %>
+        <% else %>
+          <% scorecard[:teams].each_with_index do |team, idx| %>
+            <% game_team = game.game_teams.detect { |gt| gt.id == team[:id] } %>
+            <section class="<%= idx.positive? ? "mt-4 pt-4 border-t border-gray-200" : "" %>">
+              <% if scorecard[:teams].size > 1 %>
+                <h3 class="text-sm font-semibold text-gray-900 mb-2"><%= team[:name] %></h3>
+              <% end %>
+              <%= render "games/mobile/team_hole",
+                    game: game,
+                    event: event,
+                    scorecard: scorecard,
+                    team: team,
+                    game_team: game_team,
+                    hole_number: h %>
+            </section>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <p class="text-xs text-center text-gray-500">
+    Full scorecard tables are available on larger screens.
+  </p>
+</div>

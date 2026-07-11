@@ -66,6 +66,34 @@ RSpec.describe "HoleScores", type: :request do
       expect(response).not_to be_redirect
       expect(HoleScore.find_by!(game_team_player_id: gtp_bob.id, hole_number: 2).gross_score).to eq(5)
     end
+
+    it "lets a teammate enter another golfer's gross score via turbo stream" do
+      patch game_hole_score_path(game, gtp_alice),
+            params: { hole_number: 3, gross_score: "6" },
+            headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq Mime[:turbo_stream]
+      expect(HoleScore.find_by!(game_team_player_id: gtp_alice.id, hole_number: 3).gross_score).to eq(6)
+    end
+
+    it "rejects score entry from a player on a different team" do
+      other_team = GameTeam.create!(game: game, name: "Other")
+      outsider = User.create!(name: "Out", email: "out@test.com", password: "pw")
+      EventMembership.create!(event: event, user: outsider, role: "player")
+      GameTeamPlayer.create!(game_team: other_team, user: outsider)
+
+      delete logout_path
+      post login_path, params: { email: outsider.email, password: "pw" }
+
+      patch game_hole_score_path(game, gtp_alice),
+            params: { hole_number: 4, gross_score: "5" }
+
+      expect(response).to redirect_to(game_path(game))
+      follow_redirect!
+      expect(response.body).to include("You can only enter scores for your own team.")
+      expect(HoleScore.find_by(game_team_player_id: gtp_alice.id, hole_number: 4)).to be_nil
+    end
   end
 
   describe "Best Ball" do

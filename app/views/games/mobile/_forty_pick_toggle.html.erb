@@ -1,0 +1,21 @@
+<%# locals: gtp, game_team, hole_number, player_hole, event, game, can_edit %>
+<% if can_edit %>
+  <%= form_with url: game_hole_score_path(game, gtp),
+        method: :patch,
+        class: "inline-flex",
+        data: { controller: "score-entry", turbo: true } do %>
+    <%= hidden_field_tag :hole_number, hole_number %>
+    <%= hidden_field_tag :forty_pick_only, "1" %>
+    <%= hidden_field_tag :included_in_forty_score, "0" %>
+    <label class="inline-flex items-center gap-2 min-h-11 px-2">
+      <%= check_box_tag :included_in_forty_score, "1", player_hole[:included_in_forty_score],
+            id: "mobile_fs_#{game_team.id}_#{gtp.id}_#{hole_number}",
+            disabled: player_hole[:gross_score].blank?,
+            class: "w-5 h-5 rounded border-gray-400 text-emerald-600 focus:ring-emerald-500",
+            data: { action: "change->score-entry#submitPick" } %>
+      <span class="text-sm text-gray-700"><%= player_hole[:included_in_forty_score] ? "Yes" : "No" %></span>
+    </label>
+  <% end %>
+<% else %>
+  <span class="text-sm text-gray-600"><%= player_hole[:included_in_forty_score] ? "Yes" : "—" %></span>
+<% end %>

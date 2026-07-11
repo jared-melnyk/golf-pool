@@ -1,0 +1,59 @@
+<%# locals: game, event, scorecard, hole_number %>
+<% team_a = scorecard[:teams][0] %>
+<% team_b = scorecard[:teams][1] %>
+<% game_team_a = game.game_teams.detect { |gt| gt.id == team_a[:id] } %>
+<% game_team_b = game.game_teams.detect { |gt| gt.id == team_b[:id] } %>
+<% hole = scorecard[:holes]&.find { |h| h[:hole_number] == hole_number } %>
+<% par = game.round.hole_pars[hole_number - 1] %>
+
+<div class="space-y-4">
+  <% [ [ team_a, game_team_a ], [ team_b, game_team_b ] ].each do |team, game_team| %>
+    <% gtps = scorecard_gtps_for_team(game_team) %>
+    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p class="text-sm font-semibold text-gray-900 mb-2"><%= team[:name] %></p>
+      <% team[:players].each do |player| %>
+        <% player_hole = player[:hole_scores].find { |s| s[:hole_number] == hole_number } %>
+        <% gtp = gtps[player[:name]] %>
+        <div class="flex items-center justify-between gap-3 py-2 border-b border-gray-200 last:border-0">
+          <div class="min-w-0">
+            <p class="font-medium text-gray-900 truncate"><%= player[:name] %></p>
+            <p class="text-xs text-gray-500">
+              Net <span class="tabular-nums"><%= player_hole[:net_score] || "—" %></span>
+              <%= render "games/scorecard/stroke_dots", strokes: player_hole[:strokes_received] %>
+            </p>
+          </div>
+          <%= render "games/mobile/score_stepper",
+                gtp: gtp,
+                hole_number: hole_number,
+                gross_score: player_hole[:gross_score],
+                event: event,
+                game: game,
+                can_edit: scorecard_can_edit_gross?(game, gtp) %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-1">
+    <% if hole&.dig(:complete) %>
+      <div class="flex justify-between text-sm">
+        <span class="text-emerald-900"><%= team_a[:name] %> #</span>
+        <span class="font-semibold tabular-nums"><%= hole[:team_numbers][team_a[:id]] %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-emerald-900"><%= team_b[:name] %> #</span>
+        <span class="font-semibold tabular-nums"><%= hole[:team_numbers][team_b[:id]] %></span>
+      </div>
+      <div class="flex justify-between text-sm pt-1 border-t border-emerald-200">
+        <span class="text-emerald-900">Points</span>
+        <span class="font-semibold tabular-nums"><%= hole[:hole_points].zero? ? "0" : format("%+d", hole[:hole_points]) %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-emerald-900">Wash</span>
+        <span class="font-semibold tabular-nums text-emerald-800"><%= hole[:running_wash] %></span>
+      </div>
+    <% else %>
+      <p class="text-sm text-emerald-800">Enter all four scores to see the hole result.</p>
+    <% end %>
+  </div>
+</div>

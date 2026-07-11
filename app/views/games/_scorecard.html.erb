@@ -1,8 +1,6 @@
 <%# Renders the full Best Ball scorecard with inline score entry and leaderboard.
     Locals: scorecard (hash from BestBallScorecard), game (Game), event (Event) %>
 
-<% can_edit = scorecard_can_edit?(game, event) %>
-
 <% scorecard[:teams].each do |team| %>
   <% game_team = game.game_teams.detect { |gt| gt.id == team[:id] } %>
   <% gtps_for_team = scorecard_gtps_for_team(game_team) %>
@@ -44,7 +42,7 @@
                         gross_score: player_hole[:gross_score],
                         event: event,
                         game: game,
-                        can_edit: can_edit && gtp.present? %>
+                        can_edit: scorecard_can_edit_gross?(game, gtp) %>
                   <%= render "games/scorecard/stroke_dots", strokes: player_hole[:strokes_received] %>
                 </span>
               </td>

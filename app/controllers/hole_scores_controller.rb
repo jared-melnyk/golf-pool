@@ -82,14 +82,9 @@ class HoleScoresController < ApplicationController
                          .find(params[:id])
 
     return if @game.can_manage?(current_user)
+    return if teammate_of_authorized_gtp?
 
-    if forty_pick_only?
-      return if teammate_of_authorized_gtp?
-    else
-      return if @gtp.user_id == current_user.id
-    end
-
-    redirect_to game_path(@game), alert: "You can only enter your own scores."
+    redirect_to game_path(@game), alert: "You can only enter scores for your own team."
   end
 
   def teammate_of_authorized_gtp?

@@ -3,6 +3,10 @@
   <%= render "games/scorecard/flash", message: flash[:alert], type: :alert if flash[:alert].present? %>
 <% end %>
 
+<%= turbo_stream.replace dom_id(@game, :mobile_arena) do %>
+  <%= render "games/mobile/arena", scorecard: @scorecard, game: @game, event: @event %>
+<% end %>
+
 <% player_hole = @team_data[:players].find { |p| p[:name] == @gtp.user.name }&.then { |p| p[:hole_scores].find { |s| s[:hole_number] == @hole_number } } %>
 <% team_hole = @team_data[:hole_scores]&.find { |s| s[:hole_number] == @hole_number } %>
 
@@ -76,7 +80,7 @@
             player_hole: player_hole,
             event: @event,
             game: @game,
-            can_edit: scorecard_can_edit?(@game, @event) %>
+            can_edit: scorecard_can_edit_forty_pick?(@game, @gtp) %>
     <% end %>
   <% else %>
     <% gtps_for_team = @game_team.game_team_players.index_by { |gtp| gtp.user.name } %>
@@ -93,7 +97,7 @@
               player_hole: ph,
               event: @event,
               game: @game,
-              can_edit: scorecard_can_edit?(@game, @event) %>
+              can_edit: scorecard_can_edit_forty_pick?(@game, gtp) %>
       <% end %>
     <% end %>
   <% end %>

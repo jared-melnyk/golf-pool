@@ -1,8 +1,6 @@
 <%# Renders the Cha-Cha-Cha (1-2-3) scorecard with inline score entry and leaderboard.
     Locals: scorecard (hash from ChaChaChaScorecard), game (Game), event (Event) %>
 
-<% can_edit = scorecard_can_edit?(game, event) %>
-
 <p class="text-sm text-gray-600 mb-4">
   Count the lowest <strong>1</strong>, then <strong>2</strong>, then <strong>3</strong> net scores per hole; the pattern repeats every three holes.
 </p>
@@ -54,7 +52,7 @@
                         gross_score: player_hole[:gross_score],
                         event: event,
                         game: game,
-                        can_edit: can_edit && gtp.present? %>
+                        can_edit: scorecard_can_edit_gross?(game, gtp) %>
                   <%= render "games/scorecard/stroke_dots", strokes: player_hole[:strokes_received] %>
                 </span>
               </td>
