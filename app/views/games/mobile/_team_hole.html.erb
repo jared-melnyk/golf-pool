@@ -58,7 +58,10 @@
       <p class="text-xs text-gray-500 pt-1">
         Picks <%= team[:selected_count] %>/<%= team[:target_pick_count] %>
         <% if team[:actual_vs_par] %>
-          · Actual <%= "%+d" % team[:actual_vs_par] %>
+          · Net vs par <%= "%+d" % team[:actual_vs_par] %>
+          <% if team[:player_count] == 3 && team[:competition_vs_par] != team[:actual_vs_par] %>
+            · Scaled <%= "%+d" % team[:competition_vs_par] %>
+          <% end %>
         <% end %>
       </p>
     </div>

@@ -103,7 +103,10 @@
   <% end %>
 
   <%= turbo_stream.replace dom_id(@game_team, "forty_header_stats") do %>
-    <%= render "games/scorecard/forty_team_header", game_team: @game_team, team_data: @team_data %>
+    <%= render "games/scorecard/forty_team_header",
+          game_team: @game_team,
+          team_data: @team_data,
+          show_scaled: forty_score_shows_scaled?(@scorecard) %>
   <% end %>
 
   <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
