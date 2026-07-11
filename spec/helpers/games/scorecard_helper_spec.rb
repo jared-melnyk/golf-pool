@@ -30,4 +30,22 @@ RSpec.describe Games::ScorecardHelper, type: :helper do
       expect(helper.scorecard_display_rank(nil, leaderboard)).to eq("—")
     end
   end
+
+  describe "#forty_score_shows_scaled?" do
+    it "is false when every team is a foursome" do
+      scorecard = {
+        teams: [ { player_count: 4 }, { player_count: 4 } ],
+        leaderboard: [ { player_count: 4 }, { player_count: 4 } ]
+      }
+      expect(helper.forty_score_shows_scaled?(scorecard)).to be(false)
+    end
+
+    it "is true when any team is a threesome" do
+      scorecard = {
+        teams: [ { player_count: 4 }, { player_count: 3 } ],
+        leaderboard: []
+      }
+      expect(helper.forty_score_shows_scaled?(scorecard)).to be(true)
+    end
+  end
 end

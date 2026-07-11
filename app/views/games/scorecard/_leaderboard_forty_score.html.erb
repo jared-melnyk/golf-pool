@@ -1,9 +1,14 @@
 <%# locals: game, scorecard %>
+<% show_scaled = forty_score_shows_scaled?(scorecard) %>
 <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" id="<%= dom_id(game, :leaderboard) %>">
   <h2 class="text-base font-semibold text-gray-900 mb-3">Leaderboard</h2>
   <% complete = scorecard[:leaderboard].select { |row| row[:rank] } %>
   <% if complete.empty? %>
     <p class="text-sm text-gray-500">Every group needs all counted picks with gross scores before rankings appear.</p>
+  <% elsif show_scaled %>
+    <p class="text-xs text-gray-500 mb-3">
+      Ranked on <strong>scaled</strong> net vs par so threesomes (30 picks) compare fairly with foursomes (40 picks).
+    </p>
   <% end %>
   <table class="w-full text-sm">
     <thead>
@@ -12,8 +17,10 @@
         <th class="pb-2 pr-3">Team</th>
         <th class="pb-2 pr-3">Players</th>
         <th class="pb-2 pr-3">Picks</th>
-        <th class="pb-2 pr-3">Actual vs par</th>
-        <th class="pb-2 pr-3">Competition vs par</th>
+        <th class="pb-2 pr-3<%= show_scaled ? "" : " font-semibold text-emerald-700" %>">Net vs par</th>
+        <% if show_scaled %>
+          <th class="pb-2 pr-3 font-semibold text-emerald-700">Scaled (for ranking)</th>
+        <% end %>
         <th class="pb-2">Counted net</th>
       </tr>
     </thead>
@@ -32,20 +39,22 @@
               <%= row[:target_pick_count] %>
             <% end %>
           </td>
-          <td class="py-1 pr-3">
+          <td class="py-1 pr-3<%= show_scaled ? "" : " font-semibold text-emerald-700" %>">
             <% if row[:actual_vs_par].nil? %>
               —
             <% else %>
               <%= "%+d" % row[:actual_vs_par] %>
             <% end %>
           </td>
-          <td class="py-1 pr-3 font-semibold text-emerald-700">
-            <% if row[:competition_vs_par].nil? %>
-              —
-            <% else %>
-              <%= "%+d" % row[:competition_vs_par] %>
-            <% end %>
-          </td>
+          <% if show_scaled %>
+            <td class="py-1 pr-3 font-semibold text-emerald-700">
+              <% if row[:competition_vs_par].nil? %>
+                —
+              <% else %>
+                <%= "%+d" % row[:competition_vs_par] %>
+              <% end %>
+            </td>
+          <% end %>
           <td class="py-1"><%= row[:total_selected_net] || "—" %></td>
         </tr>
       <% end %>

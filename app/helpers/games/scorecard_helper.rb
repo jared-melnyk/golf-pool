@@ -43,6 +43,12 @@ module Games
       end || 1
     end
 
+    # 40 Score: competition scaling only matters when a threesome is in the field.
+    def forty_score_shows_scaled?(scorecard)
+      scorecard[:teams].any? { |t| t[:player_count] == 3 } ||
+        scorecard[:leaderboard].any? { |r| r[:player_count] == 3 }
+    end
+
     # Map player name → GameTeamPlayer for one group. Names are only unique within a team;
     # the same user may appear on multiple teams (separate GTP rows and DOM ids).
     def scorecard_gtps_for_team(game_team)
