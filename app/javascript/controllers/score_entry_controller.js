@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Saves scorecard fields via Turbo without full-page reload.
-// Gross scores save on blur when the value changed; 40 Score picks save on change.
+// Gross scores save on blur/change when dirty; steppers submit immediately; 40 Score picks on change.
 export default class extends Controller {
   static targets = ["input"]
   static values = { lastValue: String, focusId: String }
@@ -18,6 +18,29 @@ export default class extends Controller {
     this.element.requestSubmit()
   }
 
+  increment(event) {
+    event.preventDefault()
+    this.nudge(1)
+  }
+
+  decrement(event) {
+    event.preventDefault()
+    this.nudge(-1)
+  }
+
+  nudge(delta) {
+    if (!this.hasInputTarget) return
+
+    const input = this.inputTarget
+    const min = parseInt(input.min || "1", 10)
+    const max = parseInt(input.max || "15", 10)
+    const current = parseInt(input.value || "0", 10)
+    const base = Number.isFinite(current) && current > 0 ? current : 4
+    const next = Math.min(max, Math.max(min, base + delta))
+    input.value = String(next)
+    this.element.requestSubmit()
+  }
+
   submitPick() {
     this.element.requestSubmit()
   }
@@ -29,7 +52,6 @@ export default class extends Controller {
       return
     }
 
-    // Tab may move focus before blur runs; avoid restoring to this field.
     const active = document.activeElement
     if (active?.matches?.("[data-score-entry-target='input']") && active.id && active !== this.inputTarget) {
       this.focusIdValue = active.id

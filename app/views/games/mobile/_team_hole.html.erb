@@ -1,0 +1,66 @@
+<%# locals: game, event, scorecard, team, game_team, hole_number %>
+<% gtps = scorecard_gtps_for_team(game_team) %>
+<% team_hole = team[:hole_scores]&.find { |s| s[:hole_number] == hole_number } %>
+<% par = game.round.hole_pars[hole_number - 1] %>
+
+<div class="space-y-3">
+  <% team[:players].each do |player| %>
+    <% player_hole = player[:hole_scores].find { |s| s[:hole_number] == hole_number } %>
+    <% gtp = gtps[player[:name]] %>
+    <div class="flex items-center justify-between gap-3 py-2 border-b border-gray-100 last:border-0">
+      <div class="min-w-0">
+        <p class="font-medium text-gray-900 truncate"><%= player[:name] %></p>
+        <p class="text-xs text-gray-500">
+          Net <span class="tabular-nums"><%= player_hole[:net_score] || "—" %></span>
+          <%= render "games/scorecard/stroke_dots", strokes: player_hole[:strokes_received] %>
+        </p>
+      </div>
+      <%= render "games/mobile/score_stepper",
+            gtp: gtp,
+            hole_number: hole_number,
+            gross_score: player_hole[:gross_score],
+            event: event,
+            game: game,
+            can_edit: scorecard_can_edit_gross?(game, gtp) %>
+    </div>
+  <% end %>
+
+  <% if game.best_ball? %>
+    <div class="rounded-lg bg-emerald-50 px-3 py-2 flex justify-between items-center">
+      <span class="text-sm font-medium text-emerald-900">Best ball</span>
+      <span class="text-lg font-semibold text-emerald-800 tabular-nums"><%= team_hole&.dig(:best_ball_net) || "—" %></span>
+    </div>
+  <% elsif game.cha_cha_cha? %>
+    <div class="rounded-lg bg-emerald-50 px-3 py-2 flex justify-between items-center gap-3">
+      <span class="text-sm font-medium text-emerald-900">
+        Count <%= team_hole&.dig(:scores_to_count) %> · Team net
+      </span>
+      <span class="text-lg font-semibold text-emerald-800 tabular-nums"><%= team_hole&.dig(:team_net_strokes) || "—" %></span>
+    </div>
+  <% elsif game.forty_score? %>
+    <div class="space-y-2 pt-1">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Count toward 40?</p>
+      <% team[:players].each do |player| %>
+        <% player_hole = player[:hole_scores].find { |s| s[:hole_number] == hole_number } %>
+        <% gtp = gtps[player[:name]] %>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-sm text-gray-800"><%= player[:name] %></span>
+          <%= render "games/mobile/forty_pick_toggle",
+                gtp: gtp,
+                game_team: game_team,
+                hole_number: hole_number,
+                player_hole: player_hole,
+                event: event,
+                game: game,
+                can_edit: scorecard_can_edit_forty_pick?(game, gtp) %>
+        </div>
+      <% end %>
+      <p class="text-xs text-gray-500 pt-1">
+        Picks <%= team[:selected_count] %>/<%= team[:target_pick_count] %>
+        <% if team[:actual_vs_par] %>
+          · Actual <%= "%+d" % team[:actual_vs_par] %>
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+</div>

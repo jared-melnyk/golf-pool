@@ -107,8 +107,8 @@ RSpec.describe "Games", type: :request do
         id_b = ActionView::RecordIdentifier.dom_id(gtp_b, "gross_hole_1")
 
         expect(id_a).not_to eq(id_b)
-        expect(response.body.scan(id_a).size).to eq(1)
-        expect(response.body.scan(id_b).size).to eq(1)
+        expect(response.body.scan(/id="#{Regexp.escape(id_a)}"/).size).to eq(1)
+        expect(response.body.scan(/id="#{Regexp.escape(id_b)}"/).size).to eq(1)
       end
     end
   end
