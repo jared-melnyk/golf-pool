@@ -1,0 +1,34 @@
+<div class="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+  <div class="p-4 border-b border-gray-200">
+    <h1 class="text-2xl font-bold text-gray-900">Events</h1>
+  </div>
+
+  <% if @events.any? %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 text-sm">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Name</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700">Members</th>
+            <th scope="col" class="px-4 py-3 text-left font-semibold text-gray-700"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 bg-white">
+          <% @events.each do |event| %>
+            <tr>
+              <td class="px-4 py-3 whitespace-nowrap font-medium text-gray-900"><%= event.name %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= event.status.titleize %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-gray-700"><%= event.event_memberships.size %></td>
+              <td class="px-4 py-3 whitespace-nowrap text-right">
+                <%= link_to "Manage", admin_event_path(event), class: "text-emerald-700 hover:underline text-sm font-medium" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="p-4 text-gray-600">No events yet.</p>
+  <% end %>
+</div>
