@@ -1,0 +1,9 @@
+<%# locals: strokes %>
+<% count = strokes.to_i %>
+<% if count > 0 %>
+  <span
+    class="text-emerald-600 text-sm font-bold tracking-tighter select-none"
+    title="<%= count %> stroke<%= count == 1 ? "" : "s" %> received"
+    aria-label="<%= count %> stroke<%= count == 1 ? "" : "s" %> received"
+  ><%= "●" * count %></span>
+<% end %>

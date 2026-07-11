@@ -31,8 +31,8 @@ expected:
     Group A:
       selected_count: 40
       target_pick_count: 40
-      actual_vs_par: 4
-      competition_vs_par: 4
+      actual_vs_par: 6
+      competition_vs_par: 6
       players:
         Nitti:
           course_handicap: 8
@@ -45,4 +45,4 @@ expected:
           playing_handicap: 15
         Ryan Lannon:
           course_handicap: 38
-          playing_handicap: 38
+          playing_handicap: 36

@@ -25,7 +25,7 @@
 |--------|-----------|---------------|
 | **HI** | Handicap Index | Player’s GHIN number — overall skill level (lower = better). Listed in the trip roster. |
 | **CH** | Course Handicap | Strokes for **this course and tee** — adjusts HI for slope, rating, and par. |
-| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %). Used to allocate strokes hole by hole. |
+| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %), capped at **36**. Used to allocate strokes hole by hole. |
 
 ### Formulas (this packet)
 
@@ -41,21 +41,21 @@ This course: rating **70.6**, slope **125**, par **72**
 CH = round( HI × 1.106 + (70.6 − 72) )
 ```
 
-**Playing Handicap** (Vegas (2v2 wash) uses **100%** of CH)
+**Playing Handicap** (Vegas (2v2 wash) uses **100%** of CH, max **36**)
 
 ```
-PH = round( CH × 100% )
+PH = min( round( CH × 100% ), 36 )
 ```
 
 **Worked example — Kevin Callaghan (HI 5.7):**
 1. CH = round(5.7 × 1.106 + (70.6 − 72)) = round(4.9) = **5**
-2. PH = round(5 × 100%) = round(5.0) = **5**
+2. PH = min(round(5 × 100%), 36) = round(5.0) = **5**
 
 **Net score on a hole** = gross score − strokes received on that hole.
 
 **Strokes per hole:** PH strokes are spread across 18 holes using the **stroke index (SI)** row in the course table (SI 1 = hardest hole).
 - If PH ≤ 18: player gets **1 stroke** on the PH hardest holes (SI 1 through SI PH).
-- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes.
+- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes (max PH 36 ⇒ max 2 per hole).
 
 _The **Total strokes** column in the table below should equal each player’s PH._
 
@@ -66,7 +66,7 @@ See **Handicap terms** above for how HI → CH → PH is calculated.
 | Team | Player | HI | CH | PH | Total strokes |
 |------|--------|----|----|----|---------------|
 | Team A | Kevin Callaghan | 5.7 | 5 | 5 | 5 |
-| Team A | Ryan Lannon | 36.0 | 38 | 38 | 38 |
+| Team A | Ryan Lannon | 36.0 | 38 | 36 | 36 |
 | Team B | Jared | 18.3 | 19 | 19 | 19 |
 | Team B | Chris | 17.4 | 18 | 18 | 18 |
 
@@ -132,23 +132,23 @@ Points = opponent number − your number (to the lower team). Wash = running sum
 | 1 | 4 | 5/4 | 45 | 4/5 | 45 | — | 0 | 0 |
 | 2 | 4 | 4/4 | 44 | 4/4 | 44 | — | 0 | 0 |
 | 3 | 5 | 6/6 | 66 | 6/5 | 56 | — | -10 | -10 |
-| 4 | 4 | 3/3 | 33 | 3/4 | 43 | Team B, Team A | 10 | 0 |
-| 5 | 3 | 2/3 | 23 | 3/3 | 33 | Team B | 10 | 10 |
-| 6 | 5 | 6/6 | 66 | 6/5 | 56 | — | -10 | 0 |
-| 7 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | 1 |
-| 8 | 3 | 3/3 | 33 | 3/3 | 33 | — | 0 | 1 |
-| 9 | 4 | 4/4 | 44 | 5/4 | 45 | — | 1 | 2 |
-| 10 | 4 | 4/4 | 44 | 4/4 | 44 | — | 0 | 2 |
-| 11 | 5 | 5/6 | 56 | 5/6 | 56 | — | 0 | 2 |
-| 12 | 3 | 3/3 | 33 | 3/4 | 34 | — | 1 | 3 |
-| 13 | 4 | 4/3 | 34 | 5/4 | 54 | Team B | 20 | 23 |
-| 14 | 5 | 6/6 | 66 | 6/6 | 66 | — | 0 | 23 |
-| 15 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | 24 |
-| 16 | 3 | 2/3 | 23 | 3/4 | 43 | Team B | 20 | 44 |
-| 17 | 4 | 5/4 | 45 | 5/4 | 45 | — | 0 | 44 |
-| 18 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | 45 |
+| 4 | 4 | 3/4 | 43 | 3/4 | 43 | Team B, Team A | 0 | -10 |
+| 5 | 3 | 2/3 | 23 | 3/3 | 33 | Team B | 10 | 0 |
+| 6 | 5 | 6/6 | 66 | 6/5 | 56 | — | -10 | -10 |
+| 7 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | -9 |
+| 8 | 3 | 3/3 | 33 | 3/3 | 33 | — | 0 | -9 |
+| 9 | 4 | 4/4 | 44 | 5/4 | 45 | — | 1 | -8 |
+| 10 | 4 | 4/4 | 44 | 4/4 | 44 | — | 0 | -8 |
+| 11 | 5 | 5/6 | 56 | 5/6 | 56 | — | 0 | -8 |
+| 12 | 3 | 3/3 | 33 | 3/4 | 34 | — | 1 | -7 |
+| 13 | 4 | 4/4 | 44 | 5/4 | 45 | — | 1 | -6 |
+| 14 | 5 | 6/6 | 66 | 6/6 | 66 | — | 0 | -6 |
+| 15 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | -5 |
+| 16 | 3 | 2/3 | 23 | 3/4 | 43 | Team B | 20 | 15 |
+| 17 | 4 | 5/4 | 45 | 5/4 | 45 | — | 0 | 15 |
+| 18 | 4 | 4/4 | 44 | 4/5 | 45 | — | 1 | 16 |
 
-**Result: Team A leads by 45** (margin 45, from Team A's perspective)
+**Result: Team A leads by 16** (margin 16, from Team A's perspective)
 
 _Points/wash are shown from Team A's view: negative = Team B won the hole._
 

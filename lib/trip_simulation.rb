@@ -173,29 +173,74 @@ class TripSimulation
     end
   end
 
-  def enter_forty_score_picks!(game, player_keys)
+  def enter_forty_score_picks!(game, _player_keys)
     round = game.round
     game.game_teams.includes(game_team_players: :user).each do |team|
       team.game_team_players.each do |gtp|
         player_key = @players_by_key.key(gtp.user)
-        pick_offset = player_keys.index(player_key)
         (1..18).each do |hole|
           gross = gross_for(player_key, hole, :forty_score, round)
-          picked = pick_hole?(hole, pick_offset)
           HoleScore.create!(
             game_team_player: gtp,
             hole_number: hole,
             gross_score: gross,
-            included_in_forty_score: picked
+            included_in_forty_score: false
           )
         end
       end
     end
+
+    apply_optimal_forty_picks!(game)
   end
 
-  def pick_hole?(hole, pick_offset)
-    slots = (1..18).to_a.rotate(pick_offset * 3)
-    slots.first(10).include?(hole)
+  # 40 Score: captain picks how many scores to count per hole (0–4), 40 total.
+  # On each hole, always take the lowest nets first (never count a worse score while
+  # a better teammate's score on the same hole is left out).
+  def apply_optimal_forty_picks!(game)
+    game.reload
+    scorecard = FortyScoreScorecard.new(game).call
+    team_data = scorecard[:teams].first
+    target = team_data[:target_pick_count]
+    hole_pars = game.round.hole_pars
+
+    # Per hole: nets sorted best-first (each player at most once per hole).
+    hole_slots = {}
+    (1..18).each do |hole_number|
+      par = hole_pars[hole_number - 1]
+      nets = []
+      team_data[:players].each do |player|
+        hs = player[:hole_scores].find { |s| s[:hole_number] == hole_number }
+        next if hs[:net_score].nil?
+
+        gtp = game.game_teams.flat_map(&:game_team_players).find { |g| g.user.name == player[:name] }
+        nets << { gtp: gtp, hole_number: hole_number, vs_par: hs[:net_score] - par }
+      end
+      hole_slots[hole_number] = nets.sort_by { |n| [ n[:vs_par], n[:gtp].id ] }
+    end
+
+    # Greedily add the next-best available score on any hole until we reach the target.
+    counts = Hash.new(0)
+    target.times do
+      best_hole = nil
+      best_vs_par = nil
+      hole_slots.each do |hole_number, nets|
+        next if counts[hole_number] >= nets.size
+
+        marginal = nets[counts[hole_number]][:vs_par]
+        if best_hole.nil? || marginal < best_vs_par
+          best_hole = hole_number
+          best_vs_par = marginal
+        end
+      end
+      counts[best_hole] += 1
+    end
+
+    counts.each do |hole_number, pick_count|
+      hole_slots[hole_number].first(pick_count).each do |pick|
+        HoleScore.find_by!(game_team_player: pick[:gtp], hole_number: pick[:hole_number])
+                 .update!(included_in_forty_score: true)
+      end
+    end
   end
 
   def gross_for(player_key, hole, pattern, round)
@@ -278,6 +323,19 @@ class TripSimulation
     lines << ""
     lines << "Planning doc: `docs/trip/2026-07-michigan-golf-trip.md`"
     lines << ""
+    lines << "## Before you click the URLs"
+    lines << ""
+    lines << "1. **Start the app** in another terminal: `bin/rails server` (or `bin/dev`)"
+    if auto_login_links?
+      lines << "2. **Click any link below** — each one signs you in as commissioner and opens that page (no separate login step)"
+    else
+      lines << "2. **Sign in** at #{@host}/login — use the commissioner credentials below"
+      lines << "3. **Then** open the game/event links (they require a logged-in session)"
+      lines << "4. For one-click login links, re-run with `TRIP_SIM_LOGIN=1` on the server and in this rake task"
+    end
+    lines << ""
+    lines << "_These links point at `#{@host}`. They are not on production unless you re-run with `TRIP_SIM_HOST=https://long-shot-web.onrender.com bundle exec rake trip:simulate`._"
+    lines << ""
     lines << "## Credentials"
     lines << ""
     lines << "| Role | Email | Password |"
@@ -315,12 +373,22 @@ class TripSimulation
     lines << "## Notes"
     lines << ""
     lines << "- Leaderboards are per game, not event-wide."
-    lines << "- Re-run with `bundle exec rake trip:simulate` to reset demo data."
+    lines << "- Re-run with `bundle exec rake trip:simulate` to reset demo data (old URLs stop working after a re-run)."
+    lines << "- If a link 404s or redirects oddly, re-run the simulator and use the fresh manifest."
     lines.join("\n")
   end
 
   def url_for(record)
     path = record.is_a?(Event) ? "/events/#{record.token}" : "/games/#{record.token}"
-    "#{@host}#{path}"
+    return "#{@host}#{path}" unless auto_login_links?
+
+    "#{@host}/dev/trip_sim_login?return_to=#{CGI.escape(path)}"
+  end
+
+  def auto_login_links?
+    host = @host.to_s
+    host.include?("localhost") ||
+      host.include?("127.0.0.1") ||
+      ActiveModel::Type::Boolean.new.cast(ENV["TRIP_SIM_LOGIN"])
   end
 end

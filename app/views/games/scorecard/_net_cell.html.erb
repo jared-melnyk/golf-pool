@@ -1,8 +1,9 @@
-<%# locals: gtp, hole_number, net_score %>
+<%# locals: gtp, hole_number, net_score, cell_class (optional) %>
+<% classes = [ "py-1.5 px-2 text-center text-gray-500 text-xs tabular-nums border-r border-gray-200", local_assigns[:cell_class] ].compact.join(" ") %>
 <% if gtp %>
-  <td class="py-1 pr-3 text-gray-500 text-xs" id="<%= dom_id(gtp, "net_hole_#{hole_number}") %>">
+  <td class="<%= classes %>" id="<%= dom_id(gtp, "net_hole_#{hole_number}") %>">
     <%= net_score || "—" %>
   </td>
 <% else %>
-  <td class="py-1 pr-3 text-gray-500 text-xs"><%= net_score || "—" %></td>
+  <td class="<%= classes %>"><%= net_score || "—" %></td>
 <% end %>

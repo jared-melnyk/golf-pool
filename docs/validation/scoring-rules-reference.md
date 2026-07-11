@@ -24,7 +24,7 @@ Each validation packet includes a **Handicap terms** section with these formulas
 |------|---------|
 | Handicap Index (HI) | From player profile (GHIN honor system) |
 | Course Handicap (CH) | `round(HI × (slope ÷ 113) + (rating − par))` |
-| Playing Handicap (PH) | `round(CH × allowance%)` — see table below |
+| Playing Handicap (PH) | `min(round(CH × allowance%), 36)` — see table below |
 | Net score | `gross − strokes_received` on that hole |
 
 ### Playing handicap allowances
@@ -36,12 +36,14 @@ Each validation packet includes a **Handicap terms** section with these formulas
 | 40 Score | 100% |
 | Vegas | 100% |
 
+**PH ceiling:** Playing handicap is capped at **36** (at most **2 strokes** on any hole). Course handicap is still shown uncapped for reference.
+
 ### Stroke allocation
 
 Strokes are spread across 18 holes using each hole’s **stroke index (SI)** from the course table (SI 1 = hardest hole).
 
 - If **PH ≤ 18:** player gets **1 stroke** on the PH hardest holes (SI 1 through SI PH).
-- If **PH > 18:** every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes.
+- If **PH > 18:** every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes (max PH 36 ⇒ max 2 per hole).
 
 **Example (PH 19):** 1 stroke on every hole, plus a 2nd stroke on the hardest hole (SI 1).
 

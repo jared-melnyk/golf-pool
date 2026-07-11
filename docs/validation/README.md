@@ -58,10 +58,10 @@ See [scoring-rules-reference.md](scoring-rules-reference.md) for full definition
 CH = round(HI × slope/113 + (rating − par))
 ```
 
-**PH (Playing Handicap)** — CH adjusted for the game format:
+**PH (Playing Handicap)** — CH adjusted for the game format, capped at 36:
 
 ```
-PH = round(CH × allowance%)
+PH = min(round(CH × allowance%), 36)
 ```
 
 | Format | Allowance |
@@ -69,7 +69,7 @@ PH = round(CH × allowance%)
 | Best Ball, Cha-Cha-Cha | 85% |
 | 40 Score, Vegas | 100% |
 
-**Strokes per hole:** PH strokes are spread using stroke index (SI). If PH ≤ 18, strokes land on the PH hardest holes; if PH > 18, every hole gets 1 stroke plus extras on the hardest holes (see rules reference).
+**Strokes per hole:** PH strokes are spread using stroke index (SI). If PH ≤ 18, strokes land on the PH hardest holes; if PH > 18, every hole gets 1 stroke plus extras on the hardest holes. The PH cap of 36 means **at most 2 strokes on any hole**.
 
 **Net on a hole** = gross − strokes received.
 

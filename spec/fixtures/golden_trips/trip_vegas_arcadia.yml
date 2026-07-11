@@ -33,7 +33,7 @@ expected:
           playing_handicap: 5
         Ryan Lannon:
           course_handicap: 38
-          playing_handicap: 38
+          playing_handicap: 36
     Team B:
       players:
         Jared:
@@ -62,6 +62,6 @@ expected:
       hole_points: -10
       running_wash: -10
   wash:
-    margin: 45
+    margin: 16
     leader_name: Team A
-    label: Team A leads by 45
+    label: Team A leads by 16

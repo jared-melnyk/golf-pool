@@ -25,7 +25,7 @@
 |--------|-----------|---------------|
 | **HI** | Handicap Index | Player’s GHIN number — overall skill level (lower = better). Listed in the trip roster. |
 | **CH** | Course Handicap | Strokes for **this course and tee** — adjusts HI for slope, rating, and par. |
-| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %). Used to allocate strokes hole by hole. |
+| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %), capped at **36**. Used to allocate strokes hole by hole. |
 
 ### Formulas (this packet)
 
@@ -41,21 +41,21 @@ This course: rating **72.0**, slope **113**, par **72**
 CH = round( HI × 1.0 + (72.0 − 72) )
 ```
 
-**Playing Handicap** (40 Score uses **100%** of CH)
+**Playing Handicap** (40 Score uses **100%** of CH, max **36**)
 
 ```
-PH = round( CH × 100% )
+PH = min( round( CH × 100% ), 36 )
 ```
 
-**Worked example — T1 (HI 0.0):**
+**Worked example — T2 (HI 0.0):**
 1. CH = round(0.0 × 1.0 + (72.0 − 72)) = round(0.0) = **0**
-2. PH = round(0 × 100%) = round(0.0) = **0**
+2. PH = min(round(0 × 100%), 36) = round(0.0) = **0**
 
 **Net score on a hole** = gross score − strokes received on that hole.
 
 **Strokes per hole:** PH strokes are spread across 18 holes using the **stroke index (SI)** row in the course table (SI 1 = hardest hole).
 - If PH ≤ 18: player gets **1 stroke** on the PH hardest holes (SI 1 through SI PH).
-- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes.
+- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes (max PH 36 ⇒ max 2 per hole).
 
 _The **Total strokes** column in the table below should equal each player’s PH._
 
@@ -65,13 +65,13 @@ See **Handicap terms** above for how HI → CH → PH is calculated.
 
 | Team | Player | HI | CH | PH | Total strokes |
 |------|--------|----|----|----|---------------|
-| Threesome | T1 | 0.0 | 0 | 0 | 0 |
 | Threesome | T2 | 0.0 | 0 | 0 | 0 |
 | Threesome | T3 | 0.0 | 0 | 0 | 0 |
+| Threesome | T1 | 0.0 | 0 | 0 | 0 |
 
 ## Gross scores entered (the scorecard)
 
-| Hole | Par | SI | T1 | T2 | T3 |
+| Hole | Par | SI | T2 | T3 | T1 |
 |---|---|---|---|---|---|
 | 1 | 4 | 1 | 3 | 3 | 3 |
 | 2 | 4 | 3 | 3 | 3 | 3 |
@@ -127,7 +127,7 @@ Threesomes only: competition vs par = round(actual × 4/3). Foursomes: competiti
 
 Cells show **net** (✓ = counted in the 40). Par is per hole below.
 
-| Hole | Par | T1 | T2 | T3 |
+| Hole | Par | T2 | T3 | T1 |
 |---|---|---|---|---|
 | 1 | 4 | 3 ✓ | 3 ✓ | 3 ✓ |
 | 2 | 4 | 3 ✓ | 3 ✓ | 3 ✓ |

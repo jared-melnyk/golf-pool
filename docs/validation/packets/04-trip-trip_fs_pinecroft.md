@@ -25,7 +25,7 @@
 |--------|-----------|---------------|
 | **HI** | Handicap Index | Player’s GHIN number — overall skill level (lower = better). Listed in the trip roster. |
 | **CH** | Course Handicap | Strokes for **this course and tee** — adjusts HI for slope, rating, and par. |
-| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %). Used to allocate strokes hole by hole. |
+| **PH** | Playing Handicap | CH adjusted for **this game format** (allowance %), capped at **36**. Used to allocate strokes hole by hole. |
 
 ### Formulas (this packet)
 
@@ -41,21 +41,21 @@ This course: rating **70.1**, slope **126**, par **72**
 CH = round( HI × 1.115 + (70.1 − 72) )
 ```
 
-**Playing Handicap** (40 Score uses **100%** of CH)
+**Playing Handicap** (40 Score uses **100%** of CH, max **36**)
 
 ```
-PH = round( CH × 100% )
+PH = min( round( CH × 100% ), 36 )
 ```
 
 **Worked example — Nitti (HI 8.6):**
 1. CH = round(8.6 × 1.115 + (70.1 − 72)) = round(7.7) = **8**
-2. PH = round(8 × 100%) = round(8.0) = **8**
+2. PH = min(round(8 × 100%), 36) = round(8.0) = **8**
 
 **Net score on a hole** = gross score − strokes received on that hole.
 
 **Strokes per hole:** PH strokes are spread across 18 holes using the **stroke index (SI)** row in the course table (SI 1 = hardest hole).
 - If PH ≤ 18: player gets **1 stroke** on the PH hardest holes (SI 1 through SI PH).
-- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes.
+- If PH > 18: every hole gets **1 stroke**, plus an **extra stroke** on the (PH − 18) hardest holes (max PH 36 ⇒ max 2 per hole).
 
 _The **Total strokes** column in the table below should equal each player’s PH._
 
@@ -68,7 +68,7 @@ See **Handicap terms** above for how HI → CH → PH is calculated.
 | Group A | Nitti | 8.6 | 8 | 8 | 8 |
 | Group A | Joe Mc | 12.0 | 11 | 11 | 11 |
 | Group A | Ryan Flynn | 15.0 | 15 | 15 | 15 |
-| Group A | Ryan Lannon | 36.0 | 38 | 38 | 38 |
+| Group A | Ryan Lannon | 36.0 | 38 | 36 | 36 |
 
 ## Gross scores entered (the scorecard)
 
@@ -138,9 +138,9 @@ Cells show **net** (✓ = counted in the 40). Par is per hole below.
 | 6 | 4 | 4 ✓ | 4 ✓ | 4 | 4 |
 | 7 | 3 | 3 ✓ | 3 ✓ | 4 ✓ | 3 ✓ |
 | 8 | 4 | 4 ✓ | 5 | 4 ✓ | 4 |
-| 9 | 5 | 4 | 5 ✓ | 5 | 5 ✓ |
+| 9 | 5 | 4 | 5 ✓ | 5 | 6 ✓ |
 | 10 | 4 | 3 ✓ | 4 | 4 | 4 |
-| 11 | 4 | 4 | 4 ✓ | 5 | 4 ✓ |
+| 11 | 4 | 4 | 4 ✓ | 5 | 5 ✓ |
 | 12 | 4 | 3 | 3 ✓ | 4 ✓ | 4 |
 | 13 | 4 | 5 ✓ | 5 | 4 | 4 |
 | 14 | 3 | 3 ✓ | 4 | 3 ✓ | 3 ✓ |
@@ -150,6 +150,6 @@ Cells show **net** (✓ = counted in the 40). Par is per hole below.
 | 18 | 5 | 5 | 5 ✓ | 5 ✓ | 5 ✓ |
 
 - **Picks counted:** 40 / 40
-- **Actual vs par:** +4
-- **Competition vs par:** +4
+- **Actual vs par:** +6
+- **Competition vs par:** +6
 
