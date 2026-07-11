@@ -13,6 +13,12 @@ RSpec.describe "Admin::Events", type: :request do
       expect(response).to have_http_status(:ok)
     end
 
+    it "includes an Admin Events nav link" do
+      get admin_events_path
+      expect(response.body).to include(admin_events_path)
+      expect(response.body).to include(">Events<")
+    end
+
     it "lists events with name, status, and member count" do
       event = Event.create!(name: "Michigan Trip", status: "active")
       player = User.create!(name: "Player", email: "player@example.com", password: "password")
