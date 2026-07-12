@@ -77,6 +77,17 @@ RSpec.describe "HoleScores", type: :request do
       expect(HoleScore.find_by!(game_team_player_id: gtp_alice.id, hole_number: 3).gross_score).to eq(6)
     end
 
+    it "does not persist gross score above 10" do
+      gtp_bob = GameTeamPlayer.find_by!(game_team: team, user: bob)
+      HoleScore.find_or_create_by!(game_team_player: gtp_bob, hole_number: 2) { |s| s.gross_score = 4 }
+
+      patch game_hole_score_path(game, gtp_bob),
+            params: { hole_number: 2, gross_score: "11" },
+            headers: turbo_headers
+
+      expect(HoleScore.find_by!(game_team_player_id: gtp_bob.id, hole_number: 2).gross_score).to eq(4)
+    end
+
     it "rejects score entry from a player on a different team" do
       other_team = GameTeam.create!(game: game, name: "Other")
       outsider = User.create!(name: "Out", email: "out@test.com", password: "pw")

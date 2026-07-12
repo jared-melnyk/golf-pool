@@ -15,7 +15,7 @@
             aria-label="Decrease score">−</button>
     <%= number_field_tag :gross_score,
           gross_score,
-          min: 1, max: 15, inputmode: "numeric",
+          min: 1, max: 10, inputmode: "numeric",
           id: dom_id(gtp, "mobile_gross_hole_#{hole_number}"),
           class: "w-14 h-11 rounded-lg border border-gray-300 px-1 text-center text-lg tabular-nums font-semibold focus:ring-2 focus:ring-emerald-500",
           data: {

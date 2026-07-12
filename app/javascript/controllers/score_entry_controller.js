@@ -33,7 +33,7 @@ export default class extends Controller {
 
     const input = this.inputTarget
     const min = parseInt(input.min || "1", 10)
-    const max = parseInt(input.max || "15", 10)
+    const max = parseInt(input.max || "10", 10)
     const current = parseInt(input.value || "0", 10)
     const base = Number.isFinite(current) && current > 0 ? current : 4
     const next = Math.min(max, Math.max(min, base + delta))

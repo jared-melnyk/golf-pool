@@ -2,7 +2,9 @@ class HoleScore < ApplicationRecord
   belongs_to :game_team_player
 
   validates :hole_number, inclusion: { in: 1..18 }
-  validates :gross_score, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
+  validates :gross_score,
+            numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 10 },
+            allow_nil: true
   validates :hole_number, uniqueness: { scope: :game_team_player_id }
 
   validate :forty_pick_requires_gross, if: -> { forty_score_game? && included_in_forty_score? }
