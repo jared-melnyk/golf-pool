@@ -154,6 +154,37 @@ RSpec.describe "Games", type: :request do
       get edit_teams_game_path(game)
       expect(response).to redirect_to(game_path(game))
     end
+
+    it "shows one team slot and add-team for best_ball" do
+      get edit_teams_game_path(game)
+      expect(response.body).to include("Team 1")
+      expect(response.body).not_to include("Team 2")
+      expect(response.body).to include("Add a team")
+      expect(response.body).to include("competes against other groups")
+    end
+
+    it "shows a second best_ball slot when slots=2" do
+      get edit_teams_game_path(game, slots: 2)
+      expect(response.body).to include("Team 1")
+      expect(response.body).to include("Team 2")
+    end
+
+    it "shows one team slot and no add-team for cha_cha_cha" do
+      game = create_active_game!(game_type: "cha_cha_cha")
+      get edit_teams_game_path(game)
+      expect(response.body).to include("Team 1")
+      expect(response.body).not_to include("Team 2")
+      expect(response.body).not_to include("Add a team")
+      expect(response.body).to include("competes against other groups in this round")
+    end
+
+    it "shows two fixed team slots for vegas" do
+      game = create_active_game!(game_type: "vegas")
+      get edit_teams_game_path(game)
+      expect(response.body).to include("Team 1")
+      expect(response.body).to include("Team 2")
+      expect(response.body).not_to include("Add a team")
+    end
   end
 
   describe "PATCH /games/:token/update_teams" do
@@ -250,6 +281,17 @@ RSpec.describe "Games", type: :request do
         expect(response).to have_http_status(:unprocessable_entity)
         expect(game.game_teams.reload).to be_empty
       end
+
+      it "rejects more than one team" do
+        patch update_teams_game_path(game), params: {
+          teams: {
+            "0" => { name: "Group A", user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s) },
+            "1" => { name: "Group B", user_ids: [ p3.id, p4.id, p5.id ].map(&:to_s) }
+          }
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(game.game_teams.reload).to be_empty
+      end
     end
 
     context "when game type is cha_cha_cha" do
@@ -276,6 +318,17 @@ RSpec.describe "Games", type: :request do
       it "rejects a twosome" do
         patch update_teams_game_path(game), params: {
           teams: { "0" => { name: "Pair", user_ids: [ p1.id, p2.id ].map(&:to_s) } }
+        }
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(game.game_teams.reload).to be_empty
+      end
+
+      it "rejects more than one team" do
+        patch update_teams_game_path(game), params: {
+          teams: {
+            "0" => { name: "Group A", user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s) },
+            "1" => { name: "Group B", user_ids: [ p4.id, p1.id, p2.id ].map(&:to_s) }
+          }
         }
         expect(response).to have_http_status(:unprocessable_entity)
         expect(game.game_teams.reload).to be_empty

@@ -73,10 +73,7 @@ class GamesController < ApplicationController
   end
 
   def edit_teams
-    @members = @game.roster_users
-    @guests = @game.game_guests.order(:name)
-    @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
-    @guest = GameGuest.new
+    prepare_edit_teams
   end
 
   def update_teams
@@ -100,16 +97,14 @@ class GamesController < ApplicationController
         end
       end
 
+      enforce_single_team_format! if @game.single_team_format?
       enforce_forty_score_team_sizes! if @game.forty_score?
       enforce_cha_cha_cha_team_sizes! if @game.cha_cha_cha?
       enforce_vegas_team_sizes! if @game.vegas?
     end
     redirect_to game_path(@game), notice: "Teams saved."
   rescue ActiveRecord::RecordInvalid => e
-    @members = @game.roster_users
-    @guests = @game.game_guests.order(:name)
-    @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
-    @guest = GameGuest.new
+    prepare_edit_teams
     flash.now[:alert] = "Could not save teams: #{e.record&.errors&.full_messages&.to_sentence || e.message}"
     render :edit_teams, status: :unprocessable_entity
   end
@@ -144,6 +139,14 @@ class GamesController < ApplicationController
     return if @game.active? || @game.completed?
 
     redirect_to game_setup_path(@game), alert: "Finish game setup before assigning teams."
+  end
+
+  def prepare_edit_teams
+    @members = @game.roster_users
+    @guests = @game.game_guests.order(:name)
+    @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
+    @guest = GameGuest.new
+    @team_slot_count = @game.team_slot_count(requested_slots: params[:slots])
   end
 
   def load_ad_hoc_form_state
@@ -238,6 +241,13 @@ class GamesController < ApplicationController
     end
   rescue ActionController::ParameterMissing
     {}
+  end
+
+  def enforce_single_team_format!
+    return if @game.game_teams.reload.size <= 1
+
+    @game.errors.add(:base, "#{Game.type_label(@game.game_type)} uses one team per game (this group’s score competes across the round).")
+    raise ActiveRecord::RecordInvalid.new(@game)
   end
 
   def enforce_forty_score_team_sizes!

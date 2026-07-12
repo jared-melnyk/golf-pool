@@ -2,7 +2,7 @@
 
 **Dates:** July 16–17, 2026  
 **Players:** 12  
-**Scoring app:** [Long Shot](https://long-shot-web.onrender.com) (commissioner sets up games; leaderboards are per game)
+**Scoring app:** [Long Shot](https://long-shot-web.onrender.com) (commissioner sets up games; field formats use one team per foursome game; round/trip standings rank groups)
 
 > **Share as PDF (pick one):**
 >

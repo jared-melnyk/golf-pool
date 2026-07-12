@@ -1,0 +1,23 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-900"><%= @event.name %> · Standings</h1>
+    <p class="text-sm text-gray-600 mt-1">Team format boards by round. Scores update as groups play.</p>
+  </div>
+
+  <% if @round_standings.any? %>
+    <% @round_standings.each do |standings| %>
+      <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+        <h2 class="text-lg font-semibold text-gray-900"><%= standings[:round_name] %></h2>
+        <% if standings[:formats].any? %>
+          <%= render "shared/round_standings", standings: standings %>
+        <% else %>
+          <p class="text-sm text-gray-500 mt-2">No games on this round yet.</p>
+        <% end %>
+      </section>
+    <% end %>
+  <% else %>
+    <p class="text-gray-600 text-sm">No rounds yet.</p>
+  <% end %>
+
+  <%= link_to "← Back to trip", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+</div>

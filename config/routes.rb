@@ -53,6 +53,7 @@ Rails.application.routes.draw do
 
   resources :events, param: :token do
     post :join, on: :member
+    resource :standings, only: [ :show ], controller: "events/standings"
     resources :event_memberships, only: [ :destroy, :update ]
     resources :rounds, only: [ :new, :create, :edit, :update, :destroy ] do
       collection do

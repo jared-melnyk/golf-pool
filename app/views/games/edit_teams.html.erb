@@ -4,10 +4,19 @@
     <p class="text-sm text-gray-600 mt-1">
       <%= @game.round.name %> · <%= game_type_label(@game.game_type) %>
     </p>
-    <% if @game.forty_score? %>
-      <p class="text-sm text-amber-800 mt-2">40 Score groups need 3 or 4 players each.</p>
+    <% if @game.best_ball? %>
+      <p class="text-sm text-amber-800 mt-2">
+        <strong>One team:</strong> your group’s score competes against other groups in this round.<br>
+        <strong>Add a team:</strong> play head-to-head inside this game (e.g. 2v2).
+      </p>
+    <% elsif @game.forty_score? %>
+      <p class="text-sm text-amber-800 mt-2">
+        This group’s score competes against other groups in this round. Groups need 3 or 4 players.
+      </p>
     <% elsif @game.cha_cha_cha? %>
-      <p class="text-sm text-amber-800 mt-2">Cha-Cha-Cha (1-2-3) groups need 3 or 4 players each.</p>
+      <p class="text-sm text-amber-800 mt-2">
+        This group’s score competes against other groups in this round. Groups need 3 or 4 players.
+      </p>
     <% elsif @game.vegas? %>
       <p class="text-sm text-amber-800 mt-2">Vegas requires exactly 2 teams of 2 players each.</p>
     <% end %>
@@ -53,7 +62,7 @@
   </section>
 
   <%= form_with url: update_teams_game_path(@game), method: :patch, local: true, class: "space-y-6" do |f| %>
-    <% 2.times do |i| %>
+    <% @team_slot_count.times do |i| %>
       <% team = @game_teams[i] %>
       <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
         <h2 class="text-base font-semibold text-gray-900 mb-3">Team <%= i + 1 %></h2>
@@ -111,6 +120,13 @@
           <% end %>
         </div>
       </section>
+    <% end %>
+
+    <% if @game.allows_additional_teams? && @team_slot_count < 10 %>
+      <p>
+        <%= link_to "Add a team", edit_teams_game_path(@game, slots: @team_slot_count + 1),
+              class: "text-sm font-medium text-emerald-700 hover:text-emerald-800 underline" %>
+      </p>
     <% end %>
 
     <div>
