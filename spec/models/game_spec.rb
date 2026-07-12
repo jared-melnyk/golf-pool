@@ -114,13 +114,11 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  describe ".default_trip_name" do
-    it "combines format label and next group letter" do
-      expect(Game.default_trip_name(round, "vegas")).to eq("Vegas · A")
-    end
-
-    it "uses Cha-Cha-Cha label" do
-      expect(Game.default_trip_name(round, "cha_cha_cha")).to eq("Cha-Cha-Cha (1-2-3) · A")
+  describe ".default_ad_hoc_name" do
+    it "combines format, course, and date" do
+      expect(Game.default_ad_hoc_name(round, "vegas")).to eq(
+        "Vegas · Test Course · #{round.played_on.strftime('%-b %-d')}"
+      )
     end
   end
 end

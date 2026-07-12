@@ -330,6 +330,61 @@ RSpec.describe "Games", type: :request do
     end
   end
 
+  describe "GET /games/new" do
+    it "renders course and format fields without a name field" do
+      get new_game_path
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Course or club name")
+      expect(response.body).to include("Game format")
+      expect(response.body).not_to include("Game name")
+    end
+  end
+
+  describe "POST /games" do
+    let(:snapshot) do
+      {
+        golf_course_api_course_id: 1,
+        course_name: "Test Course",
+        club_name: "Test Club",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: 72.0,
+        slope_rating: 128,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 1 }
+      }
+    end
+
+    before do
+      allow_any_instance_of(GamesController).to receive(:build_snapshot).and_return(snapshot)
+    end
+
+    it "creates an active ad hoc game with round and auto name" do
+      expect {
+        post games_path, params: {
+          game: { game_type: "best_ball" },
+          round: {
+            played_on: "2026-07-12",
+            golf_course_api_course_id: "1",
+            tee_selector: "male:0"
+          }
+        }
+      }.to change(Game, :count).by(1)
+       .and change(Round, :count).by(1)
+
+      game = Game.last
+      expect(game.event).to be_nil
+      expect(game.status).to eq("active")
+      expect(game.game_type).to eq("best_ball")
+      expect(game.round.course_name).to eq("Test Course")
+      expect(game.round.event).to be_nil
+      expect(game.name).to eq("Best Ball · Test Course · Jul 12")
+      expect(response).to redirect_to(game_setup_path(game, step: "invite"))
+    end
+  end
+
   describe "POST /games/:token/join" do
     let(:host) { User.create!(name: "H", email: "h@test.com", password: "pw") }
     let(:player) { User.create!(name: "P", email: "p@test.com", password: "pw") }

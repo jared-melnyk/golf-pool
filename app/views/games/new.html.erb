@@ -7,20 +7,23 @@
       </p>
     <% else %>
       <h1 class="text-2xl font-bold text-gray-900">New game</h1>
-      <p class="text-sm text-gray-600 mt-1">Name your round, then pick course and format.</p>
+      <p class="text-sm text-gray-600 mt-1">Pick course, tee, and format. Named automatically.</p>
     <% end %>
   </div>
 
-  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-    <% form_url = @round.present? ? event_round_games_path(@event, @round) : games_path %>
-    <%= form_with model: @game, url: form_url, method: :post, local: true, class: "space-y-4" do |f| %>
-      <% if @game.errors.any? %>
-        <ul class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
-          <% @game.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
-        </ul>
-      <% end %>
+  <% if flash[:alert].present? || flash.now[:alert].present? %>
+    <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] || flash.now[:alert] %></p>
+  <% end %>
 
-      <% if @round.present? %>
+  <% if @round.present? %>
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <%= form_with model: @game, url: event_round_games_path(@event, @round), method: :post, local: true, class: "space-y-4" do |f| %>
+        <% if @game.errors.any? %>
+          <ul class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+            <% @game.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        <% end %>
+
         <div>
           <%= f.label :game_type, "Game format", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <%= f.select :game_type,
@@ -32,26 +35,43 @@
             Named automatically (e.g. Vegas · <%= Game.next_group_letter(@round) %>).
           </p>
         </div>
-      <% else %>
+
+        <%= f.submit "Create game", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+      <% end %>
+    </section>
+    <%= link_to "← Back to trip", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
+  <% else %>
+    <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
+             data-controller="course-search"
+             data-course-search-search-url-value="<%= search_courses_games_path %>"
+             data-course-search-select-url-value="<%= select_course_games_path %>">
+      <%= form_with model: @game, url: games_path, method: :post, local: true, class: "space-y-4" do |f| %>
+        <% if @game.errors.any? %>
+          <ul class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg list-disc list-inside">
+            <% @game.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        <% end %>
+
+        <%= render "game_setups/new_round_fields",
+              round_played_on: @round_played_on,
+              search_query: @search_query,
+              selected_course: @selected_course,
+              tee_options: @tee_options,
+              selected_tee_selector: @selected_tee_selector,
+              course_selection_error: @course_selection_error %>
+
         <div>
-          <%= f.label :name, "Game name", class: "block text-sm font-medium text-gray-700 mb-1" %>
-          <%= f.text_field :name,
-                placeholder: "Saturday with friends",
+          <%= f.label :game_type, "Game format", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.select :game_type,
+                Game::GAME_TYPES.map { |t| [ game_type_label(t), t ] },
+                { include_blank: "Select a format" },
                 required: true,
                 class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500" %>
         </div>
+
+        <%= f.submit "Create game", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
       <% end %>
-
-      <div>
-        <%= f.submit @round.present? ? "Create game" : "Continue to setup",
-              class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
-      </div>
-    <% end %>
-  </section>
-
-  <% if @round.present? %>
-    <%= link_to "← Back to trip", event_path(@event), class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
-  <% else %>
+    </section>
     <%= link_to "← Back to games", games_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>
   <% end %>
 </div>

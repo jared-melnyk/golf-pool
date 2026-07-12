@@ -55,10 +55,14 @@ class Game < ApplicationRecord
     "#{type_label(game_type)} · #{next_group_letter(round)}"
   end
 
+  def self.default_ad_hoc_name(round, game_type)
+    "#{type_label(game_type)} · #{round.course_name} · #{round.played_on.strftime('%-b %-d')}"
+  end
+
   def suggested_name
     return nil unless round && game_type.present?
 
-    "#{self.class.type_label(game_type)} · #{round.course_name} · #{round.played_on.strftime('%-b %-d')}"
+    self.class.default_ad_hoc_name(round, game_type)
   end
 
   def host?(user)

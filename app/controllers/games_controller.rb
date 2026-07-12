@@ -3,6 +3,8 @@
 class GamesController < ApplicationController
   include GameScorecardBuilder
   include GameAuthorizable
+  include RoundSnapshotBuildable
+  include CourseSearchActions
 
   before_action :set_event, only: [ :new, :create ], if: -> { params[:event_token].present? }
   before_action :set_round, only: [ :new, :create ], if: -> { params[:round_id].present? }
@@ -22,6 +24,7 @@ class GamesController < ApplicationController
 
   def new
     @game = Game.new
+    load_ad_hoc_form_state unless @round
   end
 
   def create
@@ -30,6 +33,27 @@ class GamesController < ApplicationController
     else
       create_ad_hoc_game!
     end
+  end
+
+  def select_course
+    unless golf_course_api_key_configured?
+      return render_course_selection_error(
+        partial: "shared/course_searches/selection",
+        message: GolfCourseApi::MissingApiKeyError::DEFAULT_MESSAGE
+      )
+    end
+
+    load_selected_course(params[:course_id].to_i)
+    render partial: "shared/course_searches/selection",
+           locals: {
+             selected_course: @selected_course,
+             tee_options: @tee_options,
+             selected_tee_selector: @selected_tee_selector,
+             error_message: nil
+           },
+           layout: false
+  rescue StandardError => e
+    render_course_selection_error(partial: "shared/course_searches/selection", message: e.message)
   end
 
   def show
@@ -122,14 +146,64 @@ class GamesController < ApplicationController
     redirect_to game_setup_path(@game), alert: "Finish game setup before assigning teams."
   end
 
+  def load_ad_hoc_form_state
+    @search_query = ""
+    @selected_course = nil
+    @tee_options = []
+    @selected_tee_selector = nil
+    @course_selection_error = nil
+    @round_played_on = Date.current
+  end
+
   def create_ad_hoc_game!
-    @game = Game.new(name: game_params[:name], creator: current_user, status: "draft")
-    if @game.save
+    game_type = game_params[:game_type]
+    snapshot = build_snapshot(
+      course_id: ad_hoc_round_params.fetch(:golf_course_api_course_id).to_i,
+      tee_selector: ad_hoc_round_params.fetch(:tee_selector)
+    )
+    played_on = Date.parse(ad_hoc_round_params.fetch(:played_on).to_s)
+
+    ApplicationRecord.transaction do
+      round = Round.create!(
+        name: default_round_name_for(
+          { "course_name" => snapshot[:course_name], "club_name" => snapshot[:club_name] },
+          played_on: played_on
+        ),
+        played_on: played_on,
+        golf_course_api_course_id: snapshot[:golf_course_api_course_id],
+        course_name: snapshot[:course_name],
+        club_name: snapshot[:club_name],
+        tee_name: snapshot[:tee_name],
+        tee_gender: snapshot[:tee_gender],
+        course_rating: snapshot[:course_rating],
+        slope_rating: snapshot[:slope_rating],
+        par_total: snapshot[:par_total],
+        hole_pars: snapshot[:hole_pars],
+        hole_handicaps: snapshot[:hole_handicaps],
+        course_snapshot: snapshot[:course_snapshot]
+      )
+      @game = Game.create!(
+        name: Game.default_ad_hoc_name(round, game_type),
+        creator: current_user,
+        status: "active",
+        round: round,
+        game_type: game_type
+      )
       @game.game_memberships.create!(user: current_user, role: "host")
-      redirect_to game_setup_path(@game), notice: "Game created. Continue setup when ready."
-    else
-      render :new, status: :unprocessable_entity
     end
+
+    redirect_to game_setup_path(@game, step: "invite"), notice: "Game created. Invite players when ready."
+  rescue StandardError => e
+    @game = Game.new(game_type: game_params[:game_type])
+    load_ad_hoc_form_state
+    @round_played_on = begin
+      Date.parse(ad_hoc_round_params[:played_on].to_s)
+    rescue StandardError
+      Date.current
+    end
+    @selected_tee_selector = ad_hoc_round_params[:tee_selector]
+    flash.now[:alert] = e.message
+    render :new, status: :unprocessable_entity
   end
 
   def create_round_game!
@@ -151,6 +225,10 @@ class GamesController < ApplicationController
 
   def game_params
     params.fetch(:game, {}).permit(:name, :round_id, :game_type)
+  end
+
+  def ad_hoc_round_params
+    params.require(:round).permit(:played_on, :golf_course_api_course_id, :tee_selector)
   end
 
   def teams_params

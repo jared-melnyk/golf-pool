@@ -31,6 +31,10 @@ Rails.application.routes.draw do
   resource :profile, only: [ :edit, :update ]
 
   resources :games, param: :token do
+    collection do
+      get :search_courses
+      get :select_course
+    end
     post :join, on: :member
     resource :setup, only: [ :show, :update ], controller: "game_setups" do
       get :search_courses
