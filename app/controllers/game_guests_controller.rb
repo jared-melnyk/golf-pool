@@ -42,5 +42,6 @@ class GameGuestsController < ApplicationController
     @guests = @game.game_guests.order(:name)
     @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
     @guest = @guest || GameGuest.new
+    @team_slot_count = @game.team_slot_count(requested_slots: params[:slots])
   end
 end

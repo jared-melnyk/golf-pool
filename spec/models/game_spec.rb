@@ -121,4 +121,82 @@ RSpec.describe Game, type: :model do
       )
     end
   end
+
+  describe "competition scope" do
+    it "treats cha_cha_cha as field" do
+      game = build_game(game_type: "cha_cha_cha")
+      game.save!
+      GameTeam.create!(game: game, name: "Group A")
+      expect(game.field_scope?).to be true
+      expect(game.match_scope?).to be false
+    end
+
+    it "treats forty_score as field" do
+      game = build_game(game_type: "forty_score")
+      game.save!
+      GameTeam.create!(game: game, name: "Group A")
+      expect(game.field_scope?).to be true
+    end
+
+    it "treats vegas as match" do
+      game = build_game(game_type: "vegas")
+      game.save!
+      2.times { |i| GameTeam.create!(game: game, name: "Team #{i}") }
+      expect(game.match_scope?).to be true
+      expect(game.field_scope?).to be false
+    end
+
+    it "treats best_ball with one team as field" do
+      game = build_game(game_type: "best_ball")
+      game.save!
+      GameTeam.create!(game: game, name: "Group A")
+      expect(game.field_scope?).to be true
+    end
+
+    it "treats best_ball with two teams as match" do
+      game = build_game(game_type: "best_ball")
+      game.save!
+      GameTeam.create!(game: game, name: "Team A")
+      GameTeam.create!(game: game, name: "Team B")
+      expect(game.match_scope?).to be true
+      expect(game.field_scope?).to be false
+    end
+  end
+
+  describe "#default_team_slot_count" do
+    it "is 1 for best_ball, cha_cha_cha, and forty_score" do
+      expect(build_game(game_type: "best_ball").default_team_slot_count).to eq(1)
+      expect(build_game(game_type: "cha_cha_cha").default_team_slot_count).to eq(1)
+      expect(build_game(game_type: "forty_score").default_team_slot_count).to eq(1)
+    end
+
+    it "is 2 for vegas" do
+      expect(build_game(game_type: "vegas").default_team_slot_count).to eq(2)
+    end
+  end
+
+  describe "#team_slot_count" do
+    it "honors slots request for best_ball up to 10" do
+      game = build_game(game_type: "best_ball")
+      game.save!
+      expect(game.team_slot_count).to eq(1)
+      expect(game.team_slot_count(requested_slots: 2)).to eq(2)
+      expect(game.team_slot_count(requested_slots: 99)).to eq(10)
+    end
+
+    it "stays at 1 for cha_cha_cha even if slots requested" do
+      game = build_game(game_type: "cha_cha_cha")
+      game.save!
+      expect(game.team_slot_count(requested_slots: 3)).to eq(1)
+    end
+  end
+
+  describe "#allows_additional_teams?" do
+    it "is true only for best_ball" do
+      expect(build_game(game_type: "best_ball").allows_additional_teams?).to be true
+      expect(build_game(game_type: "cha_cha_cha").allows_additional_teams?).to be false
+      expect(build_game(game_type: "forty_score").allows_additional_teams?).to be false
+      expect(build_game(game_type: "vegas").allows_additional_teams?).to be false
+    end
+  end
 end

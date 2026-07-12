@@ -21,13 +21,17 @@
   <% end %>
 <% end %>
 
-<p class="mb-4" data-controller="clipboard" data-invite-url="<%= event_url(@event) %>">
-  <button type="button"
-          data-action="click->clipboard#copy"
-          class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
-    Copy invite link
-  </button>
-  <span data-clipboard-target="feedback" class="ml-2 text-sm text-gray-600 hidden">Link copied!</span>
+<p class="mb-4 flex flex-wrap gap-3 items-center">
+  <%= link_to "Standings", event_standings_path(@event),
+        class: "rounded px-4 py-2 text-sm font-medium border border-emerald-300 text-emerald-800 hover:border-emerald-400 no-underline" %>
+  <span data-controller="clipboard" data-invite-url="<%= event_url(@event) %>">
+    <button type="button"
+            data-action="click->clipboard#copy"
+            class="rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700">
+      Copy invite link
+    </button>
+    <span data-clipboard-target="feedback" class="ml-2 text-sm text-gray-600 hidden">Link copied!</span>
+  </span>
 </p>
 
 <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
@@ -120,6 +124,10 @@
                 </li>
               <% end %>
             </ol>
+            <% standings = @round_standings_by_id[round.id] %>
+            <% if standings && standings[:formats].any? %>
+              <%= render "shared/round_standings", standings: standings %>
+            <% end %>
           <% else %>
             <p class="mt-2 text-sm text-gray-500">No games yet for this round.</p>
           <% end %>

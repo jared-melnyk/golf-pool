@@ -127,6 +127,48 @@ class Game < ApplicationRecord
     end
   end
 
+  def default_team_slot_count
+    vegas? ? 2 : 1
+  end
+
+  def allows_additional_teams?
+    best_ball?
+  end
+
+  def single_team_format?
+    cha_cha_cha? || forty_score?
+  end
+
+  # How many team slots to show on the setup form.
+  def team_slot_count(requested_slots: nil)
+    existing = game_teams.size
+    if vegas?
+      2
+    elsif single_team_format?
+      1
+    elsif best_ball?
+      requested = requested_slots.to_i
+      base = [ default_team_slot_count, existing ].max
+      return base if requested <= base
+
+      [ requested, 10 ].min
+    else
+      [ default_team_slot_count, existing ].max
+    end
+  end
+
+  # Derived competition scope — see docs/plans/2026-07-12-team-scope-and-standings-design.md
+  def field_scope?
+    return false if vegas?
+    return true if single_team_format?
+
+    best_ball? && game_teams.size <= 1
+  end
+
+  def match_scope?
+    !field_scope?
+  end
+
   private
 
   def generate_token
