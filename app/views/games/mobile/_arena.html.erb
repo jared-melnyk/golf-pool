@@ -1,6 +1,5 @@
 <%# locals: scorecard, game, event %>
-<% focus_team = scorecard_focus_team(scorecard, game) %>
-<% default_hole = scorecard_default_hole(scorecard, focus_team) %>
+<% default_hole = 1 %>
 <% round = game.round %>
 
 <div id="<%= dom_id(game, :mobile_arena) %>"

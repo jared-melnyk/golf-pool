@@ -1,6 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Mobile hole navigation: show one hole panel at a time, persist selection.
+// Score saves Turbo-replace this element — never let the server default overwrite
+// the user's current hole once sessionStorage has a value.
 export default class extends Controller {
   static targets = ["panel", "label", "par", "si"]
   static values = {
@@ -11,11 +13,13 @@ export default class extends Controller {
   }
 
   connect() {
+    this.ready = false
     const stored = this.storageKeyValue && sessionStorage.getItem(this.storageKeyValue)
     const fromStore = stored ? parseInt(stored, 10) : NaN
     if (fromStore >= 1 && fromStore <= 18) {
       this.holeValue = fromStore
     }
+    this.ready = true
     this.showCurrent()
   }
 
@@ -33,7 +37,7 @@ export default class extends Controller {
   }
 
   holeValueChanged() {
-    this.persist()
+    if (this.ready) this.persist()
     this.showCurrent()
   }
 
