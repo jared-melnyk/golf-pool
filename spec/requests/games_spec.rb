@@ -28,23 +28,43 @@ RSpec.describe "Games", type: :request do
 
   before { post login_path, params: { email: commissioner.email, password: "pw" } }
 
-  describe "GET /events/:event_token/games/new" do
-    it "renders new game form for commissioners" do
-      get new_event_game_path(event)
+  describe "GET /events/:event_token/rounds/:round_id/games/new" do
+    it "renders format-only form for commissioners" do
+      get new_event_round_game_path(event, round)
       expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Game format")
+      expect(response.body).not_to include("Game name")
     end
   end
 
-  describe "POST /events/:event_token/games" do
-    it "creates a draft game and redirects to setup" do
+  describe "POST /events/:event_token/rounds/:round_id/games" do
+    it "creates an active game on the round and redirects to invite setup" do
       expect {
-        post event_games_path(event), params: { game: { name: "Saturday best ball" } }
+        post event_round_games_path(event, round), params: { game: { game_type: "vegas" } }
       }.to change(Game, :count).by(1)
 
       game = Game.last
-      expect(game.status).to eq("draft")
+      expect(game.status).to eq("active")
       expect(game.event).to eq(event)
-      expect(response).to redirect_to(game_setup_path(game))
+      expect(game.round).to eq(round)
+      expect(game.game_type).to eq("vegas")
+      expect(game.name).to eq("Vegas · A")
+      expect(response).to redirect_to(game_setup_path(game, step: "invite"))
+    end
+
+    it "assigns sequential group letters on the same round" do
+      post event_round_games_path(event, round), params: { game: { game_type: "best_ball" } }
+      post event_round_games_path(event, round), params: { game: { game_type: "best_ball" } }
+
+      names = round.games.order(:created_at).pluck(:name)
+      expect(names).to eq([ "Best Ball · A", "Best Ball · B" ])
+    end
+  end
+
+  describe "GET /events/:event_token/games/new" do
+    it "is not available as a trip-level create path" do
+      get "/events/#{event.token}/games/new"
+      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -79,6 +99,12 @@ RSpec.describe "Games", type: :request do
         expect(response.body).to include("Invite players")
         expect(response.body).to include("Finalize scores")
         expect(response.body).not_to include("Complete game")
+      end
+
+      it "shows the parent round name linked to the trip" do
+        get game_path(game)
+        expect(response.body).to include(round.name)
+        expect(response.body).to include(event_path(event))
       end
     end
 

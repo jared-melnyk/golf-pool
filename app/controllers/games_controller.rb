@@ -5,6 +5,7 @@ class GamesController < ApplicationController
   include GameAuthorizable
 
   before_action :set_event, only: [ :new, :create ], if: -> { params[:event_token].present? }
+  before_action :set_round, only: [ :new, :create ], if: -> { params[:round_id].present? }
   before_action :require_event_commissioner!, only: [ :new, :create ], if: -> { params[:event_token].present? }
   before_action :set_game, only: [ :show, :edit_teams, :update_teams, :join, :complete, :reopen ]
   before_action :require_game_access!, only: [ :show, :edit_teams, :update_teams, :complete, :reopen ]
@@ -21,12 +22,11 @@ class GamesController < ApplicationController
 
   def new
     @game = Game.new
-    @event = Event.find_by!(token: params[:event_token]) if params[:event_token].present?
   end
 
   def create
-    if params[:event_token].present?
-      create_event_game!
+    if params[:round_id].present?
+      create_round_game!
     else
       create_ad_hoc_game!
     end
@@ -59,11 +59,12 @@ class GamesController < ApplicationController
     ApplicationRecord.transaction do
       @game.game_teams.destroy_all
       teams_params.each_with_index do |(_key, team_data), index|
+        name = team_data[:name].to_s.strip
         user_ids = Array(team_data[:user_ids]).compact_blank
         guest_ids = Array(team_data[:guest_ids]).compact_blank
-        next if team_data[:name].blank? && user_ids.empty? && guest_ids.empty?
+        next if name.blank? && user_ids.empty? && guest_ids.empty?
 
-        name = team_data[:name].presence || "Team #{("A".ord + index).chr}"
+        name = "Team #{('A'.ord + index).chr}" if name.blank?
         team = @game.game_teams.create!(name: name)
         user_ids.each do |uid|
           user = @game.roster_users.find_by(id: uid)
@@ -105,6 +106,10 @@ class GamesController < ApplicationController
     @event = Event.find_by!(token: params[:event_token])
   end
 
+  def set_round
+    @round = @event.rounds.find(params[:round_id])
+  end
+
   def require_event_commissioner!
     return if @event.commissioner?(current_user)
 
@@ -127,12 +132,18 @@ class GamesController < ApplicationController
     end
   end
 
-  def create_event_game!
-    name = game_params[:name].presence || "Game at #{@event.name}"
-    @game = @event.games.new(name: name, creator: current_user, status: "draft")
+  def create_round_game!
+    game_type = game_params[:game_type]
+    @game = @event.games.new(
+      name: Game.default_trip_name(@round, game_type),
+      creator: current_user,
+      status: "active",
+      round: @round,
+      game_type: game_type
+    )
     if @game.save
       @game.game_memberships.create!(user: current_user, role: "host")
-      redirect_to game_setup_path(@game), notice: "Game created. Continue setup when ready."
+      redirect_to game_setup_path(@game, step: "invite"), notice: "Game created. Invite players when ready."
     else
       render :new, status: :unprocessable_entity
     end

@@ -94,4 +94,33 @@ RSpec.describe Game, type: :model do
       expect(game.suggested_name).to include(round.course_name)
     end
   end
+
+  describe ".next_group_letter" do
+    it "returns A when the round has no games" do
+      expect(Game.next_group_letter(round)).to eq("A")
+    end
+
+    it "returns the next letter among all games on the round" do
+      Game.create!(
+        name: "Best Ball · A", creator: creator, status: "active",
+        event: event, round: round, game_type: "best_ball"
+      )
+      Game.create!(
+        name: "Vegas · B", creator: creator, status: "active",
+        event: event, round: round, game_type: "vegas"
+      )
+
+      expect(Game.next_group_letter(round)).to eq("C")
+    end
+  end
+
+  describe ".default_trip_name" do
+    it "combines format label and next group letter" do
+      expect(Game.default_trip_name(round, "vegas")).to eq("Vegas · A")
+    end
+
+    it "uses Cha-Cha-Cha label" do
+      expect(Game.default_trip_name(round, "cha_cha_cha")).to eq("Cha-Cha-Cha (1-2-3) · A")
+    end
+  end
 end

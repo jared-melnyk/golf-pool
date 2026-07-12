@@ -79,6 +79,8 @@ export default class extends Controller {
 
     const url = new URL(this.selectUrlValue, window.location.origin)
     url.searchParams.set("course_id", courseId)
+    const playedOn = this.element.querySelector('input[name="round[played_on]"]')?.value
+    if (playedOn) url.searchParams.set("played_on", playedOn)
 
     try {
       const response = await fetch(url, {

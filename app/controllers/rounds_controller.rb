@@ -26,7 +26,7 @@ class RoundsController < ApplicationController
     end
 
     load_selected_course(params[:course_id].to_i)
-    @default_round_name = default_round_name_for(@selected_course)
+    @default_round_name = default_round_name_for(@selected_course, played_on: played_on_for_default_name)
     render partial: "rounds/course_selection",
            locals: {
              selected_course: @selected_course,
@@ -160,5 +160,12 @@ class RoundsController < ApplicationController
     suffix = game_names.any? ? " (#{game_names.join(', ')})" : ""
     count = @round.games.count
     "Cannot delete this round while #{count} #{'game'.pluralize(count)} use it#{suffix}."
+  end
+
+  def played_on_for_default_name
+    raw = params[:played_on].presence || params.dig(:round, :played_on).presence
+    raw ? Date.parse(raw.to_s) : Date.current
+  rescue ArgumentError
+    Date.current
   end
 end

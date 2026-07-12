@@ -55,8 +55,8 @@ Rails.application.routes.draw do
         get :search_courses
         get :select_course
       end
+      resources :games, only: [ :new, :create ]
     end
-    resources :games, only: [ :new, :create ]
   end
 
   # Legacy bookmarks: /events/:event_token/games/:id → /games/:token
