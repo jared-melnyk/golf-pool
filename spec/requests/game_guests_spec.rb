@@ -110,6 +110,21 @@ RSpec.describe "Game guests", type: :request do
       expect(team_a.game_team_players.map(&:display_name)).to match_array([ "P1", "Jon" ])
     end
 
+    it "saves guest teams even when team names are left blank" do
+      guest2 = GameGuest.create!(game: game, name: "Stu", handicap_index: 18.0)
+
+      patch update_teams_game_path(game), params: {
+        teams: {
+          "0" => { name: "", guest_ids: [ guest.id.to_s ] },
+          "1" => { name: "", guest_ids: [ guest2.id.to_s ] }
+        }
+      }
+
+      expect(response).to redirect_to(game_path(game))
+      expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
+      expect(game.game_teams.flat_map { |t| t.game_team_players.map(&:display_name) }).to match_array([ "Jon", "Stu" ])
+    end
+
     it "leaves unchecked guests on the roster but not on a team" do
       patch update_teams_game_path(game), params: {
         teams: {

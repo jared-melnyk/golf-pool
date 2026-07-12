@@ -151,12 +151,25 @@ RSpec.describe "Games", type: :request do
       expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
     end
 
-    it "skips blank team names and redirects to game show" do
+    it "skips empty team slots with blank names and no players" do
       patch update_teams_game_path(game), params: {
         teams: { "0" => { name: "" } }
       }
       expect(response).to redirect_to(game_path(game))
       expect(game.game_teams.reload).to be_empty
+    end
+
+    it "defaults team names when players are assigned without a name" do
+      patch update_teams_game_path(game), params: {
+        teams: {
+          "0" => { name: "", user_ids: [ player1.id.to_s ] },
+          "1" => { name: "  ", user_ids: [ player2.id.to_s ] }
+        }
+      }
+
+      expect(response).to redirect_to(game_path(game))
+      expect(game.game_teams.reload.map(&:name)).to match_array([ "Team A", "Team B" ])
+      expect(game.game_teams.flat_map { |t| t.game_team_players.map(&:user_id) }).to match_array([ player1.id, player2.id ])
     end
 
     context "when game type is forty_score" do
