@@ -9,12 +9,6 @@ class RoundFormatStandings
     "vegas" => VegasScorecard
   }.freeze
 
-  FieldMetric = {
-    "best_ball" => :total_net_strokes,
-    "cha_cha_cha" => :total_net_strokes,
-    "forty_score" => :competition_vs_par
-  }.freeze
-
   def initialize(round:, game_type:)
     @round = round
     @game_type = game_type.to_s
@@ -41,54 +35,56 @@ class RoundFormatStandings
 
   def field_results_for(game)
     scorecard = ScorecardClass.fetch(@game_type).new(game).call
-    metric_key = FieldMetric.fetch(@game_type)
+    teams = scorecard[:teams]
 
-    scorecard[:teams].map do |team|
-      value = team[metric_key]
-      TeamResult.new(
+    if teams.empty?
+      return [ {
+        game_id: game.id,
+        team_id: nil,
+        team_name: game.name,
+        metric_value: nil,
+        live_label: "Set up teams",
+        complete: false,
+        game_token: game.token
+      } ]
+    end
+
+    teams.map do |team|
+      ranking_value =
+        if @game_type == "forty_score" && team[:complete]
+          team[:competition_vs_par]
+        else
+          team[:live_vs_par]
+        end
+
+      {
         game_id: game.id,
         team_id: team[:id],
         team_name: team[:name],
-        round_id: game.round_id,
-        event_id: game.event_id,
-        game_type: @game_type,
-        scope: :field,
-        metric_key: metric_key,
-        metric_value: value,
-        complete: value.present?
-      )
+        metric_value: ranking_value,
+        live_label: team[:live_label].presence || "—",
+        complete: team[:complete] == true,
+        game_token: game.token
+      }
     end
   end
 
   def rank_field(results)
-    complete = results.select(&:complete).sort_by { |r| [ r.metric_value, r.team_name ] }
-    incomplete = results.reject(&:complete)
+    with_score = results.select { |r| r[:metric_value].present? }
+    without = results.reject { |r| r[:metric_value].present? }
+    sorted = with_score.sort_by { |r| [ r[:metric_value], r[:team_name] ] }
 
     ranked = []
-    complete.each_with_index do |result, idx|
-      rank = if idx.positive? && complete[idx - 1].metric_value == result.metric_value
+    sorted.each_with_index do |result, idx|
+      rank = if idx.positive? && sorted[idx - 1][:metric_value] == result[:metric_value]
         ranked[idx - 1][:rank]
       else
         idx + 1
       end
-      ranked << result_hash(result, rank)
+      ranked << result.merge(rank: rank)
     end
 
-    ranked + incomplete.map { |r| result_hash(r, nil) }
-  end
-
-  def result_hash(result, rank)
-    {
-      rank: rank,
-      team_name: result.team_name,
-      game_id: result.game_id,
-      team_id: result.team_id,
-      metric_key: result.metric_key,
-      metric_value: result.metric_value,
-      scope: result.scope,
-      complete: result.complete,
-      game_token: games_by_id[result.game_id]&.token
-    }
+    ranked + without.map { |r| r.merge(rank: nil) }
   end
 
   def match_summary(game)
@@ -107,12 +103,16 @@ class RoundFormatStandings
       wash = scorecard[:wash]
       { label: wash[:label], metric_value: wash[:margin] }
     else
-      leaders = scorecard[:leaderboard]
-      top = leaders.find { |row| row[:rank] == 1 }
-      {
-        label: top ? "#{top[:team_name]} leads" : "In progress",
-        metric_value: top&.dig(:total_net_strokes)
-      }
+      teams = scorecard[:teams]
+      best = teams.select { |t| t[:live_vs_par] }.min_by { |t| [ t[:live_vs_par], t[:name] ] }
+      if best
+        {
+          label: "#{best[:name]} · #{best[:live_label]}",
+          metric_value: best[:live_vs_par]
+        }
+      else
+        { label: "In progress", metric_value: nil }
+      end
     end
 
     {
@@ -121,9 +121,5 @@ class RoundFormatStandings
       game_token: game.token,
       **summary
     }
-  end
-
-  def games_by_id
-    @games_by_id ||= @round.games.index_by(&:id)
   end
 end

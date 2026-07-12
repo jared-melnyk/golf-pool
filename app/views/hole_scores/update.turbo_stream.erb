@@ -30,11 +30,14 @@
   <%= turbo_stream.replace dom_id(@game_team, "total_net") do %>
     <%= render "games/scorecard/team_total",
           game_team: @game_team,
-          total_net_strokes: @team_data[:total_net_strokes] %>
+          total_net_strokes: @team_data[:total_net_strokes],
+          live_label: @team_data[:live_label] %>
   <% end %>
 
-  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
-    <%= render "games/scorecard/leaderboard_cha_cha_cha", game: @game, scorecard: @scorecard %>
+  <% unless @game.field_scope? %>
+    <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+      <%= render "games/scorecard/leaderboard_cha_cha_cha", game: @game, scorecard: @scorecard %>
+    <% end %>
   <% end %>
 <% elsif @game.vegas? %>
   <% team_a = @scorecard[:teams][0] %>
@@ -64,11 +67,14 @@
   <%= turbo_stream.replace dom_id(@game_team, "total_net") do %>
     <%= render "games/scorecard/team_total",
           game_team: @game_team,
-          total_net_strokes: @team_data[:total_net_strokes] %>
+          total_net_strokes: @team_data[:total_net_strokes],
+          live_label: @team_data[:live_label] %>
   <% end %>
 
-  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
-    <%= render "games/scorecard/leaderboard_best_ball", game: @game, scorecard: @scorecard %>
+  <% unless @game.field_scope? %>
+    <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+      <%= render "games/scorecard/leaderboard_best_ball", game: @game, scorecard: @scorecard %>
+    <% end %>
   <% end %>
 <% else %>
   <% if @forty_pick_only %>
@@ -109,7 +115,9 @@
           show_scaled: forty_score_shows_scaled?(@scorecard) %>
   <% end %>
 
-  <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
-    <%= render "games/scorecard/leaderboard_forty_score", game: @game, scorecard: @scorecard %>
+  <% unless @game.field_scope? %>
+    <%= turbo_stream.replace dom_id(@game, :leaderboard) do %>
+      <%= render "games/scorecard/leaderboard_forty_score", game: @game, scorecard: @scorecard %>
+    <% end %>
   <% end %>
 <% end %>

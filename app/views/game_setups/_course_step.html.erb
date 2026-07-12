@@ -26,14 +26,14 @@
                 required: true,
                 class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
           <p class="text-xs text-gray-500 mt-1">
-            Trip games attach to an existing round.
+            Event games attach to an existing round.
             <%= link_to "Create a round", new_event_round_path(game.event), class: "text-emerald-700 hover:underline" %>
             if you need a new course/tee.
           </p>
         </div>
       <% else %>
         <p class="text-sm text-gray-600">
-          No rounds on this trip yet.
+          No rounds on this event yet.
           <%= link_to "Create a round", new_event_round_path(game.event), class: "text-emerald-700 hover:underline" %>
           first, then return here to attach this game.
         </p>

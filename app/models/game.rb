@@ -169,6 +169,29 @@ class Game < ApplicationRecord
     !field_scope?
   end
 
+  def group_letter
+    if (match = name.to_s.match(/·\s*([A-Z])\s*\z/))
+      match[1]
+    elsif round
+      siblings = round.games.order(:created_at).pluck(:id)
+      idx = siblings.index(id) || siblings.size
+      ("A".ord + idx).chr
+    else
+      "A"
+    end
+  end
+
+  # slot_count: how many team slots are being set up (1 = field Group letter for BB).
+  def default_team_name(slot_index, slot_count: 1)
+    if vegas? || (best_ball? && slot_count.to_i >= 2)
+      "Team #{('A'.ord + slot_index).chr}"
+    elsif single_team_format? || best_ball?
+      "Group #{group_letter}"
+    else
+      "Team #{('A'.ord + slot_index).chr}"
+    end
+  end
+
   private
 
   def generate_token

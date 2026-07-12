@@ -65,6 +65,19 @@ RSpec.describe BestBallScorecard do
     expect(alice_net_h1).to eq(4)
   end
 
+  it "exposes a live thru-N vs-par label before the round is complete" do
+    team = scorecard[:teams].first
+    # Clear holes 7–18 so only front 6 count
+    gtp_alice.hole_scores.where("hole_number > 6").delete_all
+    gtp_bob.hole_scores.where("hole_number > 6").delete_all
+
+    live = described_class.new(game).call[:teams].first
+    expect(live[:live_thru_holes]).to eq(6)
+    expect(live[:live_label]).to match(/\A[E+\-].*\(6\)\z/)
+    expect(live[:complete]).to be false
+    expect(live[:total_net_strokes]).to be_nil
+  end
+
   it "computes team best-ball net per hole (min of players' net scores)" do
     team = scorecard[:teams].first
     # Alice PH=15, hole 1 SI=1 → Alice gets a stroke → Alice net = 5-1 = 4

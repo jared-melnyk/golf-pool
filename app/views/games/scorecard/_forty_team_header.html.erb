@@ -1,13 +1,12 @@
 <%# locals: game_team, team_data, show_scaled (optional) %>
 <% show_scaled = local_assigns.fetch(:show_scaled, false) %>
 <p class="text-xs text-gray-600" id="<%= dom_id(game_team, "forty_header_stats") %>">
-  <%= team_data[:selected_count] %> / <%= team_data[:target_pick_count] %> picks
-  <% if team_data[:actual_vs_par] %>
-    · Net vs par <%= "%+d" % team_data[:actual_vs_par] %>
-    <% if show_scaled %>
+  <% if team_data[:live_label].present? %>
+    <span class="font-semibold text-emerald-800 tabular-nums"><%= team_data[:live_label] %></span>
+    <% if team_data[:complete] && show_scaled && team_data[:competition_vs_par] != team_data[:actual_vs_par] %>
       · Scaled <%= "%+d" % team_data[:competition_vs_par] %>
     <% end %>
-    (<span title="Counted net strokes"><%= team_data[:total_selected_net] %></span> net /
-    <%= team_data[:total_selected_par] %> par)
+  <% else %>
+    <%= team_data[:selected_count] %> / <%= team_data[:target_pick_count] %> picks
   <% end %>
 </p>

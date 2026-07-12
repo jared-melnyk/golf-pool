@@ -1,4 +1,4 @@
-<%# locals: game_team, total_net_strokes %>
+<%# locals: game_team, total_net_strokes, live_label (optional) %>
 <td class="pt-2 px-2 text-center text-emerald-700 tabular-nums border-l-2 border-emerald-200" id="<%= dom_id(game_team, "total_net") %>">
-  <%= total_net_strokes || "—" %>
+  <%= local_assigns[:live_label].presence || total_net_strokes || "—" %>
 </td>

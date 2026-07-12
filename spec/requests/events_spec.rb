@@ -42,7 +42,7 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(event.name)
-      expect(response.body).to include("commissioner-managed")
+      expect(response.body).to include("Rounds")
     end
 
     it "shows round details to any event member" do

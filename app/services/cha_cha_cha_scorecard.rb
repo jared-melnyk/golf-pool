@@ -44,7 +44,22 @@ class ChaChaChaScorecard
     nets = hole_scores.map { |s| s[:team_net_strokes] }
     total = nets.any?(&:nil?) ? nil : nets.sum
 
-    { id: team.id, name: team.name, players: players_data, hole_scores: hole_scores, total_net_strokes: total }
+    scored = hole_scores.select { |s| s[:team_net_strokes] }
+    thru = scored.size
+    live_vs_par = scored.sum { |s| s[:team_net_strokes] - @round.hole_pars[s[:hole_number] - 1] }
+    complete = thru == 18
+
+    {
+      id: team.id,
+      name: team.name,
+      players: players_data,
+      hole_scores: hole_scores,
+      total_net_strokes: total,
+      live_vs_par: thru.positive? ? live_vs_par : nil,
+      live_thru_holes: thru,
+      live_label: LiveScoreFormatting.thru_label(live_vs_par, thru),
+      complete: complete
+    }
   end
 
   def team_net_for_hole(players_data, hole_number, scores_to_count)

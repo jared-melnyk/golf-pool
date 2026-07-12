@@ -79,13 +79,20 @@ class GamesController < ApplicationController
   def update_teams
     ApplicationRecord.transaction do
       @game.game_teams.destroy_all
-      teams_params.each_with_index do |(_key, team_data), index|
+      pending = teams_params.select do |_key, team_data|
         name = team_data[:name].to_s.strip
         user_ids = Array(team_data[:user_ids]).compact_blank
         guest_ids = Array(team_data[:guest_ids]).compact_blank
-        next if name.blank? && user_ids.empty? && guest_ids.empty?
+        name.present? || user_ids.any? || guest_ids.any?
+      end
+      slot_count = [ pending.size, 1 ].max
 
-        name = "Team #{('A'.ord + index).chr}" if name.blank?
+      pending.each_with_index do |(_key, team_data), index|
+        name = team_data[:name].to_s.strip
+        user_ids = Array(team_data[:user_ids]).compact_blank
+        guest_ids = Array(team_data[:guest_ids]).compact_blank
+
+        name = @game.default_team_name(index, slot_count: slot_count) if name.blank?
         team = @game.game_teams.create!(name: name)
         user_ids.each do |uid|
           user = @game.roster_users.find_by(id: uid)

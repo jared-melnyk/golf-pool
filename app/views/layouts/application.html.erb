@@ -69,7 +69,7 @@
 
               <div class="<%= section_head %> mt-3">On-Course games</div>
               <%= link_to "Games", games_path, class: nav_row.call(games_link_active), data: { action: "click->sidebar#close" } %>
-              <%= link_to "Trips", events_path, class: nav_row.call(trips_link_active), data: { action: "click->sidebar#close" } %>
+              <%= link_to "Events", events_path, class: nav_row.call(trips_link_active), data: { action: "click->sidebar#close" } %>
 
               <% if current_user_admin? %>
                 <div class="<%= section_head %> mt-3">Admin</div>

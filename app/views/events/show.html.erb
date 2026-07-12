@@ -70,7 +70,6 @@
   </div>
 
   <% if @rounds.any? %>
-    <p class="text-xs text-gray-500 mb-3">commissioner-managed · games nest under each round</p>
     <ul class="space-y-4">
       <% @rounds.each do |round| %>
         <li class="border border-gray-100 rounded-lg p-3 bg-gray-50/50">
@@ -104,29 +103,12 @@
             <% end %>
           </div>
 
-          <% games = round.games.sort_by(&:created_at) %>
-          <% if games.any? %>
-            <ol class="mt-3 ml-1 space-y-1.5 list-decimal list-inside">
-              <% games.each do |game| %>
-                <li class="text-sm text-gray-800">
-                  <%= link_to game.name, game_path(game),
-                        class: "font-medium text-emerald-700 hover:underline" %>
-                  <span class="text-gray-500">
-                    <% if game.game_type.present? %>
-                      · <%= game_type_label(game.game_type) %>
-                    <% end %>
-                    <% if game.completed? %>
-                      <span class="ml-1 text-xs text-gray-400">(completed)</span>
-                    <% elsif game.draft? %>
-                      <span class="ml-1 text-xs text-gray-400">(draft)</span>
-                    <% end %>
-                  </span>
-                </li>
-              <% end %>
-            </ol>
+          <% if round.games.any? %>
             <% standings = @round_standings_by_id[round.id] %>
             <% if standings && standings[:formats].any? %>
               <%= render "shared/round_standings", standings: standings %>
+            <% else %>
+              <p class="mt-2 text-sm text-gray-500">Games added — set up teams to see standings.</p>
             <% end %>
           <% else %>
             <p class="mt-2 text-sm text-gray-500">No games yet for this round.</p>
@@ -136,7 +118,6 @@
     </ul>
   <% else %>
     <p class="text-gray-600 text-sm leading-relaxed">
-      <span class="text-xs text-gray-500 block mb-1">commissioner-managed</span>
       No rounds yet. Commissioners can create a round from GolfCourseAPI course + tee data, then add games to that round.
       Set your <%= link_to "GHIN handicap index", edit_profile_path, class: "text-emerald-700 hover:underline" %> on your profile for net games.
     </p>
