@@ -59,12 +59,12 @@
         <h2 class="text-base font-semibold text-gray-900 mb-3">Team <%= i + 1 %></h2>
 
         <div class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Team name <span class="font-normal text-gray-400">(optional)</span></label>
           <input
             type="text"
             name="teams[<%= i %>][name]"
             value="<%= team&.name %>"
-            placeholder="e.g. Team A"
+            placeholder="Defaults to Team <%= ("A".ord + i).chr %>"
             class="w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500"
           />
         </div>
