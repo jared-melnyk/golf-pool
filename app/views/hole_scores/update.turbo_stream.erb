@@ -7,7 +7,7 @@
   <%= render "games/mobile/arena", scorecard: @scorecard, game: @game, event: @event %>
 <% end %>
 
-<% player_hole = @team_data[:players].find { |p| p[:name] == @gtp.user.name }&.then { |p| p[:hole_scores].find { |s| s[:hole_number] == @hole_number } } %>
+<% player_hole = @team_data[:players].find { |p| p[:name] == @gtp.display_name }&.then { |p| p[:hole_scores].find { |s| s[:hole_number] == @hole_number } } %>
 <% team_hole = @team_data[:hole_scores]&.find { |s| s[:hole_number] == @hole_number } %>
 
 <% unless @forty_pick_only %>
@@ -83,7 +83,7 @@
             can_edit: scorecard_can_edit_forty_pick?(@game, @gtp) %>
     <% end %>
   <% else %>
-    <% gtps_for_team = @game_team.game_team_players.index_by { |gtp| gtp.user.name } %>
+    <% gtps_for_team = @game_team.game_team_players.index_by(&:display_name) %>
     <% @team_data[:players].each do |player| %>
       <% gtp = gtps_for_team[player[:name]] %>
       <% next unless gtp %>

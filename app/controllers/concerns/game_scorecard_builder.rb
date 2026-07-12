@@ -22,7 +22,7 @@ module GameScorecardBuilder
   def preload_game_for_scorecard(game)
     ActiveRecord::Associations::Preloader.new(
       records: [ game ],
-      associations: { game_teams: { game_team_players: [ :user, :hole_scores ] } }
+      associations: { game_teams: { game_team_players: [ :user, :game_guest, :hole_scores ] } }
     ).call
     game
   end

@@ -13,7 +13,7 @@ class VegasScorecard
   end
 
   def call
-    teams = @game.game_teams.order(:id).includes(game_team_players: [ :user, :hole_scores ]).to_a
+    teams = @game.game_teams.order(:id).includes(game_team_players: [ :user, :game_guest, :hole_scores ]).to_a
     reference_team = teams.first
     teams_data = teams.map { |team| build_team(team) }
 
@@ -55,7 +55,7 @@ class VegasScorecard
     end
 
     {
-      name: gtp.user.name,
+      name: gtp.display_name,
       course_handicap: ch,
       playing_handicap: ph,
       hole_scores: hole_scores

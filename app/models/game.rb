@@ -7,6 +7,7 @@ class Game < ApplicationRecord
   belongs_to :creator, class_name: "User"
   has_many :game_memberships, dependent: :destroy
   has_many :members, through: :game_memberships, source: :user
+  has_many :game_guests, dependent: :destroy
   has_many :game_teams, dependent: :destroy
 
   before_validation :generate_token, on: :create

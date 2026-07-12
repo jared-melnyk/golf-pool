@@ -23,7 +23,7 @@ class ChaChaChaScorecard
   end
 
   def call
-    teams_data = @game.game_teams.includes(game_team_players: [ :user, :hole_scores ]).map do |team|
+    teams_data = @game.game_teams.includes(game_team_players: [ :user, :game_guest, :hole_scores ]).map do |team|
       build_team(team)
     end
 
@@ -71,7 +71,7 @@ class ChaChaChaScorecard
     end
 
     {
-      name: gtp.user.name,
+      name: gtp.display_name,
       course_handicap: ch,
       playing_handicap: ph,
       hole_scores: hole_scores
