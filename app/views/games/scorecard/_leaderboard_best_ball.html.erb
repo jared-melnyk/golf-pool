@@ -1,26 +1,26 @@
 <%# locals: game, scorecard %>
 <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" id="<%= dom_id(game, :leaderboard) %>">
   <h2 class="text-base font-semibold text-gray-900 mb-3">Leaderboard</h2>
-  <% complete_teams = scorecard[:leaderboard].select { |row| row[:total_net_strokes] } %>
-  <% if complete_teams.empty? %>
-    <p class="text-sm text-gray-500">Scores not yet complete.</p>
+  <% rows = scorecard[:leaderboard] %>
+  <% if rows.none? { |row| row[:live_vs_par] } %>
+    <p class="text-sm text-gray-500">No scores yet.</p>
   <% else %>
     <table class="w-full text-sm">
       <thead>
         <tr class="text-left text-xs font-medium text-gray-500 border-b border-gray-200">
           <th class="pb-2 pr-4">Pos</th>
           <th class="pb-2 pr-4">Team</th>
-          <th class="pb-2">Net Strokes</th>
+          <th class="pb-2">Score</th>
         </tr>
       </thead>
       <tbody>
-        <% scorecard[:leaderboard].each do |row| %>
+        <% rows.each do |row| %>
           <tr class="border-b border-gray-100">
             <td class="py-1 pr-4 font-medium">
-              <%= row[:total_net_strokes] ? scorecard_display_rank(row[:rank], scorecard[:leaderboard]) : "—" %>
+              <%= row[:live_vs_par] ? scorecard_display_rank(row[:rank], rows) : "—" %>
             </td>
             <td class="py-1 pr-4"><%= row[:team_name] %></td>
-            <td class="py-1"><%= row[:total_net_strokes] || "—" %></td>
+            <td class="py-1 tabular-nums"><%= row[:live_label] || "—" %></td>
           </tr>
         <% end %>
       </tbody>

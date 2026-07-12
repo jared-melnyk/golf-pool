@@ -80,20 +80,28 @@ class BestBallScorecard
   end
 
   def build_leaderboard(teams_data)
-    teams_with_totals = teams_data.map { |t| { team_name: t[:name], total_net_strokes: t[:total_net_strokes] } }
-    complete = teams_with_totals.select { |t| t[:total_net_strokes].present? }
-    incomplete = teams_with_totals.reject { |t| t[:total_net_strokes].present? }
-    sorted = complete.sort_by { |t| [ t[:total_net_strokes], t[:team_name] ] }
+    rows = teams_data.map do |t|
+      {
+        team_name: t[:name],
+        total_net_strokes: t[:total_net_strokes],
+        live_vs_par: t[:live_vs_par],
+        live_label: t[:live_label],
+        complete: t[:complete]
+      }
+    end
 
-    # Ordinal ranking (1-2-2-4 style); display adds T prefix only for ties.
+    with_score = rows.select { |r| r[:live_vs_par].present? }
+    without = rows.reject { |r| r[:live_vs_par].present? }
+    sorted = with_score.sort_by { |r| [ r[:live_vs_par], r[:team_name] ] }
+
     ranked = []
     sorted.each_with_index do |team, idx|
-      if idx.positive? && sorted[idx - 1][:total_net_strokes] == team[:total_net_strokes]
+      if idx.positive? && sorted[idx - 1][:live_vs_par] == team[:live_vs_par]
         ranked << team.merge(rank: ranked[idx - 1][:rank])
       else
         ranked << team.merge(rank: idx + 1)
       end
     end
-    ranked + incomplete.map { |t| t.merge(rank: nil) }
+    ranked + without.map { |t| t.merge(rank: nil) }
   end
 end
