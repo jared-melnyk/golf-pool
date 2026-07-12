@@ -101,22 +101,35 @@ RSpec.describe "Game setups", type: :request do
       get game_setup_path(event_game, step: "course")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("Use an existing event round")
+      expect(response.body).to include("Event round")
       expect(response.body).to include("Saturday morning")
       expect(response.body).to include("Wolf River Golf Park")
+      expect(response.body).not_to include("Create a new round from course search")
     end
 
     it "links an existing event round without creating a new round" do
       expect do
         patch game_setup_path(event_game), params: {
           step: "course",
-          round_source: "existing",
           existing_round_id: event_round.id
         }
       end.not_to change(Round, :count)
 
       expect(response).to redirect_to(game_setup_path(event_game, step: "format"))
       expect(event_game.reload.round).to eq(event_round)
+    end
+
+    it "rejects creating a new round from the event game course step" do
+      expect do
+        patch game_setup_path(event_game), params: {
+          step: "course",
+          round_source: "new",
+          round: { played_on: Date.today, golf_course_api_course_id: 1, tee_selector: "male:0" }
+        }
+      end.not_to change(Round, :count)
+
+      expect(response).to redirect_to(game_setup_path(event_game, step: "course"))
+      expect(flash[:alert]).to eq("Select a round from this event.")
     end
 
     it "rejects an existing round id from another event" do
@@ -140,7 +153,6 @@ RSpec.describe "Game setups", type: :request do
 
       patch game_setup_path(event_game), params: {
         step: "course",
-        round_source: "existing",
         existing_round_id: other_round.id
       }
 

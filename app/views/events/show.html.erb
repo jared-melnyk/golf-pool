@@ -66,85 +66,71 @@
   </div>
 
   <% if @rounds.any? %>
-    <p class="text-xs text-gray-500 mb-2">commissioner-managed</p>
-    <ol class="list-decimal list-inside space-y-2">
+    <p class="text-xs text-gray-500 mb-3">commissioner-managed · games nest under each round</p>
+    <ul class="space-y-4">
       <% @rounds.each do |round| %>
-        <li class="flex flex-wrap items-start justify-between gap-2 text-gray-800">
-          <span>
-            <span class="font-medium"><%= round.name %></span>
-            <span class="text-sm text-gray-600">
-              · <%= round.played_on.strftime("%b %-d, %Y") %>
-              · <%= round.course_name %>
-              · <%= round.tee_gender.titleize %> <%= round.tee_name %>
-              <% if round.tee_total_yards.present? %>
-                · <%= number_with_delimiter(round.tee_total_yards) %> yds
+        <li class="border border-gray-100 rounded-lg p-3 bg-gray-50/50">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <span class="font-medium text-gray-900"><%= round.name %></span>
+              <p class="text-sm text-gray-600 mt-0.5">
+                <%= round.played_on.strftime("%b %-d, %Y") %>
+                · <%= round.course_name %>
+                · <%= round.tee_gender.titleize %> <%= round.tee_name %>
+                <% if round.tee_total_yards.present? %>
+                  · <%= number_with_delimiter(round.tee_total_yards) %> yds
+                <% end %>
+                · Rating <%= round.course_rating %> / Slope <%= round.slope_rating %>
+              </p>
+            </div>
+            <% if @event.commissioner?(current_user) %>
+              <span class="flex flex-wrap gap-2 items-center shrink-0">
+                <%= link_to "Add game", new_event_round_game_path(@event, round),
+                      class: "rounded px-2 py-1 text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 no-underline" %>
+                <%= link_to "Edit", edit_event_round_path(@event, round),
+                      class: "rounded px-2 py-1 text-xs text-emerald-700 border border-emerald-300 hover:border-emerald-400 no-underline" %>
+                <% if round.games.exists? %>
+                  <span class="rounded px-2 py-1 text-xs text-gray-400 border border-gray-200" title="Remove games using this round before deleting">Delete</span>
+                <% else %>
+                  <%= button_to "Delete", event_round_path(@event, round), method: :delete,
+                        form: { class: "inline-block", data: { turbo_confirm: "Delete #{round.name}?" } },
+                        class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+                <% end %>
+              </span>
+            <% end %>
+          </div>
+
+          <% games = round.games.sort_by(&:created_at) %>
+          <% if games.any? %>
+            <ol class="mt-3 ml-1 space-y-1.5 list-decimal list-inside">
+              <% games.each do |game| %>
+                <li class="text-sm text-gray-800">
+                  <%= link_to game.name, game_path(game),
+                        class: "font-medium text-emerald-700 hover:underline" %>
+                  <span class="text-gray-500">
+                    <% if game.game_type.present? %>
+                      · <%= game_type_label(game.game_type) %>
+                    <% end %>
+                    <% if game.completed? %>
+                      <span class="ml-1 text-xs text-gray-400">(completed)</span>
+                    <% elsif game.draft? %>
+                      <span class="ml-1 text-xs text-gray-400">(draft)</span>
+                    <% end %>
+                  </span>
+                </li>
               <% end %>
-              · Rating <%= round.course_rating %> / Slope <%= round.slope_rating %>
-            </span>
-          </span>
-          <% if @event.commissioner?(current_user) %>
-            <span class="flex flex-wrap gap-2 items-center shrink-0">
-              <%= link_to "Edit", edit_event_round_path(@event, round),
-                    class: "rounded px-2 py-1 text-xs text-emerald-700 border border-emerald-300 hover:border-emerald-400 no-underline" %>
-              <% if round.games.exists? %>
-                <span class="rounded px-2 py-1 text-xs text-gray-400 border border-gray-200" title="Remove games using this round before deleting">Delete</span>
-              <% else %>
-                <%= button_to "Delete", event_round_path(@event, round), method: :delete,
-                      form: { class: "inline-block", data: { turbo_confirm: "Delete #{round.name}?" } },
-                      class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
-              <% end %>
-            </span>
+            </ol>
+          <% else %>
+            <p class="mt-2 text-sm text-gray-500">No games yet for this round.</p>
           <% end %>
         </li>
       <% end %>
-    </ol>
+    </ul>
   <% else %>
     <p class="text-gray-600 text-sm leading-relaxed">
       <span class="text-xs text-gray-500 block mb-1">commissioner-managed</span>
-      No rounds yet. Commissioners can create a round from GolfCourseAPI course + tee data.
+      No rounds yet. Commissioners can create a round from GolfCourseAPI course + tee data, then add games to that round.
       Set your <%= link_to "GHIN handicap index", edit_profile_path, class: "text-emerald-700 hover:underline" %> on your profile for net games.
-    </p>
-  <% end %>
-</section>
-
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-  <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-    <h2 class="text-lg font-semibold text-gray-900">Games</h2>
-    <% if @event.commissioner?(current_user) %>
-      <%= link_to "Create game", new_event_game_path(@event),
-            class: "rounded px-3 py-1.5 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 no-underline" %>
-    <% end %>
-  </div>
-
-  <% games = @event.games.includes(:round).order(created_at: :desc) %>
-  <% if games.any? %>
-    <ol class="list-decimal list-inside space-y-2">
-      <% games.each do |game| %>
-        <li class="text-gray-800">
-          <%= link_to game.name, game_path(game),
-                class: "font-medium text-emerald-700 hover:underline" %>
-          <span class="text-sm text-gray-500">
-            <% if game.game_type.present? %>
-              · <%= game_type_label(game.game_type) %>
-            <% end %>
-            <% if game.round.present? %>
-              · <%= game.round.played_on.strftime("%b %-d, %Y") %>
-            <% end %>
-            <% if game.completed? %>
-              <span class="ml-1 text-xs text-gray-400">(completed)</span>
-            <% elsif game.draft? %>
-              <span class="ml-1 text-xs text-gray-400">(draft)</span>
-            <% end %>
-          </span>
-        </li>
-      <% end %>
-    </ol>
-  <% else %>
-    <p class="text-gray-600 text-sm">
-      No games yet.
-      <% if @event.commissioner?(current_user) %>
-        <%= link_to "Create the first game →", new_event_game_path(@event), class: "text-emerald-700 hover:underline" %>
-      <% end %>
     </p>
   <% end %>
 </section>

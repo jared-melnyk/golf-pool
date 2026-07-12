@@ -46,6 +46,15 @@ class Game < ApplicationRecord
     end
   end
 
+  def self.next_group_letter(round)
+    index = round.games.count
+    ("A".ord + index).chr
+  end
+
+  def self.default_trip_name(round, game_type)
+    "#{type_label(game_type)} · #{next_group_letter(round)}"
+  end
+
   def suggested_name
     return nil unless round && game_type.present?
 

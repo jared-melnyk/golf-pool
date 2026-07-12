@@ -64,9 +64,13 @@ module RoundSnapshotBuildable
     Array(candidates.find(&:present?))
   end
 
-  def default_round_name_for(course_payload)
+  def default_round_name_for(course_payload, played_on: Date.current)
     course_name = course_payload["course_name"].presence || course_payload["club_name"].presence || "Round"
-    "Round at #{course_name}"
+    date = played_on.is_a?(Date) ? played_on : Date.parse(played_on.to_s)
+    "#{course_name} · #{date.strftime('%-b %-d')}"
+  rescue ArgumentError
+    course_name = course_payload["course_name"].presence || course_payload["club_name"].presence || "Round"
+    "#{course_name} · #{Date.current.strftime('%-b %-d')}"
   end
 
   def tee_selector_for_round(round, course_payload)

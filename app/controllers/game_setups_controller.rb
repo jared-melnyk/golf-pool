@@ -62,10 +62,9 @@ class GameSetupsController < ApplicationController
     @selected_tee_selector = params.dig(:round, :tee_selector)
     @round_played_on = round_played_on_from_params
     @course_selection_error = nil
-    @round_source = default_round_source
     @selected_existing_round_id = selected_existing_round_id_for_form
 
-    load_saved_round_course_state if @game.round.present? && @round_source == "new"
+    load_saved_round_course_state if @game.round.present? && @game.ad_hoc?
   end
 
   def round_played_on_from_params
@@ -93,7 +92,7 @@ class GameSetupsController < ApplicationController
   end
 
   def save_course!
-    if use_existing_event_round?
+    if @game.event.present?
       save_existing_event_round!
     else
       save_new_round!
@@ -104,7 +103,7 @@ class GameSetupsController < ApplicationController
     round = @game.event.rounds.find(params.require(:existing_round_id))
     @game.update!(round: round, name: @game.suggested_name.presence || @game.name)
     redirect_to game_setup_path(@game, step: "format")
-  rescue ActiveRecord::RecordNotFound
+  rescue ActiveRecord::RecordNotFound, ActionController::ParameterMissing
     redirect_to game_setup_path(@game, step: "course"), alert: "Select a round from this event."
   end
 
@@ -114,9 +113,13 @@ class GameSetupsController < ApplicationController
       tee_selector: round_params.fetch(:tee_selector)
     )
     round = @game.round || Round.new(event: @game.event)
+    played_on = Date.parse(round_params.fetch(:played_on).to_s)
     round.assign_attributes(
-      name: "Round at #{snapshot[:course_name]}",
-      played_on: round_params.fetch(:played_on),
+      name: default_round_name_for(
+        { "course_name" => snapshot[:course_name], "club_name" => snapshot[:club_name] },
+        played_on: played_on
+      ),
+      played_on: played_on,
       golf_course_api_course_id: snapshot[:golf_course_api_course_id],
       course_name: snapshot[:course_name],
       club_name: snapshot[:club_name],
@@ -134,20 +137,6 @@ class GameSetupsController < ApplicationController
     redirect_to game_setup_path(@game, step: "format")
   rescue StandardError => e
     redirect_to game_setup_path(@game, step: "course"), alert: e.message
-  end
-
-  def use_existing_event_round?
-    @game.event.present? && params[:round_source] == "existing"
-  end
-
-  def default_round_source
-    return "new" if @game.event.blank?
-
-    source = params[:round_source].presence_in(%w[existing new])
-    return source if source.present?
-    return "existing" if @game.round.present? && @event_rounds.exists?(id: @game.round_id)
-
-    @event_rounds.any? ? "existing" : "new"
   end
 
   def selected_existing_round_id_for_form

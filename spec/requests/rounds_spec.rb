@@ -69,7 +69,19 @@ RSpec.describe "Rounds", type: :request do
         expect(response.body).to include("Male")
         expect(response.body).not_to include("Female")
         expect(response.body).to include("6,348 yds")
-        expect(response.body).to include('value="Round at Course No. 1"')
+        expect(response.body).to include("Course No. 1 ·")
+        expect(response.body).to match(/value="Course No\. 1 · \w+ \d+"/)
+      end
+
+      it "uses played_on from params in the default round name" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+
+        get select_course_event_rounds_path(event),
+            params: { course_id: 99, played_on: "2026-07-16" },
+            headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('value="Course No. 1 · Jul 16"')
       end
 
       it "shows tee options when course payload is wrapped under course key" do

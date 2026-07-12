@@ -77,6 +77,42 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Course No. 1")
       expect(response.body).to include("6,348 yds")
     end
+
+    it "nests games under rounds with an Add game CTA" do
+      round = event.rounds.create!(
+        name: "Wolf River · Jul 16",
+        played_on: Date.new(2026, 7, 16),
+        golf_course_api_course_id: 1,
+        course_name: "Wolf River Golf Park",
+        club_name: "Wolf River Golf Park",
+        tee_name: "Blue",
+        tee_gender: "male",
+        course_rating: BigDecimal("69.4"),
+        slope_rating: 120,
+        par_total: 72,
+        hole_pars: Array.new(18, 4),
+        hole_handicaps: (1..18).to_a,
+        course_snapshot: { "id" => 1 }
+      )
+      Game.create!(
+        name: "Best Ball · A",
+        creator: user,
+        status: "active",
+        event: event,
+        round: round,
+        game_type: "best_ball"
+      )
+
+      get event_path(event)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Wolf River · Jul 16")
+      expect(response.body).to include("Best Ball · A")
+      expect(response.body).to include("Add game")
+      expect(response.body).to include(new_event_round_game_path(event, round))
+      expect(response.body).not_to include(">Create game<")
+      expect(response.body).not_to match(/<h2[^>]*>Games<\/h2>/)
+    end
   end
 
   describe "POST /events/:token/join" do

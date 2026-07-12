@@ -1,12 +1,9 @@
 <% event_rounds = local_assigns.fetch(:event_rounds, Round.none) %>
-<% round_source = local_assigns.fetch(:round_source, "new") %>
 <% selected_existing_round_id = local_assigns[:selected_existing_round_id] %>
-<% show_existing_round_choice = game.event.present? && event_rounds.any? %>
+<% event_game = game.event.present? %>
 
 <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm"
-         <% if show_existing_round_choice %>
-           data-controller="round-source"
-         <% else %>
+         <% unless event_game %>
            data-controller="course-search"
            data-course-search-search-url-value="<%= search_courses_game_setup_path(game) %>"
            data-course-search-select-url-value="<%= select_course_game_setup_path(game) %>"
@@ -16,24 +13,9 @@
   <%= form_with url: game_setup_path(game), method: :patch, local: true, id: "course_save_form", class: "space-y-4" do %>
     <%= hidden_field_tag :step, "course" %>
 
-    <% if show_existing_round_choice %>
-      <div data-controller="course-search"
-           data-course-search-search-url-value="<%= search_courses_game_setup_path(game) %>"
-           data-course-search-select-url-value="<%= select_course_game_setup_path(game) %>"
-           class="space-y-4">
-        <fieldset class="space-y-3">
-          <legend class="text-sm font-medium text-gray-700">Round</legend>
-          <label class="flex items-center gap-2 text-sm text-gray-800">
-            <%= radio_button_tag :round_source, "existing", round_source == "existing", data: { action: "round-source#update" } %>
-            Use an existing event round
-          </label>
-          <label class="flex items-center gap-2 text-sm text-gray-800">
-            <%= radio_button_tag :round_source, "new", round_source == "new", data: { action: "round-source#update" } %>
-            Create a new round from course search
-          </label>
-        </fieldset>
-
-        <div data-round-source-target="existingPanel" class="<%= "hidden" if round_source == "new" %>">
+    <% if event_game %>
+      <% if event_rounds.any? %>
+        <div>
           <%= label_tag :existing_round_id, "Event round", class: "block text-sm font-medium text-gray-700 mb-1" %>
           <%= select_tag :existing_round_id,
                 options_for_select(
@@ -41,32 +23,22 @@
                   selected_existing_round_id
                 ),
                 include_blank: "Select a round",
-                required: round_source == "existing",
-                data: { round_source_target: "existingInput", required_when_enabled: "true" },
+                required: true,
                 class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" %>
-          <p class="text-xs text-gray-500 mt-1">Reuse tee data already set up for this event.</p>
+          <p class="text-xs text-gray-500 mt-1">
+            Trip games attach to an existing round.
+            <%= link_to "Create a round", new_event_round_path(game.event), class: "text-emerald-700 hover:underline" %>
+            if you need a new course/tee.
+          </p>
         </div>
-
-        <div data-round-source-target="newPanel" class="space-y-4 <%= "hidden" if round_source == "existing" %>">
-          <%= render "game_setups/new_round_fields",
-                round_played_on: round_played_on,
-                search_query: search_query,
-                selected_course: selected_course,
-                tee_options: tee_options,
-                selected_tee_selector: selected_tee_selector,
-                course_selection_error: course_selection_error,
-                round_source_target: "newInput" %>
-        </div>
-      </div>
-    <% else %>
-      <% if game.event.present? %>
+      <% else %>
         <p class="text-sm text-gray-600">
-          No rounds on this event yet.
+          No rounds on this trip yet.
           <%= link_to "Create a round", new_event_round_path(game.event), class: "text-emerald-700 hover:underline" %>
-          to reuse tee data across games, or search for a course below.
+          first, then return here to attach this game.
         </p>
       <% end %>
-
+    <% else %>
       <%= render "game_setups/new_round_fields",
             round_played_on: round_played_on,
             search_query: search_query,
@@ -76,6 +48,8 @@
             course_selection_error: course_selection_error %>
     <% end %>
 
-    <%= submit_tag "Save & continue", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+    <% if !event_game || event_rounds.any? %>
+      <%= submit_tag "Save & continue", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+    <% end %>
   <% end %>
 </section>
