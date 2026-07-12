@@ -43,6 +43,7 @@ Rails.application.routes.draw do
       patch :reopen
     end
     resources :game_memberships, only: [ :destroy, :update ]
+    resources :game_guests, only: [ :create, :destroy ]
     resources :hole_scores, only: [ :update ]
   end
 

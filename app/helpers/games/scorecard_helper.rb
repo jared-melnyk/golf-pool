@@ -52,7 +52,7 @@ module Games
     # Map player name → GameTeamPlayer for one group. Names are only unique within a team;
     # the same user may appear on multiple teams (separate GTP rows and DOM ids).
     def scorecard_gtps_for_team(game_team)
-      game_team.game_team_players.index_by { |gtp| gtp.user.name }
+      game_team.game_team_players.index_by(&:display_name)
     end
 
     def scorecard_team_data(scorecard, game_team)

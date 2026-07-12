@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_12_180813) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,6 +34,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.index ["token"], name: "index_events_on_token", unique: true
   end
 
+  create_table "game_guests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "game_id", null: false
+    t.decimal "handicap_index", precision: 5, scale: 1, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_game_guests_on_game_id"
+  end
+
   create_table "game_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "game_id", null: false
@@ -47,10 +56,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
 
   create_table "game_team_players", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "game_guest_id"
     t.bigint "game_team_id", null: false
     t.decimal "snapshot_handicap_index", precision: 5, scale: 1
     t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
+    t.index ["game_guest_id"], name: "index_game_team_players_on_game_guest_id_unique", unique: true, where: "(game_guest_id IS NOT NULL)"
     t.index ["game_team_id", "user_id"], name: "index_game_team_players_on_game_team_id_and_user_id", unique: true
     t.index ["game_team_id"], name: "index_game_team_players_on_game_team_id"
     t.index ["user_id"], name: "index_game_team_players_on_user_id"
@@ -400,8 +411,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
 
   add_foreign_key "event_memberships", "events"
   add_foreign_key "event_memberships", "users"
+  add_foreign_key "game_guests", "games"
   add_foreign_key "game_memberships", "games"
   add_foreign_key "game_memberships", "users"
+  add_foreign_key "game_team_players", "game_guests"
   add_foreign_key "game_team_players", "game_teams"
   add_foreign_key "game_team_players", "users"
   add_foreign_key "game_teams", "games"

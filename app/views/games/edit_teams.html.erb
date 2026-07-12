@@ -13,11 +13,46 @@
     <% end %>
   </div>
 
-  <%= form_with url: update_teams_game_path(@game), method: :patch, local: true, class: "space-y-6" do |f| %>
-    <% if flash[:alert] %>
-      <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] %></p>
+  <% if flash[:alert] %>
+    <p class="p-3 bg-red-50 border border-red-200 text-red-800 rounded"><%= flash[:alert] %></p>
+  <% end %>
+  <% if flash[:notice] %>
+    <p class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded"><%= flash[:notice] %></p>
+  <% end %>
+
+  <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm space-y-3">
+    <h2 class="text-base font-semibold text-gray-900">Add guest</h2>
+    <p class="text-sm text-gray-600">Add someone by name without an account. Handicap index is required.</p>
+    <%= form_with model: @guest, url: game_game_guests_path(@game), method: :post, local: true, class: "space-y-3" do |f| %>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <%= f.label :name, "Name", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.text_field :name, required: true, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500", placeholder: "e.g. Jon" %>
+        </div>
+        <div>
+          <%= f.label :handicap_index, "Handicap index", class: "block text-sm font-medium text-gray-700 mb-1" %>
+          <%= f.number_field :handicap_index, required: true, step: 0.1, class: "w-full rounded border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-emerald-500", placeholder: "e.g. 14.2" %>
+        </div>
+      </div>
+      <%= f.submit "Add guest", class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
     <% end %>
 
+    <% if @guests.any? %>
+      <ul class="divide-y divide-gray-100 border-t border-gray-100 pt-3">
+        <% @guests.each do |guest| %>
+          <li class="flex items-center justify-between gap-3 py-2 text-sm">
+            <span>
+              <%= guest.name %>
+              <span class="text-gray-400 text-xs">(HI <%= guest.handicap_index %> · Guest)</span>
+            </span>
+            <%= button_to "Remove", game_game_guest_path(@game, guest), method: :delete, form: { data: { turbo_confirm: "Remove #{guest.name} from this game?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </section>
+
+  <%= form_with url: update_teams_game_path(@game), method: :patch, local: true, class: "space-y-6" do |f| %>
     <% 2.times do |i| %>
       <% team = @game_teams[i] %>
       <section class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
@@ -44,20 +79,34 @@
               "1–4"
             end %>)
           </label>
-          <% current_ids = team&.game_team_players&.map(&:user_id) || [] %>
+          <% current_user_ids = team&.game_team_players&.filter_map(&:user_id) || [] %>
+          <% current_guest_ids = team&.game_team_players&.filter_map(&:game_guest_id) || [] %>
           <% @members.each do |user| %>
             <label class="flex items-center gap-2 mb-1 text-sm">
               <input
                 type="checkbox"
                 name="teams[<%= i %>][user_ids][]"
                 value="<%= user.id %>"
-                <%= "checked" if current_ids.include?(user.id) %>
+                <%= "checked" if current_user_ids.include?(user.id) %>
                 class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
               />
               <%= user.name %>
               <% if user.ghin_handicap_index.present? %>
                 <span class="text-gray-400 text-xs">(HI <%= user.ghin_handicap_index %>)</span>
               <% end %>
+            </label>
+          <% end %>
+          <% @guests.each do |guest| %>
+            <label class="flex items-center gap-2 mb-1 text-sm">
+              <input
+                type="checkbox"
+                name="teams[<%= i %>][guest_ids][]"
+                value="<%= guest.id %>"
+                <%= "checked" if current_guest_ids.include?(guest.id) %>
+                class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+              />
+              <%= guest.name %>
+              <span class="text-gray-400 text-xs">(HI <%= guest.handicap_index %> · Guest)</span>
             </label>
           <% end %>
         </div>

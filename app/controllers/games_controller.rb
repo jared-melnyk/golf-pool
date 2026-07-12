@@ -50,7 +50,9 @@ class GamesController < ApplicationController
 
   def edit_teams
     @members = @game.roster_users
-    @game_teams = @game.game_teams.includes(game_team_players: :user)
+    @guests = @game.game_guests.order(:name)
+    @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
+    @guest = GameGuest.new
   end
 
   def update_teams
@@ -64,6 +66,10 @@ class GamesController < ApplicationController
           user = @game.roster_users.find_by(id: uid)
           GameTeamPlayer.create!(game_team: team, user: user) if user
         end
+        Array(team_data[:guest_ids]).compact_blank.each do |gid|
+          guest = @game.game_guests.find_by(id: gid)
+          GameTeamPlayer.create!(game_team: team, game_guest: guest) if guest
+        end
       end
 
       enforce_forty_score_team_sizes! if @game.forty_score?
@@ -73,7 +79,9 @@ class GamesController < ApplicationController
     redirect_to game_path(@game), notice: "Teams saved."
   rescue ActiveRecord::RecordInvalid => e
     @members = @game.roster_users
-    @game_teams = @game.game_teams.includes(game_team_players: :user)
+    @guests = @game.game_guests.order(:name)
+    @game_teams = @game.game_teams.includes(game_team_players: [ :user, :game_guest ])
+    @guest = GameGuest.new
     flash.now[:alert] = "Could not save teams: #{e.record&.errors&.full_messages&.to_sentence || e.message}"
     render :edit_teams, status: :unprocessable_entity
   end
@@ -134,7 +142,7 @@ class GamesController < ApplicationController
   def teams_params
     params.require(:teams).to_unsafe_h.transform_values do |v|
       team_params = v.is_a?(ActionController::Parameters) ? v : ActionController::Parameters.new(v)
-      team_params.permit(:name, user_ids: []).to_h.with_indifferent_access
+      team_params.permit(:name, user_ids: [], guest_ids: []).to_h.with_indifferent_access
     end
   rescue ActionController::ParameterMissing
     {}

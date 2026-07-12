@@ -18,4 +18,22 @@ RSpec.describe GameTeamPlayer, type: :model do
     gtp = GameTeamPlayer.create!(game_team: team, user: user)
     expect(gtp.snapshot_handicap_index).to eq(14.2)
   end
+
+  it "snapshots the guest handicap index on creation" do
+    guest = GameGuest.create!(game: game, name: "Jon", handicap_index: 18.5)
+    gtp = GameTeamPlayer.create!(game_team: team, game_guest: guest)
+    expect(gtp.snapshot_handicap_index).to eq(18.5)
+    expect(gtp.display_name).to eq("Jon")
+  end
+
+  it "requires exactly one of user or game_guest" do
+    expect(GameTeamPlayer.new(game_team: team)).not_to be_valid
+    guest = GameGuest.create!(game: game, name: "Jon", handicap_index: 10.0)
+    expect(GameTeamPlayer.new(game_team: team, user: user, game_guest: guest)).not_to be_valid
+  end
+
+  it "returns display_name from the user when present" do
+    gtp = GameTeamPlayer.create!(game_team: team, user: user)
+    expect(gtp.display_name).to eq("Alice")
+  end
 end
