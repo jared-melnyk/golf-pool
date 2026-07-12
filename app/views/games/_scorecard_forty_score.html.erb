@@ -83,4 +83,4 @@
   </section>
 <% end %>
 
-<%= render "games/scorecard/leaderboard_forty_score", game: game, scorecard: scorecard %>
+<%= render "games/scorecard/leaderboard_forty_score", game: game, scorecard: scorecard unless game.field_scope? %>

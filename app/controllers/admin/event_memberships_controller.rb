@@ -13,7 +13,7 @@ module Admin
       end
 
       if @event.member?(user)
-        redirect_to admin_event_path(@event), alert: "#{user.name} is already on this trip."
+        redirect_to admin_event_path(@event), alert: "#{user.name} is already on this event."
         return
       end
 

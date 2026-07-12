@@ -58,16 +58,15 @@ class FortyScoreScorecard
     player_count = team.game_team_players.size
     target = FortyScore.target_pick_count(player_count)
 
-    # Standard golf vs par: Σ(net − par). Negative = under par (displays as e.g. −25).
-    actual_vs_par =
-      if selected_count == target
-        total_selected_net - total_selected_par
-      end
+    live_vs_par = selected_count.positive? ? (total_selected_net - total_selected_par) : nil
 
+    # Final vs-par only when pick budget is filled (competition scaling for threesomes).
+    actual_vs_par = selected_count == target ? live_vs_par : nil
     competition_vs_par = FortyScore.competition_vs_par(
       actual_vs_par: actual_vs_par,
       player_count: player_count
     )
+    complete = selected_count == target && selected_count.positive?
 
     {
       id: team.id,
@@ -76,10 +75,15 @@ class FortyScoreScorecard
       player_count: player_count,
       target_pick_count: target,
       selected_count: selected_count,
-      total_selected_net: selected_count == target ? total_selected_net : nil,
-      total_selected_par: selected_count == target ? total_selected_par : nil,
+      total_selected_net: complete ? total_selected_net : nil,
+      total_selected_par: complete ? total_selected_par : nil,
       actual_vs_par: actual_vs_par,
-      competition_vs_par: competition_vs_par
+      competition_vs_par: competition_vs_par,
+      live_vs_par: live_vs_par,
+      live_picks: selected_count,
+      live_pick_target: target,
+      live_label: LiveScoreFormatting.picks_label(live_vs_par, selected_count, target),
+      complete: complete
     }
   end
 

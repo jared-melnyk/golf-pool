@@ -4,8 +4,6 @@
     <h4 class="text-sm font-semibold text-gray-900 mb-2"><%= format[:label] %> standings</h4>
 
     <% if format[:field].any? %>
-      <% metric_key = format[:field].find { |r| r[:complete] }&.dig(:metric_key) || format[:field].first[:metric_key] %>
-      <p class="text-xs text-gray-500 mb-1"><%= standings_metric_label(metric_key) %> · lower is better</p>
       <ol class="space-y-1 text-sm">
         <% format[:field].each do |row| %>
           <li class="flex items-baseline justify-between gap-3">
@@ -17,7 +15,7 @@
                 <span class="font-medium text-gray-900"><%= row[:team_name] %></span>
               <% end %>
             </span>
-            <span class="tabular-nums text-gray-800"><%= standings_metric_display(row) %></span>
+            <span class="tabular-nums text-gray-800"><%= row[:live_label] || "—" %></span>
           </li>
         <% end %>
       </ol>

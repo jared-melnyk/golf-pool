@@ -67,11 +67,12 @@
           <% end %>
           <%= render "games/scorecard/team_total",
                 game_team: game_team,
-                total_net_strokes: team[:total_net_strokes] %>
+                total_net_strokes: team[:total_net_strokes],
+                live_label: team[:live_label] %>
         </tr>
       </tbody>
     </table>
   </section>
 <% end %>
 
-<%= render "games/scorecard/leaderboard_best_ball", game: game, scorecard: scorecard %>
+<%= render "games/scorecard/leaderboard_best_ball", game: game, scorecard: scorecard unless game.field_scope? %>

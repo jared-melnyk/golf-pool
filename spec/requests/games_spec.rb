@@ -229,6 +229,22 @@ RSpec.describe "Games", type: :request do
       expect(game.game_teams.flat_map { |t| t.game_team_players.map(&:user_id) }).to match_array([ player1.id, player2.id ])
     end
 
+    it "defaults a field forty_score team to Group letter from the game name" do
+      fs = create_active_game!(game_type: "forty_score")
+      fs.update!(name: "Forty Score · B")
+      p1 = User.create!(name: "FsA", email: "fsa@test.com", password: "pw")
+      p2 = User.create!(name: "FsB", email: "fsb@test.com", password: "pw")
+      p3 = User.create!(name: "FsC", email: "fsc@test.com", password: "pw")
+      [ p1, p2, p3 ].each { |pl| EventMembership.create!(event: event, user: pl, role: "player") }
+
+      patch update_teams_game_path(fs), params: {
+        teams: { "0" => { name: "", user_ids: [ p1.id, p2.id, p3.id ].map(&:to_s) } }
+      }
+
+      expect(response).to redirect_to(game_path(fs))
+      expect(fs.game_teams.reload.sole.name).to eq("Group B")
+    end
+
     context "when game type is forty_score" do
       let(:game) { create_active_game!(game_type: "forty_score") }
       let(:p1) { User.create!(name: "Fs1", email: "fs1@test.com", password: "pw") }

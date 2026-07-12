@@ -6,7 +6,7 @@
 
   <p class="flex flex-wrap gap-3">
     <%= link_to "New game", new_game_path, class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
-    <%= link_to "Plan a trip", new_event_path, class: "rounded px-4 py-2 text-sm font-medium border border-gray-300 text-gray-800 hover:bg-gray-50" %>
+    <%= link_to "Create event", new_event_path, class: "rounded px-4 py-2 text-sm font-medium border border-gray-300 text-gray-800 hover:bg-gray-50" %>
   </p>
 
   <% if @games.any? %>
@@ -17,7 +17,7 @@
             <div>
               <%= link_to game.name, game_path(game), class: "text-lg font-semibold text-emerald-700 hover:underline" %>
               <% if game.event.present? %>
-                <p class="text-sm text-gray-500 mt-1">Trip: <%= link_to game.event.name, event_path(game.event), class: "text-emerald-700 hover:underline" %></p>
+                <p class="text-sm text-gray-500 mt-1">Event: <%= link_to game.event.name, event_path(game.event), class: "text-emerald-700 hover:underline" %></p>
               <% end %>
               <% if game.round.present? && game.game_type.present? %>
                 <p class="text-sm text-gray-600 mt-1">

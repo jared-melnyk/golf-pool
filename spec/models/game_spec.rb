@@ -191,12 +191,18 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  describe "#allows_additional_teams?" do
-    it "is true only for best_ball" do
-      expect(build_game(game_type: "best_ball").allows_additional_teams?).to be true
-      expect(build_game(game_type: "cha_cha_cha").allows_additional_teams?).to be false
-      expect(build_game(game_type: "forty_score").allows_additional_teams?).to be false
-      expect(build_game(game_type: "vegas").allows_additional_teams?).to be false
+  describe "#default_team_name" do
+    it "uses Group letter for field formats" do
+      game = build_game(game_type: "forty_score", name: "Forty Score · C")
+      game.save!
+      expect(game.default_team_name(0)).to eq("Group C")
+    end
+
+    it "uses Team A/B for match best_ball" do
+      game = build_game(game_type: "best_ball", name: "Best Ball · A")
+      game.save!
+      expect(game.default_team_name(0, slot_count: 2)).to eq("Team A")
+      expect(game.default_team_name(1, slot_count: 2)).to eq("Team B")
     end
   end
 end

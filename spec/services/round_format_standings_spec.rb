@@ -33,8 +33,7 @@ RSpec.describe RoundFormatStandings do
 
       expect(result[:field].map { |row| row[:team_name] }).to eq([ "Group B", "Group C", "Group A" ])
       expect(result[:field].map { |row| row[:rank] }).to eq([ 1, 2, 3 ])
-      expect(result[:field].first[:metric_key]).to eq(:total_net_strokes)
-      expect(result[:field].first[:scope]).to eq(:field)
+      expect(result[:field].first[:live_label]).to be_present
       expect(result[:matches]).to eq([])
     end
 
@@ -61,20 +60,20 @@ RSpec.describe RoundFormatStandings do
       expect(result[:matches].first[:game_name]).to eq("2v2")
     end
 
-    it "lists incomplete field teams without a rank after complete ones" do
+    it "lists mid-round field teams with live ranks" do
       add_field_game!(name: "Done", gross: 4)
-      incomplete = create_test_game!(event: event, round: round, game_type: "best_ball", name: "WIP")
+      incomplete = create_test_game!(event: event, round: round, game_type: "best_ball", name: "Best Ball · B")
       user = User.create!(name: "WIP", email: "wip@test.com", password: "pw", ghin_handicap_index: 0)
       team = GameTeam.create!(game: incomplete, name: "WIP")
       gtp = GameTeamPlayer.create!(game_team: team, user: user)
-      HoleScore.create!(game_team_player: gtp, hole_number: 1, gross_score: 4)
+      HoleScore.create!(game_team_player: gtp, hole_number: 1, gross_score: 5)
 
       result = described_class.new(round: round, game_type: "best_ball").call
 
-      expect(result[:field].first[:team_name]).to eq("Done")
-      expect(result[:field].first[:rank]).to eq(1)
-      expect(result[:field].last[:team_name]).to eq("WIP")
-      expect(result[:field].last[:rank]).to be_nil
+      expect(result[:field].map { |row| row[:team_name] }).to include("Done", "WIP")
+      wip = result[:field].find { |row| row[:team_name] == "WIP" }
+      expect(wip[:live_label]).to eq("+1 (1)")
+      expect(wip[:rank]).to be_present
     end
   end
 end

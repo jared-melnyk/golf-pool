@@ -56,12 +56,10 @@
         </div>
       <% end %>
       <p class="text-xs text-gray-500 pt-1">
-        Picks <%= team[:selected_count] %>/<%= team[:target_pick_count] %>
-        <% if team[:actual_vs_par] %>
-          · Net vs par <%= "%+d" % team[:actual_vs_par] %>
-          <% if team[:player_count] == 3 && team[:competition_vs_par] != team[:actual_vs_par] %>
-            · Scaled <%= "%+d" % team[:competition_vs_par] %>
-          <% end %>
+        <% if team[:live_label].present? %>
+          <span class="font-semibold text-emerald-800"><%= team[:live_label] %></span>
+        <% else %>
+          Picks <%= team[:selected_count] %>/<%= team[:target_pick_count] %>
         <% end %>
       </p>
     </div>
