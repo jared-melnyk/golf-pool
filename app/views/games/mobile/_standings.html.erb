@@ -31,16 +31,20 @@
     </ul>
   <% else %>
     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Leaderboard</p>
-    <ul class="space-y-1.5">
-      <% scorecard[:leaderboard].each do |row| %>
-        <li class="flex items-baseline justify-between gap-3 text-sm">
-          <span class="font-medium text-gray-900">
-            <span class="text-gray-500 tabular-nums mr-1"><%= row[:total_net_strokes] ? scorecard_display_rank(row[:rank], scorecard[:leaderboard]) : "—" %></span>
-            <%= row[:team_name] %>
-          </span>
-          <span class="tabular-nums text-gray-700"><%= row[:total_net_strokes] || "—" %></span>
-        </li>
-      <% end %>
-    </ul>
+    <% if scorecard[:leaderboard].none? { |row| row[:live_vs_par] } %>
+      <p class="text-sm text-gray-500">No scores yet.</p>
+    <% else %>
+      <ul class="space-y-1.5">
+        <% scorecard[:leaderboard].each do |row| %>
+          <li class="flex items-baseline justify-between gap-3 text-sm">
+            <span class="font-medium text-gray-900">
+              <span class="text-gray-500 tabular-nums mr-1"><%= row[:live_vs_par] ? scorecard_display_rank(row[:rank], scorecard[:leaderboard]) : "—" %></span>
+              <%= row[:team_name] %>
+            </span>
+            <span class="tabular-nums text-gray-700"><%= row[:live_label] || "—" %></span>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
   <% end %>
 </div>

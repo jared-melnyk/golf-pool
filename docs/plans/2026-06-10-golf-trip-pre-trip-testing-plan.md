@@ -164,7 +164,7 @@ Each scenario defines round snapshot, players, teams, gross scores, and **expect
 | `bb_wide_spread` | Scratch + 28 index on same team |
 | `bb_ph_over_18` | PH > 18; extra strokes on hardest holes |
 | `bb_tie_ordinal` | Two teams tied → T1; next tier → T3 |
-| `bb_incomplete` | Missing back 9 → nil total, nil rank |
+| `bb_incomplete` | Missing back 9 → nil final total; live rank/label thru front 9 |
 
 **Cha-Cha-Cha**
 
