@@ -109,6 +109,24 @@ RSpec.describe BestBallScorecard do
     expect(scorecard[:leaderboard].first).to have_key(:team_name)
   end
 
+  context "when gross minus strokes would be below 1" do
+    let(:high) { User.create!(name: "High", email: "high@test.com", password: "pw", ghin_handicap_index: 36.0) }
+    let(:team_h) { GameTeam.create!(game: game, name: "Low Gross Team") }
+    let(:gtp_high) { GameTeamPlayer.create!(game_team: team_h, user: high) }
+
+    before do
+      round.update!(slope_rating: 130, course_rating: 74.0)
+      HoleScore.create!(game_team_player: gtp_high, hole_number: 1, gross_score: 1)
+    end
+
+    it "floors net score at 1" do
+      player = BestBallScorecard.new(game).call[:teams].find { |t| t[:name] == "Low Gross Team" }[:players].first
+      hole1 = player[:hole_scores].find { |s| s[:hole_number] == 1 }
+      expect(hole1[:strokes_received]).to eq(2)
+      expect(hole1[:net_score]).to eq(1)
+    end
+  end
+
   context "when course handicap would exceed 36 playing handicap" do
     let(:high) { User.create!(name: "High", email: "high@test.com", password: "pw", ghin_handicap_index: 36.0) }
     let(:team_h) { GameTeam.create!(game: game, name: "High Team") }
