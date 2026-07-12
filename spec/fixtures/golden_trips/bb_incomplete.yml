@@ -1,6 +1,6 @@
 id: bb_incomplete
 format: best_ball
-description: Missing back 9 yields nil total and nil rank
+description: Missing back 9 yields nil final total but live rank/label thru front 9
 teams:
   - name: Team A
     players:
@@ -37,10 +37,17 @@ expected:
   teams:
     Team A:
       total_net_strokes: null
+      live_thru_holes: 9
+      live_vs_par: 0
+      live_label: "E (9)"
   leaderboard:
     - team_name: Team A
-      rank: null
+      rank: 1
       total_net_strokes: null
+      live_vs_par: 0
+      live_label: "E (9)"
     - team_name: Team B
       rank: 1
       total_net_strokes: 72
+      live_vs_par: 0
+      live_label: "E (18)"
