@@ -1,8 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Mobile hole navigation: show one hole panel at a time, persist selection.
-// Score saves Turbo-replace this element — never let the server default overwrite
-// the user's current hole once sessionStorage has a value.
+// Score saves Turbo-replace this element. Persist synchronously on navigate so a
+// blur→save replace cannot wipe the new hole before MutationObserver fires
+// holeValueChanged. Never persist from holeValueChanged — that callback runs for
+// the SSR default (hole 1) before connect() can restore sessionStorage.
 export default class extends Controller {
   static targets = ["panel", "label", "par", "si"]
   static values = {
@@ -13,32 +15,34 @@ export default class extends Controller {
   }
 
   connect() {
-    this.ready = false
     const stored = this.storageKeyValue && sessionStorage.getItem(this.storageKeyValue)
     const fromStore = stored ? parseInt(stored, 10) : NaN
     if (fromStore >= 1 && fromStore <= 18) {
       this.holeValue = fromStore
     }
-    this.ready = true
+    this.persist()
     this.showCurrent()
   }
 
   previous() {
     this.holeValue = this.holeValue <= 1 ? 18 : this.holeValue - 1
+    this.persist()
+    this.showCurrent()
   }
 
   next() {
     this.holeValue = this.holeValue >= 18 ? 1 : this.holeValue + 1
+    this.persist()
+    this.showCurrent()
   }
 
   jump(event) {
     const hole = parseInt(event.currentTarget.dataset.hole, 10)
-    if (hole >= 1 && hole <= 18) this.holeValue = hole
-  }
-
-  holeValueChanged() {
-    if (this.ready) this.persist()
-    this.showCurrent()
+    if (hole >= 1 && hole <= 18) {
+      this.holeValue = hole
+      this.persist()
+      this.showCurrent()
+    }
   }
 
   persist() {
