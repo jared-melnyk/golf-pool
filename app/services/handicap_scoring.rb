@@ -4,8 +4,15 @@
 module HandicapScoring
   # Club-style ceiling: PH 36 ⇒ at most 2 strokes on any hole.
   MAX_PLAYING_HANDICAP = 36
+  MIN_NET_SCORE = 1
 
   private
+
+  def net_for_hole(gross, strokes)
+    return nil if gross.nil?
+
+    [ gross - strokes, MIN_NET_SCORE ].max
+  end
 
   def course_handicap(hi)
     slope = @round.slope_rating.to_f

@@ -93,7 +93,7 @@ class FortyScoreScorecard
       rec = scores_by_hole[h]
       strokes = strokes_on_hole(ph, h)
       gross = rec&.gross_score
-      net = gross ? gross - strokes : nil
+      net = net_for_hole(gross, strokes)
       {
         hole_number: h,
         gross_score: gross,

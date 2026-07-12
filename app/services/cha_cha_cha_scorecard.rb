@@ -66,7 +66,7 @@ class ChaChaChaScorecard
     hole_scores = (1..18).map do |h|
       strokes = strokes_on_hole(ph, h)
       gross = scores_by_hole[h]&.gross_score
-      net = gross ? gross - strokes : nil
+      net = net_for_hole(gross, strokes)
       { hole_number: h, gross_score: gross, net_score: net, strokes_received: strokes }
     end
 

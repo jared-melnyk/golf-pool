@@ -35,6 +35,21 @@ RSpec.describe HoleScore, type: :model do
     expect(hs).to be_valid
   end
 
+  it "rejects gross_score of 0" do
+    hs = HoleScore.new(game_team_player: gtp, hole_number: 1, gross_score: 0)
+    expect(hs).not_to be_valid
+  end
+
+  it "rejects gross_score above 10" do
+    hs = HoleScore.new(game_team_player: gtp, hole_number: 1, gross_score: 11)
+    expect(hs).not_to be_valid
+  end
+
+  it "allows gross_score of 10" do
+    hs = HoleScore.new(game_team_player: gtp, hole_number: 1, gross_score: 10)
+    expect(hs).to be_valid
+  end
+
   it "enforces uniqueness of hole_number per game_team_player" do
     HoleScore.create!(game_team_player: gtp, hole_number: 5, gross_score: 4)
     dup = HoleScore.new(game_team_player: gtp, hole_number: 5, gross_score: 3)

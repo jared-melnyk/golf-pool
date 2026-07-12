@@ -11,7 +11,7 @@
     <%= hidden_field_tag :hole_number, hole_number %>
     <%= number_field_tag :gross_score,
           gross_score,
-          min: 1, max: 15, size: 3,
+          min: 1, max: 10, size: 3,
           id: dom_id(gtp, "gross_hole_#{hole_number}"),
           class: "w-11 rounded border border-gray-300 px-1 py-0.5 text-center text-sm tabular-nums focus:ring-1 focus:ring-emerald-500",
           data: {
