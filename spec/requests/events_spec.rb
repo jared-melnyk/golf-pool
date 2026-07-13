@@ -45,6 +45,20 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("Rounds")
     end
 
+    it "shows overall low net and rounds before the members list" do
+      get event_path(event)
+
+      low_net_at = response.body.index("Overall low net")
+      rounds_at = response.body.index(">Rounds<") || response.body.index("Rounds</h2>")
+      members_at = response.body.index("Members</h2>")
+
+      expect(low_net_at).to be_present
+      expect(rounds_at).to be_present
+      expect(members_at).to be_present
+      expect(low_net_at).to be < rounds_at
+      expect(rounds_at).to be < members_at
+    end
+
     it "shows round details to any event member" do
       event.rounds.create!(
         name: "Round 1",

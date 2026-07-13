@@ -53,8 +53,6 @@
 
 ### Arcadia Bluffs GC — South Course
 
-| | |
-|--|--|
 | **Address** | 14710 Loch Lomond Rd, Arcadia, MI 49613 |
 | **Format** | Vegas (2 teams × 2 players per match; two separate matches) |
 | **Tees** | **White** — 6,491 yds · Rating 70.6 · Slope 125 · Par 72 |
@@ -88,8 +86,6 @@
 
 ### Wolf River Golf Park
 
-| | |
-|--|--|
 | **Address** | 11685 Chippewa Hwy, Bear Lake, MI 49614 |
 | **Format** | Best Ball (one team scorecard per foursome) |
 | **Tees** | **Bear Paw** — 6,114 yds · Rating 69.4 · Slope 120 · Par 72 |
@@ -109,12 +105,9 @@
 
 ### Champion Hill GC
 
-| | |
-|--|--|
 | **Address** | 10486 S M-37, Mesick, MI 49668 |
 | **Format** | Cha-Cha-Cha (holes 1/2/3 pattern = 1 / 2 / 3 best nets) |
 | **Tees** | **White** — 6,104 yds · Rating 68.5 · Slope 120 · Par 72 |
-| **Tee note** | *Source: GolfCourseAPI* |
 
 #### Foursomes
 
@@ -149,8 +142,8 @@
 
 ## Grouping philosophy
 
-- **Vegas:** Ryan L (36) paired with Kevin (5.7); mids split across the other match.
-- **12-player rounds:** Each foursome has a low, mid, and high mix; Will and Ryan L are never in the same group.
+- **Vegas:** High / low caps are paired; mids split across the other match.
+- **12-player rounds:** Each foursome has a low, mid, and high mix.
 - **Rotation:** Partner groups change each round so everyone sees different teammates.
 
 ---
@@ -194,5 +187,3 @@
 2700 Orchard Hwy, Manistee, MI 49660  
 Hotel: (888) 568-2244 · Main: (231) 723-1535
 
-
-*Last updated: July 2026. Course data from [GolfCourseAPI](https://golfcourseapi.com) where noted.*

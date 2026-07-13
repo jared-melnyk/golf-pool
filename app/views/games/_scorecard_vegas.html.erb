@@ -7,12 +7,6 @@
 <% game_team_a = game.game_teams.detect { |gt| gt.id == team_a[:id] } %>
 <% game_team_b = game.game_teams.detect { |gt| gt.id == team_b[:id] } %>
 
-<p class="text-sm text-gray-600 mb-4">
-  Combine each team’s two <strong>net scores</strong> into a two-digit number (lower tens, higher ones).
-  Lower team number wins the hole. Net birdie or better flips the other team’s digits.
-  Points accumulate on a wash basis.
-</p>
-
 <%= render "games/scorecard/vegas_wash_summary", game: game, scorecard: scorecard %>
 
 <% [ [ team_a, game_team_a ], [ team_b, game_team_b ] ].each do |team, game_team| %>

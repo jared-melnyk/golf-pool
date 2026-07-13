@@ -5,7 +5,7 @@ class LandingController < ApplicationController
 
   def index
     if current_user
-      redirect_to pools_path
+      redirect_to events_path
     else
       render :index
     end

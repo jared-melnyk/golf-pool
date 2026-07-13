@@ -46,6 +46,8 @@
   <% else %>
     <div id="scorecard_flash"></div>
 
+    <%= render "games/format_rules", game: @game %>
+
     <div class="md:hidden">
       <%= render "games/mobile/arena", scorecard: @scorecard, game: @game, event: @event %>
     </div>

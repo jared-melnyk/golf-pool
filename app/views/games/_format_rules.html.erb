@@ -1,0 +1,40 @@
+<%# locals: game %>
+<% allowance = game.playing_handicap_allowance_percent %>
+<details class="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+  <summary class="cursor-pointer select-none px-4 py-3 text-sm font-medium text-gray-800">
+    <%= game_type_label(game.game_type) %> · <%= allowance %>% PH · Rules
+  </summary>
+  <div class="border-t border-gray-100 px-4 py-3 text-sm text-gray-600 space-y-2">
+    <% case game.game_type %>
+    <% when "best_ball" %>
+      <p>
+        Lowest <strong>net</strong> score among teammates counts as the team hole score.
+        Team total is the sum of 18 hole scores; lowest total wins.
+        Playing handicap uses <strong><%= allowance %>%</strong> of course handicap (PH capped at 36).
+      </p>
+    <% when "cha_cha_cha" %>
+      <p>
+        Count the lowest <strong>1</strong>, then <strong>2</strong>, then <strong>3</strong> net scores per hole;
+        the pattern repeats every three holes (1→4→7…, 2→5→8…, 3→6→9…).
+        Team hole score is the sum of those nets.
+        Playing handicap uses <strong><%= allowance %>%</strong> of course handicap (PH capped at 36).
+      </p>
+    <% when "forty_score" %>
+      <p>
+        Your group selects counted net scores: <strong>40</strong> picks for a foursome, <strong>30</strong> for a threesome (0–4 picks per hole).
+        Leaderboard ranks by <strong>net vs par</strong> on counted holes.
+        Threesomes also get a scaled line so 30-pick and 40-pick groups compare fairly.
+        Playing handicap uses <strong><%= allowance %>%</strong> of course handicap.
+        <%= link_to "How it works →", "https://www.thefriedegg.com/articles/how-to-play-golf-game-40-score",
+              class: "underline font-medium text-emerald-700 hover:text-emerald-800", target: "_blank", rel: "noopener" %>
+      </p>
+    <% when "vegas" %>
+      <p>
+        Each team combines two <strong>net</strong> scores into a two-digit number (lower net → tens digit).
+        Nets above 9 count as 9. A net birdie or better flips the <strong>opponent’s</strong> digit order.
+        Lower team number wins the hole; points accumulate on a wash.
+        Playing handicap uses <strong><%= allowance %>%</strong> of course handicap.
+      </p>
+    <% end %>
+  </div>
+</details>
