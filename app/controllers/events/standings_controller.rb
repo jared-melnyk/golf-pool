@@ -10,5 +10,6 @@ class Events::StandingsController < ApplicationController
 
     @rounds = @event.rounds.includes(:games).order(played_on: :asc, created_at: :asc)
     @round_standings = @rounds.map { |round| RoundStandings.new(round).call }
+    @individual_standings = EventIndividualStandings.new(@event).call
   end
 end
