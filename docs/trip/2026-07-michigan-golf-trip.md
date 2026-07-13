@@ -49,7 +49,7 @@
 
 ---
 
-## Round 1 — Thursday, July 16 · 8:00 AM
+## Round 1 — Thursday, July 16 · 7:14 AM
 
 ### Arcadia Bluffs GC — South Course
 
