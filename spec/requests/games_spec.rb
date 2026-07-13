@@ -144,6 +144,14 @@ RSpec.describe "Games", type: :request do
         expect(response.body.scan(/id="#{Regexp.escape(id_a)}"/).size).to eq(1)
         expect(response.body.scan(/id="#{Regexp.escape(id_b)}"/).size).to eq(1)
       end
+
+      it "reminds players to lock in counted scores before the next tee" do
+        get game_path(game)
+
+        expect(response.body).to include("Lock in counted scores before the next tee")
+        expect(response.body).to include("before teeing off on the next hole")
+        expect(response.body).to include("honor system")
+      end
     end
   end
 
