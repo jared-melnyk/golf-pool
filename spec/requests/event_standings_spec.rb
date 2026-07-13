@@ -23,6 +23,7 @@ RSpec.describe "Event standings", type: :request do
     game = create_test_game!(event: event, round: round, game_type: "best_ball", name: "Best Ball · A")
     team = GameTeam.create!(game: game, name: "Group A")
     player = User.create!(name: "A", email: "a@test.com", password: "pw", ghin_handicap_index: 0)
+    event.event_memberships.create!(user: player, role: "player")
     gtp = GameTeamPlayer.create!(game_team: team, user: player)
     (1..18).each { |h| HoleScore.create!(game_team_player: gtp, hole_number: h, gross_score: 4) }
 
@@ -30,6 +31,9 @@ RSpec.describe "Event standings", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Standings")
+    expect(response.body).to include("Overall low net")
+    expect(response.body).to include("100% course handicap")
+    expect(response.body).to include(">A<")
     expect(response.body).to include("Wolf River")
     expect(response.body).to include("Best Ball standings")
     expect(response.body).to include("Group A")
@@ -43,6 +47,7 @@ RSpec.describe "Event standings", type: :request do
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("Standings")
+    expect(response.body).to include("Overall low net")
     expect(response.body).to include("Best Ball standings")
     expect(response.body).to include("Group A")
   end

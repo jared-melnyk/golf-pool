@@ -1,16 +1,8 @@
-# Michigan Golf Trip 2026
+# Manistee Golf Trip 2026
 
 **Dates:** July 16–17, 2026  
 **Players:** 12  
-**Scoring app:** [Long Shot](https://long-shot-web.onrender.com) (commissioner sets up games; field formats use one team per foursome game; round/trip standings rank groups)
-
-> **Share as PDF (pick one):**
->
-> 1. **Easiest — share the file:** Send `2026-07-michigan-golf-trip.md` by email or Slack. No PDF needed; phones and laptops read it fine.
-> 2. **Browser print:** Push to GitHub (or paste into a gist), open the rendered page in Chrome/Safari, then **File → Print → Save as PDF**.
-> 3. **Cursor extension:** Install [Markdown PDF](https://marketplace.visualstudio.com/items?itemName=yzane.markdown-pdf) (Extensions sidebar → search “Markdown PDF”), then right-click this file → **Markdown PDF: Export (pdf)**.
->
-> Cursor has no built-in Print menu — ignore any advice that says File → Print inside the editor.
+**Scoring app:** [Long Shot](https://longshotpool.com)
 
 ---
 
@@ -31,16 +23,16 @@
 | Will Schmadeke | 36.0 |
 | Ryan Lannon | 36.0 |
 
-**Handicap allowances (in app):**
+**Handicap allowances:**
 
 | Format | Playing handicap |
 |--------|------------------|
 | Best Ball | 85% of course handicap |
 | Cha-Cha-Cha | 85% |
 | 40 Score | 100% |
-| Vegas | 100% (net capped at 9 per player before digit pairing) |
+| Vegas | 100% |
 
-**Playing handicap ceiling:** PH is capped at **36** (max 2 strokes on any hole). High indexes (e.g. Will, Lannon) may still show a higher course handicap, but strokes use the capped PH.
+**Playing handicap ceiling:** PH is capped at **36** (max 2 strokes on any hole).
 
 ---
 
@@ -48,7 +40,7 @@
 
 | Round | Date | Tee time | Course | Format | Field |
 |-------|------|----------|--------|--------|-------|
-| 1 | Thu Jul 16 | 8:00 AM | Arcadia Bluffs — South | **Vegas** (2v2) | 8 players |
+| 1 | Thu Jul 16 | 7:14 & 7:58 AM | Arcadia Bluffs — South | **Vegas** (2v2) | 8 players |
 | 2 | Thu Jul 16 | 2:00 PM | Wolf River Golf Park | **Best Ball** | 12 |
 | 3 | Fri Jul 17 | 7:00 AM | Champion Hill GC | **Cha-Cha-Cha** | 12 |
 | 4 | Fri Jul 17 | 2:00 PM | Pinecroft GC (Benzonia) | **40 Score** | 12 |
@@ -66,7 +58,6 @@
 | **Address** | 14710 Loch Lomond Rd, Arcadia, MI 49613 |
 | **Format** | Vegas (2 teams × 2 players per match; two separate matches) |
 | **Tees** | **White** — 6,491 yds · Rating 70.6 · Slope 125 · Par 72 |
-| **Tee note** | Nearest to ~6,100 yd target. *Source: GolfCourseAPI* |
 
 #### Vegas pairings
 
@@ -75,13 +66,13 @@
 | Team | Players |
 |------|---------|
 | A | Kevin Callaghan + Ryan Lannon |
-| B | Jared + Chris |
+| B | Greg Lindemann + Chris |
 
 **Match 2**
 
 | Team | Players |
 |------|---------|
-| A | Joe Mc + Greg Lindemann |
+| A | Joe Mc + Jared |
 | B | Kyle Krivacek + Ryan Flynn |
 
 #### Vegas rules (quick ref)
@@ -129,9 +120,9 @@
 
 | Group | Players |
 |-------|---------|
-| A | Kevin · Nick · Greg · Will |
+| A | Kevin · Nick · Kyle · Will |
 | B | Nitti · Ryan Flynn · Chris · Ryan L |
-| C | Joe · Kyle · Jared · Walker |
+| C | Joe · Greg · Jared · Walker |
 
 ---
 
@@ -164,44 +155,44 @@
 
 ---
 
-## Open items / confirm before trip
+## Prize money
 
-- [ ] Wolf River tee name at check-in (API: Bear Paw; may be renamed post-renovation)
-- [ ] Arcadia White tee confirmed at check-in
-- [ ] App event link + invite flow tested on phones
-- [ ] Lodging, meals, transportation *(add below)*
+**Pool:** 12 × $100 = **$1,200** (100% cash back).  
+**In pot:** Rounds 2–4 only (Wolf River Best Ball, Champion Hill Cha-Cha-Cha, Pinecroft 40 Score).  
+**Out of pot:** Round 1 Vegas — optional private side bets only.
+
+### Payouts
+
+| Bucket | Amount | Detail |
+|--------|--------|--------|
+| Round team wins | $720 | Winning foursome: **$60 each** ($240/team) × 3 rounds |
+| Closest to the pin | $120 | **3 × $40** — one CTP per full-field round (see holes below) |
+| Overall low net | $360 | Sum of individual net-to-par over 3 full-field rounds: **$200 / $100 / $60** (1st–3rd) |
+| **Total** | **$1,200** | |
+
+### CTP holes (shortest par 3)
+
+| Round | Course | Hole | Prize |
+|-------|--------|------|-------|
+| 2 | Wolf River | **10** | $40 |
+| 3 | Champion Hill | **11** | $40 |
+| 4 | Pinecroft | **17** | $40 |
+
+### Rules
+
+- **Eligibility:** All 12 who pay in are eligible for rounds 2–4 prizes, CTPs, and overall.
+- **Round winner:** Best team score in that game’s format (app leaderboard). Cash split evenly among the four on the winning card.
+- **CTP:** Must be on the green. Same player can win multiple CTPs.
+- **Overall low net:** Individual net relative to par, summed across the three full-field rounds using **100% course handicap** for each round.
+- **Ties:** Main game tiebreaker uses a countback ladder: better back 9 wins, if tied, better last 6, 3, 1. CTP if all those tie.
+- **Per Hole Scoring Bounds** Gross max of 10 per hole, net minimum of 1 per hole. Vegas net max of 9 per hole.
+- **Vegas:** Not funded from the $1,200.
 
 ### Lodging
 
-*TBD*
+**[Little River Casino Resort](https://www.lrcr.com/)**  
+2700 Orchard Hwy, Manistee, MI 49660  
+Hotel: (888) 568-2244 · Main: (231) 723-1535
 
-### Meals
-
-*TBD*
-
-### Transportation
-
-*TBD*
-
----
-
-## App dry-run (commissioner)
-
-**Prerequisites:** local Postgres running, then:
-
-```bash
-# Terminal 1 — seed trip data
-bundle exec rake trip:simulate
-
-# Terminal 2 — start the app (required; manifest URLs won't load without this)
-bin/rails server
-```
-
-1. Open game URLs from `tmp/trip_sim_manifest.md` — each local link auto-signs you in as commissioner
-2. Manual login if needed: http://localhost:3000/login — `trip-commissioner@dryrun.test` / `trip2026`
-
-Re-running `trip:simulate` deletes the old event and creates new URLs — always use the latest manifest.
-
----
 
 *Last updated: July 2026. Course data from [GolfCourseAPI](https://golfcourseapi.com) where noted.*

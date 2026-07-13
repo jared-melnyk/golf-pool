@@ -1,8 +1,10 @@
 <div class="space-y-6">
   <div>
     <h1 class="text-2xl font-bold text-gray-900"><%= @event.name %> · Standings</h1>
-    <p class="text-sm text-gray-600 mt-1">Team format boards by round. Scores update as groups play.</p>
+    <p class="text-sm text-gray-600 mt-1">Overall low net plus team format boards by round. Scores update as groups play.</p>
   </div>
+
+  <%= render "shared/individual_standings", standings: @individual_standings %>
 
   <% if @round_standings.any? %>
     <% @round_standings.each do |standings| %>
