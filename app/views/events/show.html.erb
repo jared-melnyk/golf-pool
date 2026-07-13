@@ -34,33 +34,6 @@
   </span>
 </p>
 
-<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-  <h2 class="text-lg font-semibold text-gray-900 mb-3">Members</h2>
-  <ol class="list-decimal list-inside space-y-2">
-    <% @memberships.each do |em| %>
-      <li class="flex flex-wrap items-center justify-between gap-2">
-        <span>
-          <%= em.user.name %>
-          <span class="text-sm text-gray-500">— <%= em.role.titleize %></span>
-          <% if em.user.ghin_handicap_index.present? %>
-            <span class="text-sm text-gray-500">(HI <%= em.user.ghin_handicap_index %>)</span>
-          <% end %>
-        </span>
-        <span class="flex flex-wrap gap-2 items-center">
-          <% if @event.commissioner?(current_user) && em.player? %>
-            <%= button_to "Make commissioner", event_event_membership_path(@event, em), method: :patch, params: { event_membership: { role: "commissioner" } }, form: { class: "inline-block", data: { turbo_confirm: "Promote #{em.user.name} to commissioner?" } }, class: "rounded px-2 py-1 text-xs text-emerald-700 border border-emerald-300 hover:border-emerald-400" %>
-          <% end %>
-          <% if em.user_id == current_user.id %>
-            <%= button_to "Leave", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Leave this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
-          <% elsif @event.commissioner?(current_user) && em.player? %>
-            <%= button_to "Remove", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Remove #{em.user.name} from this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
-          <% end %>
-        </span>
-      </li>
-    <% end %>
-  </ol>
-</section>
-
 <%= render "shared/individual_standings", standings: @individual_standings %>
 
 <section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
@@ -124,6 +97,33 @@
       Set your <%= link_to "GHIN handicap index", edit_profile_path, class: "text-emerald-700 hover:underline" %> on your profile for net games.
     </p>
   <% end %>
+</section>
+
+<section class="mb-6 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+  <h2 class="text-lg font-semibold text-gray-900 mb-3">Members</h2>
+  <ol class="list-decimal list-inside space-y-2">
+    <% @memberships.each do |em| %>
+      <li class="flex flex-wrap items-center justify-between gap-2">
+        <span>
+          <%= em.user.name %>
+          <span class="text-sm text-gray-500">— <%= em.role.titleize %></span>
+          <% if em.user.ghin_handicap_index.present? %>
+            <span class="text-sm text-gray-500">(HI <%= em.user.ghin_handicap_index %>)</span>
+          <% end %>
+        </span>
+        <span class="flex flex-wrap gap-2 items-center">
+          <% if @event.commissioner?(current_user) && em.player? %>
+            <%= button_to "Make commissioner", event_event_membership_path(@event, em), method: :patch, params: { event_membership: { role: "commissioner" } }, form: { class: "inline-block", data: { turbo_confirm: "Promote #{em.user.name} to commissioner?" } }, class: "rounded px-2 py-1 text-xs text-emerald-700 border border-emerald-300 hover:border-emerald-400" %>
+          <% end %>
+          <% if em.user_id == current_user.id %>
+            <%= button_to "Leave", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Leave this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% elsif @event.commissioner?(current_user) && em.player? %>
+            <%= button_to "Remove", event_event_membership_path(@event, em), method: :delete, form: { class: "inline-block", data: { turbo_confirm: "Remove #{em.user.name} from this event?" } }, class: "rounded px-2 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 hover:border-red-400" %>
+          <% end %>
+        </span>
+      </li>
+    <% end %>
+  </ol>
 </section>
 
 <%= link_to "← All events", events_path, class: "text-sm text-emerald-700 hover:text-emerald-800 underline" %>

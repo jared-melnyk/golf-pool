@@ -94,6 +94,14 @@ RSpec.describe "Games", type: :request do
         expect(response.body).to include("Team Alpha")
       end
 
+      it "shows collapsed format rules with PH allowance" do
+        get game_path(game)
+        expect(response.body).to include("<details")
+        expect(response.body).to include("Best Ball · 85% PH · Rules")
+        expect(response.body).to include("Lowest")
+        expect(response.body).to include("net")
+      end
+
       it "shows invite button and finalize scores for managers" do
         get game_path(game)
         expect(response.body).to include("Invite players")

@@ -19,9 +19,20 @@ RSpec.describe "Landing", type: :request do
 
       before { post login_path, params: { email: user.email, password: "password" } }
 
-      it "redirects to pools" do
+      it "redirects to events" do
         get root_path
-        expect(response).to redirect_to(pools_path)
+        expect(response).to redirect_to(events_path)
+      end
+
+      it "hides PGA Pools from the sidebar nav" do
+        get events_path
+        expect(response).to have_http_status(:ok)
+        expect(response.body).not_to include("PGA Pools")
+        expect(response.body).not_to include(">My pools<")
+        expect(response.body).not_to include(">New pool<")
+        expect(response.body).not_to include(">Rules<")
+        expect(response.body).to include("On-Course games")
+        expect(response.body).to include(">Events<")
       end
     end
   end
