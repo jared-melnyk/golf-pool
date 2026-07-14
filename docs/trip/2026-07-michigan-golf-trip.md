@@ -134,8 +134,8 @@
 
 | Group | Players |
 |-------|---------|
-| A | Nitti · Joe · Ryan Flynn · Ryan L |
-| B | Kevin · Kyle · Greg · Will |
+| A | Nitti · Joe · Kyle · Ryan L |
+| B | Kevin · Ryan Flynn · Greg · Will |
 | C | Nick · Jared · Chris · Walker |
 
 ---
