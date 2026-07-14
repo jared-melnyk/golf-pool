@@ -92,7 +92,7 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("6,348 yds")
     end
 
-    it "nests games under rounds with an Add game CTA" do
+    it "shows round standings as game entry points with an Add game CTA" do
       round = event.rounds.create!(
         name: "Wolf River · Jul 16",
         played_on: Date.new(2026, 7, 16),
@@ -108,7 +108,7 @@ RSpec.describe "Events", type: :request do
         hole_handicaps: (1..18).to_a,
         course_snapshot: { "id" => 1 }
       )
-      Game.create!(
+      game = Game.create!(
         name: "Best Ball · A",
         creator: user,
         status: "active",
@@ -121,11 +121,14 @@ RSpec.describe "Events", type: :request do
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Wolf River · Jul 16")
+      expect(response.body).to include("Best Ball standings")
       expect(response.body).to include("Best Ball · A")
+      expect(response.body).to include(game_path(game))
       expect(response.body).to include("Add game")
       expect(response.body).to include(new_event_round_game_path(event, round))
       expect(response.body).not_to include(">Create game<")
       expect(response.body).not_to match(/<h2[^>]*>Games<\/h2>/)
+      expect(response.body).not_to include("Delete #{game.name}? This cannot be undone.")
     end
   end
 
