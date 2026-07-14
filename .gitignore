@@ -42,3 +42,6 @@
 
 # Git worktrees
 .worktrees/
+
+# Personal notes / scratch (not committed)
+/local/
