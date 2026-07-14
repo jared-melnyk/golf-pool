@@ -88,21 +88,35 @@ RSpec.describe "HoleScores", type: :request do
       expect(HoleScore.find_by!(game_team_player_id: gtp_bob.id, hole_number: 2).gross_score).to eq(4)
     end
 
-    it "rejects score entry from a player on a different team" do
+    it "lets a player on another team enter another team's gross score" do
       other_team = GameTeam.create!(game: game, name: "Other")
-      outsider = User.create!(name: "Out", email: "out@test.com", password: "pw")
-      EventMembership.create!(event: event, user: outsider, role: "player")
-      GameTeamPlayer.create!(game_team: other_team, user: outsider)
+      teammate_on_other = User.create!(name: "Out", email: "out@test.com", password: "pw")
+      EventMembership.create!(event: event, user: teammate_on_other, role: "player")
+      GameTeamPlayer.create!(game_team: other_team, user: teammate_on_other)
 
       delete logout_path
-      post login_path, params: { email: outsider.email, password: "pw" }
+      post login_path, params: { email: teammate_on_other.email, password: "pw" }
+
+      patch game_hole_score_path(game, gtp_alice),
+            params: { hole_number: 4, gross_score: "5" },
+            headers: turbo_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(HoleScore.find_by!(game_team_player_id: gtp_alice.id, hole_number: 4).gross_score).to eq(5)
+    end
+
+    it "rejects score entry from a non-member" do
+      stranger = User.create!(name: "Stranger", email: "stranger@test.com", password: "pw")
+
+      delete logout_path
+      post login_path, params: { email: stranger.email, password: "pw" }
 
       patch game_hole_score_path(game, gtp_alice),
             params: { hole_number: 4, gross_score: "5" }
 
       expect(response).to redirect_to(game_path(game))
       follow_redirect!
-      expect(response.body).to include("You can only enter scores for your own team.")
+      expect(response.body).to include("You must be a member of this game.")
       expect(HoleScore.find_by(game_team_player_id: gtp_alice.id, hole_number: 4)).to be_nil
     end
   end

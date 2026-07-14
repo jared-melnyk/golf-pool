@@ -5,21 +5,17 @@ module Games
     def scorecard_can_edit?(game, _event = nil)
       return false if game.completed?
 
-      game.can_manage?(current_user) ||
-        game.game_teams.joins(:game_team_players).where(game_team_players: { user_id: current_user.id }).exists?
+      game.member?(current_user)
     end
 
-    # Any teammate (or manager) may enter gross scores for players on that team.
+    # Any game member may enter gross scores for any player on the game.
     def scorecard_can_edit_gross?(game, gtp)
       return false if game.completed? || gtp.blank?
-      return true if game.can_manage?(current_user)
 
-      GameTeamPlayer.joins(:game_team)
-                    .where(game_teams: { id: gtp.game_team_id, game_id: game.id }, user_id: current_user.id)
-                    .exists?
+      game.member?(current_user)
     end
 
-    # Same team rule as gross — one scorer can manage 40 Score picks for the group.
+    # Same membership rule as gross — one scorer can manage 40 Score picks for the group.
     def scorecard_can_edit_forty_pick?(game, gtp)
       scorecard_can_edit_gross?(game, gtp)
     end

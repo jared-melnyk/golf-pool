@@ -102,11 +102,23 @@ RSpec.describe "Games", type: :request do
         expect(response.body).to include("net")
       end
 
-      it "shows invite button and finalize scores for managers" do
+      it "shows invite, lock scorecard, and mobile next for members" do
         get game_path(game)
         expect(response.body).to include("Invite players")
-        expect(response.body).to include("Finalize scores")
-        expect(response.body).not_to include("Complete game")
+        expect(response.body).to include("Lock scorecard")
+        expect(response.body).to include(">Next</button>")
+        expect(response.body).to include(">Back</button>")
+        expect(response.body).not_to include("Finalize scores")
+        expect(response.body).not_to include("data-hole-stepper-chip")
+        expect(response.body).to include('data-hole-stepper-target="label">Hole 1<')
+      end
+
+      it "puts manager invite/edit/delete after the scorecard when active" do
+        get game_path(game)
+        invite_pos = response.body.index("Invite players")
+        scorecard_pos = response.body.index("Team Alpha")
+        expect(invite_pos).to be > scorecard_pos
+        expect(response.body).to include("border border-gray-300 text-gray-800 hover:bg-gray-50")
       end
 
       it "shows the parent round name linked to the trip" do
@@ -152,6 +164,37 @@ RSpec.describe "Games", type: :request do
         expect(response.body).to include("before teeing off on the next hole")
         expect(response.body).to include("honor system")
       end
+    end
+  end
+
+  describe "PATCH /games/:token/complete and reopen" do
+    let!(:game) { create_active_game! }
+    let!(:team) { GameTeam.create!(game: game, name: "Team Alpha") }
+
+    it "lets a non-manager trip member lock and reopen the scorecard" do
+      player = User.create!(name: "Player", email: "player-lock@test.com", password: "pw")
+      EventMembership.create!(event: event, user: player, role: "player")
+      GameTeamPlayer.create!(game_team: team, user: player)
+      post login_path, params: { email: player.email, password: "pw" }
+
+      patch complete_game_path(game)
+      expect(response).to redirect_to(game_path(game))
+      expect(game.reload).to be_completed
+
+      patch reopen_game_path(game)
+      expect(response).to redirect_to(game_path(game))
+      expect(game.reload).to be_active
+    end
+
+    it "rejects a non-member" do
+      stranger = User.create!(name: "Stranger", email: "stranger-lock@test.com", password: "pw")
+      post login_path, params: { email: stranger.email, password: "pw" }
+
+      patch complete_game_path(game)
+      expect(response).to redirect_to(game_path(game))
+      follow_redirect!
+      expect(response.body).to include("You must be a member of this game.")
+      expect(game.reload).to be_active
     end
   end
 

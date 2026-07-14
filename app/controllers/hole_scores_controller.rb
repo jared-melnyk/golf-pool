@@ -80,16 +80,5 @@ class HoleScoresController < ApplicationController
     @gtp = GameTeamPlayer.joins(:game_team)
                          .where(game_teams: { game_id: @game.id })
                          .find(params[:id])
-
-    return if @game.can_manage?(current_user)
-    return if teammate_of_authorized_gtp?
-
-    redirect_to game_path(@game), alert: "You can only enter scores for your own team."
-  end
-
-  def teammate_of_authorized_gtp?
-    GameTeamPlayer.joins(:game_team)
-                  .where(game_teams: { id: @gtp.game_team_id, game_id: @game.id }, user_id: current_user.id)
-                  .exists?
   end
 end
