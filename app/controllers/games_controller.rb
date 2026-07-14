@@ -9,9 +9,9 @@ class GamesController < ApplicationController
   before_action :set_event, only: [ :new, :create ], if: -> { params[:event_token].present? }
   before_action :set_round, only: [ :new, :create ], if: -> { params[:round_id].present? }
   before_action :require_event_commissioner!, only: [ :new, :create ], if: -> { params[:event_token].present? }
-  before_action :set_game, only: [ :show, :edit_teams, :update_teams, :join, :complete, :reopen ]
-  before_action :require_game_access!, only: [ :show, :edit_teams, :update_teams, :complete, :reopen ]
-  before_action :require_game_manager!, only: [ :edit_teams, :update_teams, :complete, :reopen ]
+  before_action :set_game, only: [ :show, :edit_teams, :update_teams, :join, :complete, :reopen, :destroy ]
+  before_action :require_game_access!, only: [ :show, :edit_teams, :update_teams, :complete, :reopen, :destroy ]
+  before_action :require_game_manager!, only: [ :edit_teams, :update_teams, :complete, :reopen, :destroy ]
   before_action :require_game_active_for_teams!, only: [ :edit_teams, :update_teams ]
 
   def index
@@ -124,6 +124,18 @@ class GamesController < ApplicationController
   def reopen
     @game.update!(status: "active")
     redirect_to game_path(@game), notice: "Scores are editable again."
+  end
+
+  def destroy
+    event = @game.event
+    name = @game.name
+    @game.destroy!
+
+    if event.present?
+      redirect_to event_path(event), notice: "Game deleted."
+    else
+      redirect_to games_path, notice: "#{name} deleted."
+    end
   end
 
   private
