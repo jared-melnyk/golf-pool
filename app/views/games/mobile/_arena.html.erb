@@ -43,25 +43,18 @@
               data-hole-stepper-target="nextButton"
               aria-label="Next hole">Next</button>
       <% if can_lock && game.active? %>
-        <%= button_to "Lock scorecard", complete_game_path(game), method: :patch,
-              form: {
-                class: "inline hidden",
-                data: {
-                  hole_stepper_target: "lockControl",
-                  turbo_confirm: "Lock the scorecard for everyone?"
-                }
-              },
-              class: "inline-flex items-center justify-center h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700" %>
+        <%# Wrapper owns visibility — do not combine Tailwind `hidden` + `inline` on the form (display clash). %>
+        <div class="hidden" data-hole-stepper-target="lockControl">
+          <%= button_to "Lock scorecard", complete_game_path(game), method: :patch,
+                form: { data: { turbo_confirm: "Lock the scorecard for everyone?" } },
+                class: "inline-flex items-center justify-center h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700" %>
+        </div>
       <% elsif can_lock && game.completed? %>
-        <%= button_to "Reopen scorecard", reopen_game_path(game), method: :patch,
-              form: {
-                class: "inline hidden",
-                data: {
-                  hole_stepper_target: "reopenControl",
-                  turbo_confirm: "Reopen the scorecard for editing?"
-                }
-              },
-              class: "inline-flex items-center justify-center h-11 px-3 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium hover:bg-gray-50" %>
+        <div class="hidden" data-hole-stepper-target="reopenControl">
+          <%= button_to "Reopen scorecard", reopen_game_path(game), method: :patch,
+                form: { data: { turbo_confirm: "Reopen the scorecard for editing?" } },
+                class: "inline-flex items-center justify-center h-11 px-3 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium hover:bg-gray-50" %>
+        </div>
       <% end %>
     </div>
 
