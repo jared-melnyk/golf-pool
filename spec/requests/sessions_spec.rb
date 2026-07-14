@@ -29,7 +29,7 @@ RSpec.describe "Sessions", type: :request do
       expect(response).not_to redirect_to(login_path)
     end
 
-    it "records a session start when restoring from remember cookies" do
+    it "refreshes last visit when restoring from remember cookies after idle time" do
       user.update_column(:last_login_at, 1.week.ago)
       previous = user.last_login_at
 
@@ -39,7 +39,7 @@ RSpec.describe "Sessions", type: :request do
     end
   end
 
-  describe "session start tracking" do
+  describe "last visit tracking" do
     before { user.update_column(:last_login_at, nil) }
 
     it "records last visit on the first authenticated request" do
@@ -50,7 +50,7 @@ RSpec.describe "Sessions", type: :request do
       expect(user.reload.last_login_at).to be_present
     end
 
-    it "does not update last visit on subsequent requests in the same session" do
+    it "does not update last visit again within the throttle window" do
       post login_path, params: { email: user.email, password: "password" }
       get pools_path
       first_visit = user.reload.last_login_at
@@ -60,6 +60,18 @@ RSpec.describe "Sessions", type: :request do
       end
 
       expect(user.reload.last_login_at).to eq(first_visit)
+    end
+
+    it "refreshes last visit after the throttle window even in the same session" do
+      post login_path, params: { email: user.email, password: "password" }
+      get pools_path
+      first_visit = user.reload.last_login_at
+
+      travel (User::LAST_SEEN_THROTTLE + 1.minute) do
+        get pools_path
+      end
+
+      expect(user.reload.last_login_at).to be > first_visit
     end
   end
 
