@@ -155,6 +155,39 @@ RSpec.describe "Games", type: :request do
     end
   end
 
+  describe "DELETE /games/:token" do
+    let!(:game) { create_active_game! }
+
+    it "lets a commissioner delete an event game" do
+      expect {
+        delete game_path(game)
+      }.to change(Game, :count).by(-1)
+
+      expect(response).to redirect_to(event_path(event))
+      follow_redirect!
+      expect(response.body).to include("Game deleted")
+    end
+
+    it "rejects a non-commissioner player" do
+      player = User.create!(name: "Player", email: "player-del@test.com", password: "pw")
+      EventMembership.create!(event: event, user: player, role: "player")
+      post login_path, params: { email: player.email, password: "pw" }
+
+      expect {
+        delete game_path(game)
+      }.not_to change(Game, :count)
+
+      expect(response).to redirect_to(game_path(game))
+    end
+
+    it "shows a delete control with confirm on the game page for commissioners" do
+      get game_path(game)
+      expect(response.body).to include("Delete game")
+      expect(response.body).to include("turbo-confirm")
+      expect(response.body).to include(game.name)
+    end
+  end
+
   describe "GET /games/:token/edit_teams" do
     let(:game) { create_active_game! }
 
