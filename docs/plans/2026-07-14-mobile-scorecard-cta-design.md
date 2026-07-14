@@ -1,7 +1,7 @@
 # Mobile scorecard CTA + game member scoring
 
 **Date:** 2026-07-14  
-**Status:** Approved for planning  
+**Status:** Implemented  
 **Context:** Michigan trip Jul 16–17. On-course testers mistook the black **Finalize scores** button for “submit this hole,” which exited the scorecard and forced a return to the next hole.
 
 ## Problem

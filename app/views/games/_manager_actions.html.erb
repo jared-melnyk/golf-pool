@@ -1,0 +1,19 @@
+<%# Locals: game (Game), invite_style: :filled | :outline %>
+<% invite_class = if local_assigns[:invite_style] == :outline
+                    "rounded px-4 py-2 text-sm font-medium border border-gray-300 text-gray-800 hover:bg-gray-50"
+                  else
+                    "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700"
+                  end %>
+<div class="flex flex-wrap gap-3 items-center">
+  <%= render "games/invite_players", game: game, button_class: invite_class %>
+  <% if game.draft? %>
+    <%= link_to "Continue setup →", game_setup_path(game),
+          class: "rounded px-4 py-2 text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700" %>
+  <% else %>
+    <%= link_to "Edit teams", edit_teams_game_path(game),
+          class: "rounded px-4 py-2 text-sm font-medium border border-gray-300 text-gray-800 hover:bg-gray-50" %>
+  <% end %>
+  <%= button_to "Delete game", game_path(game), method: :delete,
+        form: { class: "inline-block", data: { turbo_confirm: "Delete #{game.name}? This cannot be undone." } },
+        class: "rounded px-4 py-2 text-sm font-medium text-red-600 border border-red-300 hover:border-red-400 hover:bg-red-50" %>
+</div>

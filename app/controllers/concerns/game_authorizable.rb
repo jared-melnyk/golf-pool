@@ -28,6 +28,6 @@ module GameAuthorizable
   def require_game_not_completed!
     return unless @game.completed?
 
-    redirect_to game_path(@game), alert: "Scores are finalized. Reopen the scorecard to make changes."
+    redirect_to game_path(@game), alert: "Scores are locked. Reopen the scorecard to make changes."
   end
 end

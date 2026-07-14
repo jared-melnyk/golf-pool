@@ -1,6 +1,7 @@
 <%# locals: scorecard, game, event %>
 <% default_hole = 1 %>
 <% round = game.round %>
+<% can_lock = game.member?(current_user) && (game.active? || game.completed?) %>
 
 <div id="<%= dom_id(game, :mobile_arena) %>"
      class="space-y-3"
@@ -23,13 +24,13 @@
   <% end %>
 
   <div class="border border-gray-200 rounded-xl bg-white shadow-sm p-3">
-    <div class="flex items-center justify-between gap-2 mb-1">
+    <div class="flex items-center justify-between gap-2 mb-3">
       <button type="button"
-              class="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-gray-300 text-gray-800 active:bg-gray-50"
+              class="inline-flex items-center justify-center min-w-[2.75rem] h-11 px-3 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium active:bg-gray-50"
               data-action="hole-stepper#previous"
-              aria-label="Previous hole">‹</button>
+              aria-label="Previous hole">Back</button>
       <div class="text-center min-w-0">
-        <p class="text-base font-semibold text-gray-900" data-hole-stepper-target="label">Hole <%= default_hole %> of 18</p>
+        <p class="text-base font-semibold text-gray-900" data-hole-stepper-target="label">Hole <%= default_hole %></p>
         <p class="text-xs text-gray-500">
           <span data-hole-stepper-target="par">Par <%= round.hole_pars[default_hole - 1] %></span>
           ·
@@ -37,18 +38,30 @@
         </p>
       </div>
       <button type="button"
-              class="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-gray-300 text-gray-800 active:bg-gray-50"
+              class="inline-flex items-center justify-center min-w-[2.75rem] h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 active:bg-emerald-700"
               data-action="hole-stepper#next"
-              aria-label="Next hole">›</button>
-    </div>
-
-    <div class="flex flex-wrap gap-1 justify-center mb-3">
-      <% (1..18).each do |h| %>
-        <button type="button"
-                class="w-8 h-8 rounded-md text-xs font-medium bg-gray-100 text-gray-700 active:bg-emerald-100"
-                data-action="hole-stepper#jump"
-                data-hole-stepper-chip
-                data-hole="<%= h %>"><%= h %></button>
+              data-hole-stepper-target="nextButton"
+              aria-label="Next hole">Next</button>
+      <% if can_lock && game.active? %>
+        <%= button_to "Lock scorecard", complete_game_path(game), method: :patch,
+              form: {
+                class: "inline hidden",
+                data: {
+                  hole_stepper_target: "lockControl",
+                  turbo_confirm: "Lock the scorecard for everyone?"
+                }
+              },
+              class: "inline-flex items-center justify-center h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700" %>
+      <% elsif can_lock && game.completed? %>
+        <%= button_to "Reopen scorecard", reopen_game_path(game), method: :patch,
+              form: {
+                class: "inline hidden",
+                data: {
+                  hole_stepper_target: "reopenControl",
+                  turbo_confirm: "Reopen the scorecard for editing?"
+                }
+              },
+              class: "inline-flex items-center justify-center h-11 px-3 rounded-lg border border-gray-300 text-gray-800 text-sm font-medium hover:bg-gray-50" %>
       <% end %>
     </div>
 

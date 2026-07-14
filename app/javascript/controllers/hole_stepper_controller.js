@@ -5,8 +5,9 @@ import { Controller } from "@hotwired/stimulus"
 // blur→save replace cannot wipe the new hole before MutationObserver fires
 // holeValueChanged. Never persist from holeValueChanged — that callback runs for
 // the SSR default (hole 1) before connect() can restore sessionStorage.
+// On hole 18, hide Next and show Lock / Reopen (targets optional).
 export default class extends Controller {
-  static targets = ["panel", "label", "par", "si"]
+  static targets = ["panel", "label", "par", "si", "nextButton", "lockControl", "reopenControl"]
   static values = {
     hole: { type: Number, default: 1 },
     storageKey: String,
@@ -31,18 +32,10 @@ export default class extends Controller {
   }
 
   next() {
-    this.holeValue = this.holeValue >= 18 ? 1 : this.holeValue + 1
+    if (this.holeValue >= 18) return
+    this.holeValue = this.holeValue + 1
     this.persist()
     this.showCurrent()
-  }
-
-  jump(event) {
-    const hole = parseInt(event.currentTarget.dataset.hole, 10)
-    if (hole >= 1 && hole <= 18) {
-      this.holeValue = hole
-      this.persist()
-      this.showCurrent()
-    }
   }
 
   persist() {
@@ -56,7 +49,7 @@ export default class extends Controller {
       panel.classList.toggle("hidden", hole !== this.holeValue)
     })
     this.labelTargets.forEach((el) => {
-      el.textContent = `Hole ${this.holeValue} of 18`
+      el.textContent = `Hole ${this.holeValue}`
     })
     const par = this.parsValue[this.holeValue - 1]
     const si = this.strokeIndexesValue[this.holeValue - 1]
@@ -66,13 +59,16 @@ export default class extends Controller {
     this.siTargets.forEach((el) => {
       el.textContent = si != null ? `SI ${si}` : ""
     })
-    this.element.querySelectorAll("[data-hole-stepper-chip]").forEach((chip) => {
-      const hole = parseInt(chip.dataset.hole, 10)
-      const active = hole === this.holeValue
-      chip.classList.toggle("bg-emerald-600", active)
-      chip.classList.toggle("text-white", active)
-      chip.classList.toggle("bg-gray-100", !active)
-      chip.classList.toggle("text-gray-700", !active)
+
+    const onLastHole = this.holeValue === 18
+    this.nextButtonTargets.forEach((el) => {
+      el.classList.toggle("hidden", onLastHole)
+    })
+    this.lockControlTargets.forEach((el) => {
+      el.classList.toggle("hidden", !onLastHole)
+    })
+    this.reopenControlTargets.forEach((el) => {
+      el.classList.toggle("hidden", !onLastHole)
     })
   }
 }

@@ -11,7 +11,7 @@ class GamesController < ApplicationController
   before_action :require_event_commissioner!, only: [ :new, :create ], if: -> { params[:event_token].present? }
   before_action :set_game, only: [ :show, :edit_teams, :update_teams, :join, :complete, :reopen, :destroy ]
   before_action :require_game_access!, only: [ :show, :edit_teams, :update_teams, :complete, :reopen, :destroy ]
-  before_action :require_game_manager!, only: [ :edit_teams, :update_teams, :complete, :reopen, :destroy ]
+  before_action :require_game_manager!, only: [ :edit_teams, :update_teams, :destroy ]
   before_action :require_game_active_for_teams!, only: [ :edit_teams, :update_teams ]
 
   def index
@@ -118,12 +118,12 @@ class GamesController < ApplicationController
 
   def complete
     @game.update!(status: "completed")
-    redirect_to game_path(@game), notice: "Scores finalized and locked."
+    redirect_to game_path(@game), notice: "Scorecard locked."
   end
 
   def reopen
     @game.update!(status: "active")
-    redirect_to game_path(@game), notice: "Scores are editable again."
+    redirect_to game_path(@game), notice: "Scorecard reopened for editing."
   end
 
   def destroy
