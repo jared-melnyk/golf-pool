@@ -37,13 +37,14 @@
           <span data-hole-stepper-target="si">SI <%= round.hole_handicaps[default_hole - 1] %></span>
         </p>
       </div>
-      <button type="button"
-              class="inline-flex items-center justify-center min-w-[2.75rem] h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 active:bg-emerald-700"
-              data-action="hole-stepper#next"
-              data-hole-stepper-target="nextButton"
-              aria-label="Next hole">Next</button>
+      <%# Visibility wrappers only toggle `hidden` — never put `hidden` on the same node as inline-flex/inline. %>
+      <div data-hole-stepper-target="nextButton">
+        <button type="button"
+                class="inline-flex items-center justify-center min-w-[2.75rem] h-11 px-3 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 active:bg-emerald-700"
+                data-action="hole-stepper#next"
+                aria-label="Next hole">Next</button>
+      </div>
       <% if can_lock && game.active? %>
-        <%# Wrapper owns visibility — do not combine Tailwind `hidden` + `inline` on the form (display clash). %>
         <div class="hidden" data-hole-stepper-target="lockControl">
           <%= button_to "Lock scorecard", complete_game_path(game), method: :patch,
                 form: { data: { turbo_confirm: "Lock the scorecard for everyone?" } },
