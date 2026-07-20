@@ -19,7 +19,6 @@ class SessionsController < ApplicationController
   def destroy
     forget_remember_user(current_user)
     session.delete(:user_id)
-    session.delete(:session_start_recorded)
     redirect_to root_path, notice: "Signed out."
   end
 end

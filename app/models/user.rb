@@ -1,4 +1,7 @@
 class User < ApplicationRecord
+  # Admin "Last visit": refresh at most this often while the user is active.
+  LAST_SEEN_THROTTLE = 1.hour
+
   has_secure_password
 
   has_many :pool_users, dependent: :destroy
@@ -69,7 +72,10 @@ class User < ApplicationRecord
     update_column(:remember_token_digest, nil)
   end
 
-  def record_session_start!
+  # Updates admin "Last visit" without affecting auth/cookies.
+  def touch_last_seen!
+    return if last_login_at.present? && last_login_at > LAST_SEEN_THROTTLE.ago
+
     update_column(:last_login_at, Time.current)
   end
 end
