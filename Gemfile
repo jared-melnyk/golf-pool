@@ -30,7 +30,9 @@ gem "nokogiri", ">= 1.19.4"
 gem "concurrent-ruby", ">= 1.3.7"
 gem "crass", ">= 1.0.7"
 gem "json", ">= 2.19.9"
+gem "loofah", ">= 2.25.2"
 gem "msgpack", ">= 1.8.2"
+gem "rails-html-sanitizer", ">= 1.7.1"
 
 # Load .env in development and test (API keys, etc.)
 gem "dotenv-rails", groups: [ :development, :test ]
