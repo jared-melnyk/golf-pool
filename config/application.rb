@@ -23,6 +23,11 @@ module GolfPool
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
+    # No Active Storage attachments/variants yet; avoid requiring libvips/ruby-vips at boot.
+    # When enabling image variants, install libvips, add gem "ruby-vips", ">= 2.2.1",
+    # and switch this back to :vips (Active Storage 8.1.3.1+ / CVE-2026-66066).
+    config.active_storage.variant_processor = :disabled
+
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.

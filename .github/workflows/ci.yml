@@ -90,9 +90,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
 
-      - name: Install libvips for Active Storage variant processing
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libvips42
-
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
