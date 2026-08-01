@@ -18,7 +18,7 @@ RSpec.describe GolfCourseApi::Client do
       response = instance_double(Net::HTTPOK, code: "200", body: {
         courses: [
           {
-            id: 12,
+            id: "ab12cd34",
             club_name: "Pinehurst Resort",
             course_name: "No. 2",
             location: { city: "Pinehurst", state: "NC" }
@@ -40,24 +40,32 @@ RSpec.describe GolfCourseApi::Client do
       result = client.search_courses(search_query: "pinehurst")
 
       expect(result.fetch("courses").size).to eq(1)
-      expect(result.fetch("courses").first.fetch("id")).to eq(12)
+      expect(result.fetch("courses").first.fetch("id")).to eq("ab12cd34")
     end
   end
 
   describe "#course" do
-    it "returns parsed course details payload" do
+    it "returns parsed course details payload for opaque string course ids" do
       response = instance_double(Net::HTTPOK, code: "200", body: {
-        id: 99,
+        id: "7k2m9qb4",
         course_name: "Murray Golf Club",
         tees: { male: [ { tee_name: "Blue", number_of_holes: 18, par_total: 72, course_rating: 72.1, slope_rating: 130, holes: [] } ] }
       }.to_json)
       allow(response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
-      allow(Net::HTTP).to receive(:start).and_return(response)
+      allow(Net::HTTP).to receive(:start) do |_host, _port, use_ssl:, &block|
+        expect(use_ssl).to eq(true)
+        http = instance_double(Net::HTTP)
+        allow(http).to receive(:request) do |request|
+          expect(request.uri.path).to eq("/v1/courses/7k2m9qb4")
+          response
+        end
+        block.call(http)
+      end
 
       client = described_class.new(api_key: "test-key")
-      result = client.course(id: 99)
+      result = client.course(id: "7k2m9qb4")
 
-      expect(result.fetch("id")).to eq(99)
+      expect(result.fetch("id")).to eq("7k2m9qb4")
       expect(result.fetch("course_name")).to eq("Murray Golf Club")
     end
   end

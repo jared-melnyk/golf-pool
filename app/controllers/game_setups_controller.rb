@@ -23,7 +23,7 @@ class GameSetupsController < ApplicationController
       )
     end
 
-    select_course_by_id(params[:course_id].to_i)
+    select_course_by_id(params[:course_id].to_s)
     render partial: "shared/course_searches/selection",
            locals: {
              selected_course: @selected_course,
@@ -109,7 +109,7 @@ class GameSetupsController < ApplicationController
 
   def save_new_round!
     snapshot = build_snapshot(
-      course_id: round_params.fetch(:golf_course_api_course_id).to_i,
+      course_id: round_params.fetch(:golf_course_api_course_id).to_s,
       tee_selector: round_params.fetch(:tee_selector)
     )
     round = @game.round || Round.new(event: @game.event)

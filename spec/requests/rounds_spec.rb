@@ -31,11 +31,11 @@ RSpec.describe "Rounds", type: :request do
         allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
         allow(GolfCourseApi::Client).to receive(:new).and_return(client)
         allow(client).to receive(:search_courses).and_return(
-          { "courses" => [ { "id" => 99, "club_name" => "Murray Golf Club", "course_name" => "Course No. 1", "location" => { "city" => "Murray", "state" => "KY" } } ] }
+          { "courses" => [ { "id" => "99", "club_name" => "Murray Golf Club", "course_name" => "Course No. 1", "location" => { "city" => "Murray", "state" => "KY" } } ] }
         )
-        allow(client).to receive(:course).with(id: 99).and_return(
+        allow(client).to receive(:course).with(id: "99").and_return(
           {
-            "id" => 99,
+            "id" => "99",
             "club_name" => "Murray Golf Club",
             "course_name" => "Course No. 1",
             "tees" => {
@@ -60,7 +60,7 @@ RSpec.describe "Rounds", type: :request do
       it "returns course selection with tee options and default round name" do
         allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
 
-        get select_course_event_rounds_path(event), params: { course_id: 99 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+        get select_course_event_rounds_path(event), params: { course_id: "99" }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include('name="round[golf_course_api_course_id]"')
@@ -73,11 +73,35 @@ RSpec.describe "Rounds", type: :request do
         expect(response.body).to match(/value="Course No\. 1 · \w+ \d+"/)
       end
 
+      it "passes opaque GolfCourseAPI string course ids through without integer coercion" do
+        allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
+        opaque_id = "7k2m9qb4"
+        allow(client).to receive(:course).with(id: opaque_id).and_return(
+          {
+            "id" => opaque_id,
+            "club_name" => "Gatlinburg Golf Club",
+            "course_name" => "Gatlinburg Golf Club",
+            "tees" => {
+              "male" => [ { "tee_name" => "Blue", "total_yards" => 6200, "number_of_holes" => 18, "course_rating" => 70.1, "slope_rating" => 125, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ]
+            }
+          }
+        )
+
+        get select_course_event_rounds_path(event), params: { course_id: opaque_id }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+
+        expect(response).to have_http_status(:ok)
+        expect(client).to have_received(:course).with(id: opaque_id)
+        expect(client).not_to have_received(:course).with(id: opaque_id.to_i)
+        expect(response.body).to include("Gatlinburg Golf Club")
+        expect(response.body).to include(%(value="#{opaque_id}"))
+        expect(response.body).to include("Blue")
+      end
+
       it "uses played_on from params in the default round name" do
         allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
 
         get select_course_event_rounds_path(event),
-            params: { course_id: 99, played_on: "2026-07-16" },
+            params: { course_id: "99", played_on: "2026-07-16" },
             headers: { "X-Requested-With" => "XMLHttpRequest" }
 
         expect(response).to have_http_status(:ok)
@@ -86,10 +110,10 @@ RSpec.describe "Rounds", type: :request do
 
       it "shows tee options when course payload is wrapped under course key" do
         allow_any_instance_of(ApplicationController).to receive(:current_user).and_return(commissioner)
-        allow(client).to receive(:course).with(id: 99).and_return(
+        allow(client).to receive(:course).with(id: "99").and_return(
           {
             "course" => {
-              "id" => 99,
+              "id" => "99",
               "club_name" => "Murray Golf Club",
               "course_name" => "Course No. 1",
               "tees" => {
@@ -99,7 +123,7 @@ RSpec.describe "Rounds", type: :request do
           }
         )
 
-        get select_course_event_rounds_path(event), params: { course_id: 99 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+        get select_course_event_rounds_path(event), params: { course_id: "99" }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
         expect(response).to have_http_status(:ok)
         expect(response.body).to include("Blue")
@@ -114,9 +138,9 @@ RSpec.describe "Rounds", type: :request do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
       allow(GolfCourseApi::Client).to receive(:new).and_return(client)
-      allow(client).to receive(:course).with(id: 99).and_return(
+      allow(client).to receive(:course).with(id: "99").and_return(
         {
-          "id" => 99,
+          "id" => "99",
           "club_name" => "Murray Golf Club",
           "course_name" => "Course No. 1",
           "tees" => {
@@ -202,7 +226,7 @@ RSpec.describe "Rounds", type: :request do
         event: event,
         name: "Saturday",
         played_on: Date.new(2026, 6, 14),
-        golf_course_api_course_id: 99,
+        golf_course_api_course_id: "99",
         course_name: "Course No. 1",
         club_name: "Murray Golf Club",
         tee_name: "Blue",
@@ -213,7 +237,7 @@ RSpec.describe "Rounds", type: :request do
         hole_pars: Array.new(18, 4),
         hole_handicaps: (1..18).to_a,
         course_snapshot: {
-          "id" => 99,
+          "id" => "99",
           "club_name" => "Murray Golf Club",
           "course_name" => "Course No. 1",
           "tees" => { "male" => [ { "tee_name" => "Blue", "number_of_holes" => 18, "course_rating" => 72.1, "slope_rating" => 131, "par_total" => 72, "holes" => (1..18).map { |n| { "par" => 4, "handicap" => n } } } ] }
@@ -240,7 +264,7 @@ RSpec.describe "Rounds", type: :request do
         event: event,
         name: "Old name",
         played_on: Date.new(2026, 6, 14),
-        golf_course_api_course_id: 99,
+        golf_course_api_course_id: "99",
         course_name: "Course No. 1",
         club_name: "Murray Golf Club",
         tee_name: "Blue",
@@ -250,7 +274,7 @@ RSpec.describe "Rounds", type: :request do
         par_total: 72,
         hole_pars: Array.new(18, 4),
         hole_handicaps: (1..18).to_a,
-        course_snapshot: { "id" => 99 }
+        course_snapshot: { "id" => "99" }
       )
     end
 
@@ -258,9 +282,9 @@ RSpec.describe "Rounds", type: :request do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("GOLF_COURSE_API_KEY").and_return("test-key")
       allow(GolfCourseApi::Client).to receive(:new).and_return(client)
-      allow(client).to receive(:course).with(id: 99).and_return(
+      allow(client).to receive(:course).with(id: "99").and_return(
         {
-          "id" => 99,
+          "id" => "99",
           "club_name" => "Murray Golf Club",
           "course_name" => "Course No. 1",
           "tees" => {
@@ -303,7 +327,7 @@ RSpec.describe "Rounds", type: :request do
         event: event,
         name: "Saturday",
         played_on: Date.new(2026, 6, 14),
-        golf_course_api_course_id: 99,
+        golf_course_api_course_id: "99",
         course_name: "Course No. 1",
         club_name: "Murray Golf Club",
         tee_name: "Blue",
@@ -313,7 +337,7 @@ RSpec.describe "Rounds", type: :request do
         par_total: 72,
         hole_pars: Array.new(18, 4),
         hole_handicaps: (1..18).to_a,
-        course_snapshot: { "id" => 99 }
+        course_snapshot: { "id" => "99" }
       )
     end
 

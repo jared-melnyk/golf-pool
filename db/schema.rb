@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_12_180813) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_214315) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -182,7 +182,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_12_180813) do
     t.jsonb "course_snapshot", default: {}, null: false
     t.datetime "created_at", null: false
     t.bigint "event_id"
-    t.integer "golf_course_api_course_id", null: false
+    t.string "golf_course_api_course_id", null: false
     t.integer "hole_handicaps", default: [], null: false, array: true
     t.integer "hole_pars", default: [], null: false, array: true
     t.string "name", null: false

@@ -170,7 +170,7 @@ RSpec.describe "Game setups", type: :request do
         search_courses: {
           "courses" => [
             {
-              "id" => 12,
+              "id" => "7k2m9qb4",
               "club_name" => "Pinehurst Resort",
               "course_name" => "No. 2",
               "location" => { "city" => "Pinehurst", "state" => "NC" }
@@ -190,7 +190,7 @@ RSpec.describe "Game setups", type: :request do
 
   it "returns course selection partial when a course is chosen" do
     course_payload = {
-      "id" => 12,
+      "id" => "7k2m9qb4",
       "club_name" => "Pinehurst Resort",
       "course_name" => "No. 2",
       "tees" => { "male" => [
@@ -204,11 +204,11 @@ RSpec.describe "Game setups", type: :request do
       instance_double(GolfCourseApi::Client, course: course_payload)
     )
 
-    get select_course_game_setup_path(game), params: { course_id: 12 }, headers: { "X-Requested-With" => "XMLHttpRequest" }
+    get select_course_game_setup_path(game), params: { course_id: "7k2m9qb4" }, headers: { "X-Requested-With" => "XMLHttpRequest" }
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include('name="round[golf_course_api_course_id]"')
-    expect(response.body).to include('value="12"')
+    expect(response.body).to include('value="7k2m9qb4"')
     expect(response.body).to include('name="round[tee_selector]"')
   end
 end
