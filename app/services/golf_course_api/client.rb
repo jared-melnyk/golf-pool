@@ -18,6 +18,7 @@ module GolfCourseApi
       get("search", search_query: search_query)
     end
 
+    # Course ids are opaque 8-character strings (e.g. "7k2m9qb4"), not integers.
     def course(id:)
       get("courses/#{id}")
     end

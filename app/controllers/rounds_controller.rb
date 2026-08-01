@@ -25,7 +25,7 @@ class RoundsController < ApplicationController
       )
     end
 
-    load_selected_course(params[:course_id].to_i)
+    load_selected_course(params[:course_id].to_s)
     @default_round_name = default_round_name_for(@selected_course, played_on: played_on_for_default_name)
     render partial: "rounds/course_selection",
            locals: {
@@ -119,7 +119,7 @@ class RoundsController < ApplicationController
 
   def save_round_from_params!
     snapshot = build_snapshot(
-      course_id: round_params.fetch(:golf_course_api_course_id).to_i,
+      course_id: round_params.fetch(:golf_course_api_course_id).to_s,
       tee_selector: round_params.fetch(:tee_selector)
     )
     assign_snapshot_to_round!(@round, snapshot, round_params)

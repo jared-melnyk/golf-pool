@@ -27,7 +27,7 @@ module GoldenTripHelpers
       event: event,
       name: "Round 1",
       played_on: Date.today,
-      golf_course_api_course_id: 1,
+      golf_course_api_course_id: "1",
       course_name: "Golden Course",
       tee_name: "White",
       tee_gender: "male",

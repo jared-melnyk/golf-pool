@@ -63,7 +63,7 @@ module TripConfig
   # Tee data from GolfCourseAPI (July 2026) unless noted.
   COURSES = {
     arcadia_south: {
-      golf_course_api_course_id: 26_721,
+      golf_course_api_course_id: "26721",
       club_name: "Arcadia Bluffs GC",
       course_name: "South",
       address: "14710 Loch Lomond Rd, Arcadia, MI 49613",
@@ -79,7 +79,7 @@ module TripConfig
       tee_note: "White 6,491 yds — nearest to 6,100 yd target among Arcadia South tees"
     },
     wolf_river: {
-      golf_course_api_course_id: 28_630,
+      golf_course_api_course_id: "28630",
       club_name: "Wolf River Golf Park",
       course_name: "Wolf River",
       address: "11685 Chippewa Hwy, Bear Lake, MI 49614",
@@ -96,7 +96,7 @@ module TripConfig
       tee_note: "Listed in GolfCourseAPI as Bear Lake Highlands (pre-2023 name). Bear Paw 6,114 yds."
     },
     champion_hill: {
-      golf_course_api_course_id: 29_051,
+      golf_course_api_course_id: "29051",
       club_name: "Champion Hill GC",
       course_name: "Champion Hill",
       address: "10486 S M-37, Mesick, MI 49668",
@@ -112,7 +112,7 @@ module TripConfig
       tee_note: "White 6,104 yds — nearest to 6,100 yds target"
     },
     pinecroft: {
-      golf_course_api_course_id: 29_222,
+      golf_course_api_course_id: "29222",
       club_name: "Pinecroft GC",
       course_name: "Pinecroft",
       address: "Benzonia, MI",

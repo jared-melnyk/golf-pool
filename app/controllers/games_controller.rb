@@ -43,7 +43,7 @@ class GamesController < ApplicationController
       )
     end
 
-    load_selected_course(params[:course_id].to_i)
+    load_selected_course(params[:course_id].to_s)
     render partial: "shared/course_searches/selection",
            locals: {
              selected_course: @selected_course,
@@ -180,7 +180,7 @@ class GamesController < ApplicationController
   def create_ad_hoc_game!
     game_type = game_params[:game_type]
     snapshot = build_snapshot(
-      course_id: ad_hoc_round_params.fetch(:golf_course_api_course_id).to_i,
+      course_id: ad_hoc_round_params.fetch(:golf_course_api_course_id).to_s,
       tee_selector: ad_hoc_round_params.fetch(:tee_selector)
     )
     played_on = Date.parse(ad_hoc_round_params.fetch(:played_on).to_s)
